@@ -54,6 +54,12 @@
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_evidence_pack.py data/runs/20260523-222300-manifest.json
 ```
 
+如果已经确认字幕归档成功，可以把 Downloads 里的临时副本一起清掉：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py --move
+```
+
 生成剩余 Spotify transcript 采集队列：
 
 ```bash
