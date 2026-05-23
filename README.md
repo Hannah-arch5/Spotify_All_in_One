@@ -60,6 +60,18 @@
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py --move
 ```
 
+清理项目内超过 90 天的旧 transcript，默认先预览不删除：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py
+```
+
+确认预览无误后真正删除：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py --delete
+```
+
 生成剩余 Spotify transcript 采集队列：
 
 ```bash

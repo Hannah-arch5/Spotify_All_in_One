@@ -36,6 +36,7 @@ Current scripts:
 - `scripts/audit_transcripts.py`
 - `scripts/parse_spotify_transcript_text.py`
 - `scripts/import_spotify_transcripts.py`
+- `scripts/prune_transcripts.py`
 - `scripts/build_evidence_pack.py`
 - `scripts/build_spotify_collection_queue.py`
 
@@ -101,6 +102,8 @@ Project transcript archive:
 - `data/transcripts/spotify/`
 - Use `scripts/import_spotify_transcripts.py` to copy newly downloaded Spotify JSON files into the project.
 - Use `scripts/import_spotify_transcripts.py --move` after verification to remove duplicate JSON files from Downloads.
+- Use `scripts/prune_transcripts.py` to preview cleanup of archived transcripts older than 90 days.
+- Use `scripts/prune_transcripts.py --delete` to actually remove old archived transcripts after preview.
 - As of 2026-05-24, Downloads has been cleaned: 0 transcript JSON files remain there; 26 JSON files are archived in `data/transcripts/spotify/`.
 
 Important files:
