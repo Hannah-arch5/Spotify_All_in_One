@@ -14,6 +14,19 @@
 - 用本地 SQLite 记录已处理 episode，避免重复
 - 输出 JSON manifest 和 Markdown 清单
 
+## 目录结构
+
+- `config/`：播客关注清单和流程配置
+- `scripts/`：可直接运行的自动化脚本
+- `src/`：RSS、配置、去重等底层代码
+- `chrome-spotify-transcript-downloader/`：Chrome unpacked extension，暂时不要移动
+- `docs/gemini/`：给 Gemini 的生成协议、复查清单和最终 prompt
+- `docs/research/`：字幕来源、YouTube/Language Reactor 可行性记录
+- `docs/workflow/`：整体流程方案
+- `docs/plugin/`：Antigravity 修改插件时要看的注意事项
+- `data/`：运行数据和缓存，默认不入 git
+- `reports/`：生成的 Markdown/PDF 报告，默认不入 git
+
 ## 运行
 
 检查最近 3 天的更新：

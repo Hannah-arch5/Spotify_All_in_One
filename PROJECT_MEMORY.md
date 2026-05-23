@@ -140,9 +140,10 @@ Codex/Gemini contract:
 
 Key docs:
 
-- `Gemini研报生成协议.md`
-- `Gemini研报复查清单.md`
-- `Gemini最终Prompt模板.md`
+- `docs/gemini/Gemini研报生成协议.md`
+- `docs/gemini/Gemini研报复查清单.md`
+- `docs/gemini/Gemini最终Prompt模板.md`
+- `docs/plugin/ANTIGRAVITY_PLUGIN_NOTES.md`
 
 ## Next Practical Steps
 
