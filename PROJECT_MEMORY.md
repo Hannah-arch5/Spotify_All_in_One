@@ -1,6 +1,6 @@
 # Project Memory
 
-Updated: 2026-05-24
+Updated: 2026-05-24 04:58 CST
 
 ## Goal
 
@@ -35,6 +35,8 @@ Current scripts:
 - `scripts/render_episode_list.py`
 - `scripts/audit_transcripts.py`
 - `scripts/parse_spotify_transcript_text.py`
+- `scripts/build_evidence_pack.py`
+- `scripts/build_spotify_collection_queue.py`
 
 Default check window:
 
@@ -60,6 +62,13 @@ Known readable list:
 - `reports/markdown/20260523-222300-episode-list.md`
 
 These output folders are ignored by git because they are run artifacts.
+
+Current transcript coverage for this accepted batch:
+
+- Evidence pack: `data/runs/20260523-222300-evidence-pack.json`
+- Human-readable coverage report: `reports/markdown/20260523-222300-evidence-pack.md`
+- Spotify collection queue: `reports/markdown/20260523-222300-spotify-collection-queue.md`
+- Status as of 2026-05-24 04:58 CST: 26/26 transcripts matched, 0 missing, 0 unmatched transcript files.
 
 ## Transcript Strategy
 
@@ -104,6 +113,7 @@ Test result:
 - It auto-captured the Spotify transcript API.
 - It downloaded JSON to `/Users/hannah/Downloads/Spotify Transcript Collector/`.
 - A test file was generated for episode ID `3E1adYXk5KvfGFlEJbdhY1`.
+- The first accepted 26-episode batch was collected successfully through Spotify pages.
 
 Fixes applied after Antigravity's version:
 
@@ -136,8 +146,7 @@ Key docs:
 
 ## Next Practical Steps
 
-1. Reload the Chrome extension and re-download the Modern Wisdom test transcript once so the JSON uses the latest parser.
-2. Batch-open/check the 26 accepted episodes and collect available Spotify transcript JSON files.
-3. Create an evidence pack format for Gemini: manifest + transcript file paths + per-episode metadata.
-4. Build a checker that verifies Gemini's report includes exactly the expected episodes and flags unsupported quotes/claims.
-5. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
+1. Build the Gemini input package from `data/runs/20260523-222300-evidence-pack.json`.
+2. Give Gemini the manifest/evidence package and the final prompt protocol.
+3. After Gemini produces the report, build a checker that verifies the report includes exactly the expected 26 episodes and flags unsupported quotes/claims.
+4. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
