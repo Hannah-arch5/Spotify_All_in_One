@@ -4,6 +4,7 @@ __pycache__/
 data/feeds/
 data/runs/
 data/state.sqlite
+data/transcripts/
 reports/markdown/
 reports/html/
 reports/pdf/

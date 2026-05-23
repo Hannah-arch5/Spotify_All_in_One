@@ -7,12 +7,11 @@ from difflib import SequenceMatcher
 import json
 from pathlib import Path
 import re
-import shutil
 import unicodedata
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DOWNLOAD_DIR = Path.home() / "Downloads" / "Spotify Transcript Collector"
+DEFAULT_TRANSCRIPT_DIR = ROOT / "data" / "transcripts" / "spotify"
 
 
 def _latest_manifest() -> Path:
@@ -129,9 +128,9 @@ def _match_transcript(
     }
 
 
-def build(manifest_path: Path, download_dir: Path) -> tuple[Path, Path]:
+def build(manifest_path: Path, transcript_dir: Path) -> tuple[Path, Path]:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    transcripts = _find_downloaded_transcripts(download_dir)
+    transcripts = _find_downloaded_transcripts(transcript_dir)
     used_paths: set[str] = set()
 
     episode_rows = []
@@ -157,7 +156,7 @@ def build(manifest_path: Path, download_dir: Path) -> tuple[Path, Path]:
         "run_id": manifest["run_id"],
         "created_at": datetime.now().astimezone().isoformat(),
         "manifest_path": str(manifest_path),
-        "download_dir": str(download_dir),
+        "transcript_dir": str(transcript_dir),
         "sort_rule": manifest["sort_rule"],
         "summary": {
             "episode_count": len(episode_rows),
@@ -190,7 +189,7 @@ def _write_markdown(path: Path, pack: dict[str, object]) -> None:
         f"- Episode 数量：{summary['episode_count']}",
         f"- 已匹配 transcript：{summary['matched_count']}",
         f"- 缺 transcript：{summary['missing_count']}",
-        f"- 下载目录：`{pack['download_dir']}`",
+        f"- Transcript 目录：`{pack['transcript_dir']}`",
         "",
         "## 明细",
         "",
@@ -235,14 +234,20 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build a transcript evidence pack for Gemini.")
     parser.add_argument("manifest", nargs="?", type=Path, help="Manifest JSON path. Defaults to latest.")
     parser.add_argument(
+        "--transcript-dir",
+        type=Path,
+        default=DEFAULT_TRANSCRIPT_DIR,
+        help="Directory containing imported Spotify transcript JSON files.",
+    )
+    parser.add_argument(
         "--download-dir",
         type=Path,
-        default=DEFAULT_DOWNLOAD_DIR,
-        help="Directory containing Spotify Transcript Downloader JSON files.",
+        help="Deprecated alias for --transcript-dir.",
     )
     args = parser.parse_args()
 
-    output_json, output_md = build(args.manifest or _latest_manifest(), args.download_dir)
+    transcript_dir = args.download_dir or args.transcript_dir
+    output_json, output_md = build(args.manifest or _latest_manifest(), transcript_dir)
     print(output_json)
     print(output_md)
 

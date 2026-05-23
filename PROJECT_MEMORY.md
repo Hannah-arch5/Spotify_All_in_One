@@ -35,6 +35,7 @@ Current scripts:
 - `scripts/render_episode_list.py`
 - `scripts/audit_transcripts.py`
 - `scripts/parse_spotify_transcript_text.py`
+- `scripts/import_spotify_transcripts.py`
 - `scripts/build_evidence_pack.py`
 - `scripts/build_spotify_collection_queue.py`
 
@@ -94,6 +95,11 @@ Extension directory:
 Chrome download output:
 
 - `/Users/hannah/Downloads/Spotify Transcript Collector/`
+
+Project transcript archive:
+
+- `data/transcripts/spotify/`
+- Use `scripts/import_spotify_transcripts.py` to copy newly downloaded Spotify JSON files into the project.
 
 Important files:
 

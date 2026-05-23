@@ -50,6 +50,7 @@
 根据 Spotify Transcript Downloader 的下载结果生成 Gemini 证据包：
 
 ```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_evidence_pack.py data/runs/20260523-222300-manifest.json
 ```
 
@@ -78,6 +79,7 @@
 - Transcript 检查报告：`reports/markdown/*-transcript-audit.md`
 - Gemini 证据包：`data/runs/*-evidence-pack.json`
 - Spotify 字幕采集队列：`data/runs/*-spotify-collection-queue.json`
+- Spotify 字幕归档：`data/transcripts/spotify/`
 - ASR 转写队列：`data/runs/*-transcription-queue.json`
 - RSS 原始缓存：`data/feeds/`
 - 去重数据库：`data/state.sqlite`
