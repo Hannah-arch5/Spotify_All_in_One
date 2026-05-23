@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+data/feeds/
+data/runs/
+data/state.sqlite
+reports/markdown/
+reports/html/
+reports/pdf/
+vendor/python/

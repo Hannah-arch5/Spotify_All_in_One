@@ -1,0 +1,33 @@
+{
+  "name": "Spotify Podcast Transcript Downloader",
+  "description": "Automatically captures and downloads podcast transcripts from the Spotify Web Player.",
+  "version": "2.1.9",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "https://open.spotify.com/*",
+    "https://spclient.wg.spotify.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://open.spotify.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://open.spotify.com/*"]
+    }
+  ],
+  "permissions": [
+    "downloads"
+  ]
+}
