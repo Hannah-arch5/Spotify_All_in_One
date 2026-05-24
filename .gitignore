@@ -1,7 +1,10 @@
 .DS_Store
+.env
 __pycache__/
 *.pyc
 data/feeds/
+data/gemini_chunks/
+data/gemini_inputs/
 data/runs/
 data/state.sqlite
 data/transcripts/

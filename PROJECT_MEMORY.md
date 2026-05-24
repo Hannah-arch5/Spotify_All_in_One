@@ -1,6 +1,6 @@
 # Project Memory
 
-Updated: 2026-05-24 04:58 CST
+Updated: 2026-05-24 23:44 CST
 
 ## Goal
 
@@ -156,9 +156,78 @@ Key docs:
 - `docs/gemini/Gemini最终Prompt模板.md`
 - `docs/plugin/ANTIGRAVITY_PLUGIN_NOTES.md`
 
+Gemini input packaging:
+
+- Script: `scripts/build_gemini_input_package.py`
+- First package output: `data/gemini_inputs/20260523-222300/`
+- Package files:
+  - `episode-manifest.json`
+  - `transcript-evidence-full.json`
+  - `transcript-evidence-full.md`
+  - `gemini-prompt.md`
+  - `source-manifest-original.json`
+- The package includes all 26 accepted episodes and 26 matched Spotify transcripts.
+
+Gemini report review:
+
+- Script: `scripts/check_gemini_report.py`
+- Intended use after Gemini returns Markdown:
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/check_gemini_report.py reports/markdown/20260523-222300-gemini-report.md --manifest data/gemini_inputs/20260523-222300/episode-manifest.json --evidence data/gemini_inputs/20260523-222300/transcript-evidence-full.json
+```
+
+Gemini API automation:
+
+- Script: `scripts/generate_gemini_report.py`
+- Default model: `gemini-2.5-pro`
+- Reads `GEMINI_API_KEY` or `GOOGLE_API_KEY` from environment.
+- Output: `reports/markdown/<run_id>-gemini-report.md`
+- The API key must stay out of git; `.env` is ignored.
+
+Gemini quota findings on 2026-05-24:
+
+- The provided key can access model metadata for `gemini-2.5-pro`.
+- `gemini-2.5-pro` generation failed with free-tier quota 0.
+- `gemini-2.5-flash` small generation works, but full 26-episode package exceeded the 250k input token/minute free-tier quota.
+- Chunked generation with `scripts/generate_chunked_gemini_report.py` works per episode.
+- Completed chunked briefs: 19/26 in `data/gemini_chunks/20260523-222300/`.
+- The run stopped at episode 20 because `gemini-2.5-flash` free tier hit 20 generate requests/day.
+- Expected daily quota reset is likely midnight Pacific Time, about 15:00 Asia/Shanghai. If not reset at 15:05 on 2026-05-25, retry around 21:05 or after a full 24 hours from the last successful request.
+- Resume later with:
+
+```bash
+GEMINI_API_KEY=<key> /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/generate_chunked_gemini_report.py --package-dir data/gemini_inputs/20260523-222300 --model gemini-2.5-flash --sleep-seconds 70
+```
+
+- The chunked script resumes existing episode briefs by default.
+
+End-to-end pipeline:
+
+- Script: `scripts/run_report_pipeline.py`
+- It runs RSS check, readable episode list, transcript audit/import, evidence pack, Spotify collection queue, Gemini input package, Gemini generation, and Gemini report review.
+- It stops with `blocked_missing_transcripts` if any transcript is missing.
+- Optional `--mark-seen-on-pass` marks episodes seen only after the generated report review conclusion is `通过`.
+
+Automation schedule:
+
+- One-time heartbeat: `resume-spotify-report-trial`, scheduled for 2026-05-25 15:05 Asia/Shanghai.
+  - First try to resume the 26-episode trial from episode 20.
+  - If Gemini quota is still blocked, stop retrying the trial and switch to Monday's newest RSS/transcript workflow.
+  - Generate the latest episode list, transcript audit, imported transcript status, evidence pack if possible, and Spotify transcript collection queue.
+  - Do not mark seen.
+- One-time cron: `evening-retry-spotify-trial`, scheduled for 2026-05-25 21:05 Asia/Shanghai.
+  - Retry the 26-episode trial if afternoon quota was still blocked.
+  - Run report review if the final Markdown is produced.
+  - Do not mark the trial batch seen unless user approves after review.
+- Recurring cron: `spotify-mwf-podcast-report`, scheduled weekly Monday / Wednesday / Friday at 15:00 Asia/Shanghai.
+  - Intended future cadence: every 2-3 days, expected around 10 episodes per report rather than 26.
+  - This should usually fit Gemini free-tier constraints when chunked generation is used.
+
 ## Next Practical Steps
 
-1. Build the Gemini input package from `data/runs/20260523-222300-evidence-pack.json`.
-2. Give Gemini the manifest/evidence package and the final prompt protocol.
-3. After Gemini produces the report, build a checker that verifies the report includes exactly the expected 26 episodes and flags unsupported quotes/claims.
-4. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
+1. On 2026-05-25 15:05, resume `scripts/generate_chunked_gemini_report.py` after Gemini daily quota reset.
+2. If quota is still blocked, check Monday's latest podcast updates and collect/download their Spotify transcripts first; retry the 26-episode trial around 21:05.
+3. After any final Markdown report is produced, run `scripts/check_gemini_report.py` against it.
+4. If review passes, ask/confirm before marking the 26-episode trial batch as seen.
+5. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.

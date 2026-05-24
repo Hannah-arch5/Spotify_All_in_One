@@ -78,6 +78,42 @@
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_spotify_collection_queue.py data/runs/20260523-222300-evidence-pack.json
 ```
 
+从 evidence pack 生成 Gemini 输入包：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_gemini_input_package.py data/runs/20260523-222300-evidence-pack.json
+```
+
+Gemini 生成研报后，复查 episode 覆盖、顺序、链接、时间戳和引号证据：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/check_gemini_report.py reports/markdown/20260523-222300-gemini-report.md --manifest data/gemini_inputs/20260523-222300/episode-manifest.json --evidence data/gemini_inputs/20260523-222300/transcript-evidence-full.json
+```
+
+使用 Gemini API 自动生成研报：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/generate_gemini_report.py --package-dir data/gemini_inputs/20260523-222300
+```
+
+如果免费层额度不足以整包生成，使用逐集分段模式，可中断续跑：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/generate_chunked_gemini_report.py --package-dir data/gemini_inputs/20260523-222300 --model gemini-2.5-flash --sleep-seconds 70
+```
+
+端到端运行整条流水线：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --since-days 3
+```
+
+如果希望研报复查通过后自动标记本批 episode 已处理：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --since-days 3 --mark-seen-on-pass
+```
+
 生成 ASR 转写队列：
 
 ```bash
@@ -99,13 +135,17 @@
 - Spotify 字幕采集队列：`data/runs/*-spotify-collection-queue.json`
 - Spotify 字幕归档：`data/transcripts/spotify/`
 - ASR 转写队列：`data/runs/*-transcription-queue.json`
+- Gemini 输入包：`data/gemini_inputs/<run_id>/`
+- Gemini 分段 episode briefs：`data/gemini_chunks/<run_id>/`
+- Gemini 自动生成研报：`reports/markdown/*-gemini-report.md`
+- Gemini 研报复查结果：`data/runs/*-gemini-review.json` 和 `reports/markdown/*-gemini-review.md`
 - RSS 原始缓存：`data/feeds/`
 - 去重数据库：`data/state.sqlite`
 
 ## 下一步
 
-1. 从 evidence pack 生成 Gemini 输入包。
-2. 让 Gemini 基于 transcript 生成研报。
-3. 复查 Gemini 研报是否覆盖全部 episode 且无虚构引用。
+1. 设置 `GEMINI_API_KEY`。
+2. 运行 `scripts/generate_gemini_report.py` 自动生成第一份 Gemini Markdown 研报。
+3. 运行 `scripts/check_gemini_report.py` 复查 Gemini 研报是否覆盖全部 episode 且无虚构引用。
 4. 渲染横向 PDF 研报。
 5. 接入 Telegram、Google Drive、Zotero。
