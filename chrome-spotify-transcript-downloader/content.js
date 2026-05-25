@@ -1083,7 +1083,7 @@ function ensurePanelCreated() {
       No transcript found yet. Open/expand Transcript on Spotify.
     </div>
     <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer;">
-      <input type="checkbox" id="std-auto-translate-cb" style="margin: 0; cursor: pointer;">
+      <input type="checkbox" id="std-auto-translate-cb" style="margin: 0; cursor: pointer;" checked>
       <span style="color: #E0E0E0;">Auto-Translate to Chinese</span>
     </label>
     <button id="std-download-btn" style="
