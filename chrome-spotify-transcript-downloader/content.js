@@ -328,11 +328,11 @@ async function batchTranslateSegments(segments) {
     const textToTranslate = segments[i].text.trim().replace(/\n/g, " ");
     if (!textToTranslate) continue;
     
-    if (currentChunkText.length + textToTranslate.length > 3000) {
+    // Increase chunk size to 4500 and remove the sleep since network latency acts as natural rate limit
+    if (currentChunkText.length + textToTranslate.length > 4500) {
       await flushChunk(currentChunkText, currentChunkIndices);
       currentChunkText = "";
       currentChunkIndices = [];
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
     if (currentChunkText.length > 0) {
