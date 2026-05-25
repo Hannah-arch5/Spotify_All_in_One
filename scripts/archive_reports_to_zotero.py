@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 import hashlib
+import json
 import random
 import shutil
 import sqlite3
@@ -130,6 +131,39 @@ def remove_legacy_report_items(connection: sqlite3.Connection, collection_id: in
             _delete_item_tree(connection, item_id)
             removed.append(f"removed_legacy_report={item_id} title={title}")
     return removed
+
+
+def remove_direct_attachment_titles(connection: sqlite3.Connection, collection_id: int, titles: Iterable[str]) -> list[str]:
+    removed: list[str] = []
+    for title in titles:
+        while True:
+            item_id = _existing_item_id(connection, title, collection_id, ITEM_TYPE_ATTACHMENT)
+            if item_id is None:
+                break
+            _delete_item_tree(connection, item_id)
+            removed.append(f"removed_direct_pdf={item_id} title={title}")
+    return removed
+
+
+def _delivery_stem(markdown_path: Path) -> str:
+    run_id = markdown_path.stem.replace("-gemini-report", "")
+    manifest_path = ROOT / "data" / "gemini_inputs" / run_id / "episode-manifest.json"
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        episodes = manifest.get("episodes") or []
+        if episodes and episodes[0].get("published_at"):
+            short = episodes[0]["published_at"][:10].replace("-", "")[2:]
+            return f"{short}-Spotify播客情报研报"
+    short = datetime.strptime(run_id[:8], "%Y%m%d").strftime("%y%m%d")
+    return f"{short}-Spotify播客情报研报"
+
+
+def _old_delivery_stem(markdown_path: Path) -> str:
+    run_id = markdown_path.stem.replace("-gemini-report", "")
+    short = datetime.strptime(run_id[:8], "%Y%m%d").strftime("%y%m%d")
+    count = len(markdown_path.read_text(encoding="utf-8").split("#### 情报 ")) - 1
+    suffix = "26集试跑" if count == 26 else f"{count}集周批次"
+    return f"{short}-Spotify播客情报研报-{suffix}"
 
 
 def archive_report(
@@ -267,15 +301,16 @@ def main() -> None:
             ]
             for message in remove_legacy_report_items(connection, collection_id, legacy_titles):
                 print(message)
+            if args.direct_pdf:
+                legacy_direct_titles = [_old_delivery_stem(path) for path in args.reports]
+                for message in remove_direct_attachment_titles(connection, collection_id, legacy_direct_titles):
+                    print(message)
         for markdown_path in args.reports:
             if not markdown_path.exists():
                 raise SystemExit(f"Missing Markdown report: {markdown_path}")
             run_id = markdown_path.stem.replace("-gemini-report", "")
             if args.direct_pdf:
-                short = datetime.strptime(run_id[:8], "%Y%m%d").strftime("%y%m%d")
-                count = len(markdown_path.read_text(encoding="utf-8").split("#### 情报 ")) - 1
-                suffix = "26集试跑" if count == 26 else f"{count}集周批次"
-                pdf_path = ROOT / "reports" / "pdf" / f"{short}-Spotify播客情报研报-{suffix}.pdf"
+                pdf_path = ROOT / "reports" / "pdf" / f"{_delivery_stem(markdown_path)}.pdf"
                 title = pdf_path.stem
                 report_date = _run_date(run_id)
                 if not pdf_path.exists():

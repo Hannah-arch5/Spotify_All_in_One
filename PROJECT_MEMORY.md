@@ -297,25 +297,28 @@ Monday batch notes:
 - Both completed reports have passed local review:
   - `20260523-222300`: `通过`, 0 errors, 0 warnings.
   - `20260525-201553`: `通过`, 0 errors, 0 warnings.
-- Corrected delivery files were rendered on 2026-05-26 with `scripts/render_delivery_reports.py`.
+- Corrected delivery files were re-rendered on 2026-05-26 with `scripts/render_delivery_reports.py`.
+  - Filename rule: `YYMMDD-Spotify播客情报研报`, where `YYMMDD` is the upload/published date of the first episode in the report, not the run date and not the report generation time.
   - Word:
-    - `reports/word/260523-Spotify播客情报研报-26集试跑.docx`
-    - `reports/word/260525-Spotify播客情报研报-8集周批次.docx`
+    - `reports/word/260523-Spotify播客情报研报.docx`
+    - `reports/word/260525-Spotify播客情报研报.docx`
   - PDF:
-    - `reports/pdf/260523-Spotify播客情报研报-26集试跑.pdf`
-    - `reports/pdf/260525-Spotify播客情报研报-8集周批次.pdf`
-  - Format: landscape, two-column body layout, justified body text, each episode starts on a new page. Long episodes can spill past one page, but the layout is tuned to keep episodes compact.
-  - Structural QA confirmed landscape orientation, two-column sections, expected episode/page breaks, and extractable PDF text. Full DOCX page-image QA could not run because LibreOffice/`soffice` is not installed.
+    - `reports/pdf/260523-Spotify播客情报研报.pdf`
+    - `reports/pdf/260525-Spotify播客情报研报.pdf`
+  - Format: landscape, single-column body layout matching the reference PDF `260511科技播客情报分析报告 - Google Docs.pdf`, black bold enlarged headings, no colored heading treatment, justified body text, and no visible run/source metadata line.
+  - The `第二部分` heading is kept on the same page/block as `情报 1`, not left behind at the end of the summary.
+  - Structural QA confirmed landscape orientation, single-column sections, expected episode/page breaks, first-episode section placement, and extractable PDF text. Full DOCX page-image QA could not run because LibreOffice/`soffice` is not installed.
 - Zotero archive corrected on 2026-05-26:
   - Target collection: `1.Spotify情报汇总`.
   - Direct top-level PDF items, not child attachments under report parent items:
-    - `260523-Spotify播客情报研报-26集试跑`
-    - `260525-Spotify播客情报研报-8集周批次`
+    - `260523-Spotify播客情报研报`
+    - `260525-Spotify播客情报研报`
   - Tags: `unread`, `2605`.
-  - The earlier incorrect parent report items were removed.
+  - The earlier incorrect parent report items and wrong suffix-named direct PDF items were removed.
   - Zotero database backups created before writes:
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733077`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733816`
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779734613`
 - Google Drive archive is still pending because the Google Drive connector failed to start with a `failed to get client` / `https://chatgpt.com/backend-api/wham/apps` transport error.
   - Target folder remains `1.Spotify情报汇总`.
   - Word files staged at `reports/archive/pending/2605/google-drive/`.

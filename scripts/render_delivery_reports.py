@@ -16,7 +16,7 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
@@ -42,12 +42,21 @@ def episode_count(markdown: str) -> int:
     return len(re.findall(r"^####\s+情报\s+\d+", markdown, flags=re.MULTILINE))
 
 
-def delivery_name(run_id: str, count: int) -> str:
-    suffix = "26集试跑" if count == 26 else f"{count}集周批次"
-    return f"{short_date(run_id)}-Spotify播客情报研报-{suffix}"
+def delivery_name(markdown_path: Path) -> str:
+    run_id = markdown_path.stem.replace("-gemini-report", "")
+    manifest_path = ROOT / "data" / "gemini_inputs" / run_id / "episode-manifest.json"
+    if manifest_path.exists():
+        import json
+
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        episodes = manifest.get("episodes") or []
+        if episodes and episodes[0].get("published_at"):
+            date_part = episodes[0]["published_at"][:10].replace("-", "")[2:]
+            return f"{date_part}-Spotify播客情报研报"
+    return f"{short_date(run_id)}-Spotify播客情报研报"
 
 
-def split_report(markdown: str) -> tuple[str, list[str], list[Section]]:
+def split_report(markdown: str) -> tuple[str, list[str], str | None, list[Section]]:
     lines = [line.rstrip() for line in markdown.splitlines()]
     title = "Spotify 播客情报研报"
     body_start = 0
@@ -60,8 +69,14 @@ def split_report(markdown: str) -> tuple[str, list[str], list[Section]]:
     episodes: list[Section] = []
     intro: list[str] = []
     current: Section | None = None
+    second_part_heading: str | None = None
     for raw in lines[body_start:]:
         if raw.startswith("<!--"):
+            continue
+        if raw.strip().startswith("**Run ID:"):
+            continue
+        if raw.startswith("## 第二部分"):
+            second_part_heading = raw.replace("##", "").strip()
             continue
         if raw.startswith("#### 情报 "):
             if current:
@@ -74,7 +89,7 @@ def split_report(markdown: str) -> tuple[str, list[str], list[Section]]:
             current.lines.append(raw)
     if current:
         episodes.append(current)
-    return title, intro, episodes
+    return title, intro, second_part_heading, episodes
 
 
 def clean_inline(text: str) -> str:
@@ -144,17 +159,17 @@ def add_docx_paragraph(doc: Document, role: str, text: str) -> None:
 def build_docx(markdown_path: Path, out_path: Path) -> None:
     run_id = markdown_path.stem.replace("-gemini-report", "")
     markdown = markdown_path.read_text(encoding="utf-8")
-    title, intro, episodes = split_report(markdown)
+    title, intro, second_part_heading, episodes = split_report(markdown)
 
     doc = Document()
     section = doc.sections[0]
     section.orientation = WD_ORIENT.LANDSCAPE
     section.page_width, section.page_height = section.page_height, section.page_width
-    section.top_margin = Cm(1.1)
-    section.bottom_margin = Cm(1.0)
-    section.left_margin = Cm(1.25)
-    section.right_margin = Cm(1.25)
-    set_doc_columns(section, 2)
+    section.top_margin = Cm(1.6)
+    section.bottom_margin = Cm(1.3)
+    section.left_margin = Cm(1.8)
+    section.right_margin = Cm(1.8)
+    set_doc_columns(section, 1)
     add_page_number_footer(section)
 
     styles = doc.styles
@@ -162,12 +177,12 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
         style = styles[name]
         style.font.name = "Arial Unicode MS"
         style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial Unicode MS")
-        style.font.size = Pt(8.7)
-        style.paragraph_format.space_after = Pt(2.4)
-        style.paragraph_format.line_spacing = 1.03
+        style.font.size = Pt(8.9)
+        style.paragraph_format.space_after = Pt(2.2)
+        style.paragraph_format.line_spacing = 1.02
     for name, size, color in (
-        ("Heading 1", 12, RGBColor(31, 78, 121)),
-        ("Heading 2", 10.5, RGBColor(68, 68, 68)),
+        ("Heading 1", 14, RGBColor(0, 0, 0)),
+        ("Heading 2", 12, RGBColor(0, 0, 0)),
     ):
         style = styles[name]
         style.font.name = "Arial Unicode MS"
@@ -179,20 +194,20 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
         style.paragraph_format.space_after = Pt(4)
 
     p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run(delivery_name(run_id, len(episodes)))
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    r = p.add_run(delivery_name(markdown_path))
     r.bold = True
     r.font.name = "Arial Unicode MS"
     r._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial Unicode MS")
-    r.font.size = Pt(16)
-    r.font.color.rgb = RGBColor(31, 78, 121)
-    meta = doc.add_paragraph(f"来源文件：{markdown_path.name}    Run ID：{run_id}    Episode：{len(episodes)}")
-    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r.font.size = Pt(18)
+    r.font.color.rgb = RGBColor(0, 0, 0)
     for line in intro:
         add_docx_paragraph(doc, *paragraph_role(line))
 
-    for episode in episodes:
+    for index, episode in enumerate(episodes):
         doc.add_page_break()
+        if index == 0 and second_part_heading:
+            add_docx_paragraph(doc, "h1", second_part_heading)
         add_docx_paragraph(doc, "h1", episode.title)
         for line in episode.lines:
             add_docx_paragraph(doc, *paragraph_role(line))
@@ -216,8 +231,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             fontName=font_name,
             fontSize=18,
             leading=22,
-            alignment=TA_CENTER,
-            textColor=colors.HexColor("#1f4e79"),
+            alignment=TA_LEFT,
+            textColor=colors.black,
             spaceAfter=10,
             wordWrap="CJK",
         ),
@@ -225,8 +240,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryMeta",
             parent=base["Normal"],
             fontName=font_name,
-            fontSize=8.5,
-            leading=10.5,
+            fontSize=8.6,
+            leading=10.4,
             alignment=TA_CENTER,
             textColor=colors.HexColor("#666666"),
             spaceAfter=8,
@@ -236,9 +251,9 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryH1",
             parent=base["Heading1"],
             fontName=font_name,
-            fontSize=12,
-            leading=14,
-            textColor=colors.HexColor("#1f4e79"),
+            fontSize=13,
+            leading=15,
+            textColor=colors.black,
             spaceBefore=3,
             spaceAfter=5,
             wordWrap="CJK",
@@ -247,9 +262,9 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryH2",
             parent=base["Heading2"],
             fontName=font_name,
-            fontSize=10.5,
-            leading=13,
-            textColor=colors.HexColor("#444444"),
+            fontSize=11.5,
+            leading=13.5,
+            textColor=colors.black,
             spaceBefore=3,
             spaceAfter=4,
             wordWrap="CJK",
@@ -258,8 +273,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryBody",
             parent=base["BodyText"],
             fontName=font_name,
-            fontSize=8.6,
-            leading=10.8,
+            fontSize=8.8,
+            leading=10.5,
             alignment=TA_JUSTIFY,
             spaceAfter=2.8,
             wordWrap="CJK",
@@ -268,8 +283,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryBullet",
             parent=base["BodyText"],
             fontName=font_name,
-            fontSize=8.4,
-            leading=10.6,
+            fontSize=8.8,
+            leading=10.5,
             leftIndent=12,
             firstLineIndent=-7,
             alignment=TA_LEFT,
@@ -279,11 +294,13 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
     }
 
 
-def draw_footer(canvas, doc) -> None:
+def draw_page(canvas, doc) -> None:
     canvas.saveState()
+    canvas.setFillColor(colors.white)
+    canvas.rect(0, 0, landscape(letter)[0], landscape(letter)[1], stroke=0, fill=1)
     canvas.setFont("ArialUnicode", 7.5)
     canvas.setFillColor(colors.HexColor("#777777"))
-    canvas.drawCentredString(landscape(A4)[0] / 2, 0.55 * cm, str(canvas.getPageNumber()))
+    canvas.drawCentredString(landscape(letter)[0] / 2, 0.5 * cm, str(canvas.getPageNumber()))
     canvas.restoreState()
 
 
@@ -300,36 +317,34 @@ def pdf_paragraph(style_map: dict[str, ParagraphStyle], role: str, text: str) ->
 def build_pdf(markdown_path: Path, out_path: Path, font_path: str) -> None:
     run_id = markdown_path.stem.replace("-gemini-report", "")
     markdown = markdown_path.read_text(encoding="utf-8")
-    _, intro, episodes = split_report(markdown)
+    _, intro, second_part_heading, episodes = split_report(markdown)
     font_name = register_pdf_font(font_path)
     styles = pdf_styles(font_name)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(
         str(out_path),
-        pagesize=landscape(A4),
-        rightMargin=1.2 * cm,
-        leftMargin=1.2 * cm,
-        topMargin=1.0 * cm,
-        bottomMargin=1.0 * cm,
+        pagesize=landscape(letter),
+        rightMargin=1.8 * cm,
+        leftMargin=1.8 * cm,
+        topMargin=1.55 * cm,
+        bottomMargin=1.25 * cm,
     )
-    story: list = [
-        Paragraph(delivery_name(run_id, len(episodes)), styles["title"]),
-        Paragraph(f"来源文件：{markdown_path.name} &nbsp;&nbsp; Run ID：{run_id} &nbsp;&nbsp; Episode：{len(episodes)}", styles["meta"]),
-    ]
+    story: list = [Paragraph(delivery_name(markdown_path), styles["title"])]
     for line in intro:
         story.append(pdf_paragraph(styles, *paragraph_role(line)))
-    for episode in episodes:
+    for index, episode in enumerate(episodes):
         story.append(PageBreak())
+        if index == 0 and second_part_heading:
+            story.append(Paragraph(second_part_heading, styles["h1"]))
         story.append(Paragraph(episode.title, styles["h1"]))
         for line in episode.lines:
             story.append(pdf_paragraph(styles, *paragraph_role(line)))
-    doc.build(story, onFirstPage=draw_footer, onLaterPages=draw_footer)
+    doc.build(story, onFirstPage=draw_page, onLaterPages=draw_page)
 
 
 def render(markdown_path: Path, font_path: str) -> tuple[Path, Path]:
     run_id = markdown_path.stem.replace("-gemini-report", "")
-    count = episode_count(markdown_path.read_text(encoding="utf-8"))
-    stem = delivery_name(run_id, count)
+    stem = delivery_name(markdown_path)
     docx_path = ROOT / "reports" / "word" / f"{stem}.docx"
     pdf_path = ROOT / "reports" / "pdf" / f"{stem}.pdf"
     build_docx(markdown_path, docx_path)
