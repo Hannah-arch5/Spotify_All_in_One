@@ -234,6 +234,13 @@ Automation schedule:
   - Intended future cadence: every 2-3 days, expected around 10 episodes per report rather than 26.
   - This should usually fit Gemini free-tier constraints when chunked generation is used.
 
+GitHub publishing preferences:
+
+- New project repositories should default to public unless the user explicitly asks for private.
+- Repository names should use title-case words separated by hyphens, for example `Chrome-Spotify-Transcript-Downloader`.
+- The STD plugin is published at `https://github.com/Hannah-arch5/Chrome-Spotify-Transcript-Downloader`.
+- STD GitHub tags: `STD_v2.0` is the stable confirmed baseline; `STD_v2.1-zh` includes the optional Chinese transcript download enhancement.
+
 ## Current Monday Batch
 
 Run generated after marking the 26-episode trial batch seen:
