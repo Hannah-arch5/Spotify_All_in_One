@@ -224,6 +224,23 @@ function handleAPICaptured(url, data) {
     
     logDebug(`Triggering auto-download with filename date: ${publishedDate}`);
     triggerDownload(payload, finalMeta);
+    
+    const translateCb = document.getElementById('std-auto-translate-cb');
+    if (translateCb && translateCb.checked) {
+      setTimeout(async () => {
+        logDebug(`Starting background translation...`);
+        const statusEl = document.getElementById('std-status-text');
+        if (statusEl) statusEl.innerHTML = `<span style="color: #FFA500;">Translating transcript...</span>`;
+        
+        await batchTranslateSegments(payload.segments);
+        
+        const translatedMeta = { ...finalMeta };
+        translatedMeta.episodeTitle = finalMeta.episodeTitle + "_zh";
+        triggerDownload(payload, translatedMeta);
+        
+        if (statusEl) statusEl.innerHTML = `<span style="color: #00FF00;">✓ Translation downloaded.</span>`;
+      }, 500);
+    }
   }
 
   // Start the extraction attempts
@@ -255,9 +272,80 @@ function handleManualDownload() {
 
     downloadedMap.set(currentEpisodeId, hash);
     triggerDownload(payload, metadata);
+
+    const translateCb = document.getElementById('std-auto-translate-cb');
+    if (translateCb && translateCb.checked) {
+      setTimeout(async () => {
+        const statusEl = document.getElementById('std-status-text');
+        if (statusEl) statusEl.innerHTML = `<span style="color: #FFA500;">Translating transcript...</span>`;
+        
+        await batchTranslateSegments(payload.segments);
+        
+        const translatedMeta = { ...metadata };
+        translatedMeta.episodeTitle = metadata.episodeTitle + "_zh";
+        triggerDownload(payload, translatedMeta);
+        
+        if (statusEl) statusEl.innerHTML = `<span style="color: #00FF00;">✓ Translation downloaded.</span>`;
+      }, 500);
+    }
   } else {
     alert("No transcript elements visible in DOM. Please open or expand the Transcript view on Spotify first!");
   }
+}
+
+async function batchTranslateSegments(segments) {
+  if (!segments || segments.length === 0) return;
+  console.log(`[STD] Starting batch translation for ${segments.length} segments...`);
+  
+  let currentChunkText = "";
+  let currentChunkIndices = [];
+  
+  const flushChunk = async (text, indices) => {
+    if (!text) return;
+    try {
+      const q = encodeURIComponent(text);
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${q}`;
+      const response = await fetch(url);
+      const res = await response.json();
+      
+      let translatedText = "";
+      if (res && res[0]) {
+        res[0].forEach(item => {
+          if (item[0]) translatedText += item[0];
+        });
+      }
+      
+      const translations = translatedText.split('\n').map(s => s.trim());
+      for (let i = 0; i < indices.length; i++) {
+        segments[indices[i]].translation = translations[i] || "";
+      }
+    } catch (err) {
+      console.error("[STD] Translation chunk failed:", err);
+    }
+  };
+
+  for (let i = 0; i < segments.length; i++) {
+    const textToTranslate = segments[i].text.trim().replace(/\n/g, " ");
+    if (!textToTranslate) continue;
+    
+    if (currentChunkText.length + textToTranslate.length > 3000) {
+      await flushChunk(currentChunkText, currentChunkIndices);
+      currentChunkText = "";
+      currentChunkIndices = [];
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    if (currentChunkText.length > 0) {
+      currentChunkText += '\n';
+    }
+    currentChunkText += textToTranslate;
+    currentChunkIndices.push(i);
+  }
+  
+  if (currentChunkText.length > 0) {
+    await flushChunk(currentChunkText, currentChunkIndices);
+  }
+  console.log(`[STD] Batch translation complete.`);
 }
 
 function triggerDownload(payload, metadata) {
@@ -994,6 +1082,10 @@ function ensurePanelCreated() {
     <div id="std-status-text" style="margin-bottom: 10px; line-height: 1.4; color: #8E8E93;">
       No transcript found yet. Open/expand Transcript on Spotify.
     </div>
+    <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer;">
+      <input type="checkbox" id="std-auto-translate-cb" style="margin: 0; cursor: pointer;">
+      <span style="color: #E0E0E0;">Auto-Translate to Chinese</span>
+    </label>
     <button id="std-download-btn" style="
       width: 100%;
       padding: 6px 8px;
