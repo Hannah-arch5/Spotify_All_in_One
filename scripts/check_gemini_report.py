@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 import re
+from difflib import SequenceMatcher
 import unicodedata
 from typing import Any
 
@@ -18,6 +19,10 @@ TITLE_RE = re.compile(r"原始标题[：:]\s*(.+)")
 LINK_RE = re.compile(r"原始链接[：:]\s*(.+)")
 TRANSCRIPT_SOURCE_RE = re.compile(r"Transcript\s*来源[：:]\s*(.+)", re.IGNORECASE)
 QUOTE_CANDIDATE_RE = re.compile(r"[\"“](.{12,240}?)[\"”]")
+KEY_QUOTE_BLOCK_RE = re.compile(
+    r"关键金句\s*/\s*结论[：:](.*?)(?:\n-\s*证据锚点[：:]|\n证据锚点[：:]|\Z)",
+    re.DOTALL,
+)
 
 
 @dataclass
@@ -89,13 +94,29 @@ def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> li
     if not transcript_text:
         return findings
     normalized_transcript = _normalize(transcript_text)
-    for raw_quote in QUOTE_CANDIDATE_RE.findall(section["body"]):
+    block_match = KEY_QUOTE_BLOCK_RE.search(section["body"])
+    if not block_match:
+        return findings
+    quote_block = block_match.group(1)
+    for raw_quote in QUOTE_CANDIDATE_RE.findall(quote_block):
         quote = raw_quote.strip()
-        # Short Chinese phrases and translated labels are often not intended as direct transcript quotes.
-        if len(quote) < 18:
+        # Only police likely direct English transcript quotes. Chinese translations and short labels are too noisy.
+        ascii_words = re.findall(r"[A-Za-z][A-Za-z']+", quote)
+        if len(ascii_words) < 4:
             continue
         normalized_quote = _normalize(quote)
-        if normalized_quote and normalized_quote not in normalized_transcript:
+        if not normalized_quote:
+            continue
+        if normalized_quote in normalized_transcript:
+            continue
+
+        quote_words = normalized_quote.split()
+        windows = (
+            " ".join(normalized_transcript.split()[start : start + len(quote_words) + 12])
+            for start in range(0, max(len(normalized_transcript.split()) - len(quote_words), 0), 20)
+        )
+        best_ratio = max((SequenceMatcher(None, normalized_quote, window).ratio() for window in windows), default=0.0)
+        if best_ratio < 0.82:
             findings.append(
                 Finding(
                     "warning",

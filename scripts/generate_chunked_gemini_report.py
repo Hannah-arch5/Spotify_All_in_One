@@ -44,6 +44,7 @@ def _generate_text(
     max_output_tokens: int,
     temperature: float,
     timeout: int,
+    max_retries: int = 3,
 ) -> str:
     endpoint = API_ENDPOINT.format(model=urllib.parse.quote(model, safe=""))
     url = f"{endpoint}?key={urllib.parse.quote(_api_key())}"
@@ -60,14 +61,21 @@ def _generate_text(
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            response_body = response.read().decode("utf-8")
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        if exc.code == 429:
-            raise GeminiQuotaError(f"Gemini API quota exhausted: {body}") from exc
-        raise RuntimeError(f"Gemini API error {exc.code}: {body}") from exc
+    for attempt in range(max_retries + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                response_body = response.read().decode("utf-8")
+            break
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            if exc.code == 429:
+                raise GeminiQuotaError(f"Gemini API quota exhausted: {body}") from exc
+            if exc.code in {500, 502, 503, 504} and attempt < max_retries:
+                time.sleep(45 * (attempt + 1))
+                continue
+            raise RuntimeError(f"Gemini API error {exc.code}: {body}") from exc
+    else:
+        raise RuntimeError("Gemini API request failed after retries.")
 
     data = json.loads(response_body)
     chunks: list[str] = []

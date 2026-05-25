@@ -1,6 +1,6 @@
 # Project Memory
 
-Updated: 2026-05-24 23:44 CST
+Updated: 2026-05-25 20:20 CST
 
 ## Goal
 
@@ -201,6 +201,13 @@ GEMINI_API_KEY=<key> /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/d
 ```
 
 - The chunked script resumes existing episode briefs by default.
+- 2026-05-25 update:
+  - Quota had reset; chunked generation resumed successfully.
+  - All 26 episode briefs completed in `data/gemini_chunks/20260523-222300/`.
+  - Final Gemini Markdown report produced: `reports/markdown/20260523-222300-gemini-report.md`.
+  - Review result after tightening quote checks and marking non-exact quotes as close paraphrases: `通过`.
+  - Review files: `data/runs/20260523-222300-gemini-review.json` and `reports/markdown/20260523-222300-gemini-review.md`.
+  - The accepted 26-episode trial batch was marked as processed in `data/state.sqlite` so future M/W/F checks do not repeat it.
 
 End-to-end pipeline:
 
@@ -224,10 +231,44 @@ Automation schedule:
   - Intended future cadence: every 2-3 days, expected around 10 episodes per report rather than 26.
   - This should usually fit Gemini free-tier constraints when chunked generation is used.
 
+## Current Monday Batch
+
+Run generated after marking the 26-episode trial batch seen:
+
+- Manifest: `data/runs/20260525-201553-manifest.json`
+- Episode list: `reports/markdown/20260525-201553-episode-list.md`
+- Transcript audit: `reports/markdown/20260525-201553-transcript-audit.md`
+- Evidence pack: `data/runs/20260525-201553-evidence-pack.json`
+- Evidence report: `reports/markdown/20260525-201553-evidence-pack.md`
+- Spotify collection queue: `reports/markdown/20260525-201553-spotify-collection-queue.md`
+- Status: 8 new episodes, 0/8 transcripts matched, 8 missing.
+
+Current Monday new episodes:
+
+1. The a16z Show — `Why AI Isn’t Killing SaaS Yet`
+2. The Diary Of A CEO with Steven Bartlett — `Bruno Fernandes: Roy Keane Twisted My Words. They Offered Me £200M, I Said No.`
+3. Modern Wisdom — `Mostly Wise: Matt McCusker, Andrew Huberman & Tom Segura - #1102`
+4. 硅谷101 — `E238｜聊聊Harness时代AI-First的组织架构：从信任人到信任AI`
+5. 厚雪长波 — `关于白酒是周期见底还是永久衰退的一次审视`
+6. Behind the Craft — `How This 5x Founder Runs His Startup Solo With AI Agents (OpenClaw, Codex, Devin) | Ryan Carson`
+7. Lenny's Podcast: Product | Growth | Career — `The AI paradox: More automation, more humans, more work | Dan Shipper`
+8. The AI Daily Brief — `Why Agents Still Need Humans`
+
+Next action for Monday batch:
+
+- Open the queue links in `reports/markdown/20260525-201553-spotify-collection-queue.md` in Chrome.
+- Let the Spotify Transcript Downloader extension download all 8 JSON transcripts into `/Users/hannah/Downloads/Spotify Transcript Collector/`.
+- Then run:
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_evidence_pack.py data/runs/20260525-201553-manifest.json
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_spotify_collection_queue.py data/runs/20260525-201553-evidence-pack.json
+```
+
 ## Next Practical Steps
 
-1. On 2026-05-25 15:05, resume `scripts/generate_chunked_gemini_report.py` after Gemini daily quota reset.
-2. If quota is still blocked, check Monday's latest podcast updates and collect/download their Spotify transcripts first; retry the 26-episode trial around 21:05.
-3. After any final Markdown report is produced, run `scripts/check_gemini_report.py` against it.
-4. If review passes, ask/confirm before marking the 26-episode trial batch as seen.
-5. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
+1. Collect/download the 8 missing Spotify transcripts for Monday batch `20260525-201553`.
+2. Rebuild the Monday evidence pack and verify transcript coverage.
+3. If all 8 transcripts are matched, build the Gemini input package, run chunked Gemini generation, and review the report.
+4. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
