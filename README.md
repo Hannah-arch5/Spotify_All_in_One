@@ -133,7 +133,8 @@ GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runt
 - Transcript 检查报告：`reports/markdown/*-transcript-audit.md`
 - Gemini 证据包：`data/runs/*-evidence-pack.json`
 - Spotify 字幕采集队列：`data/runs/*-spotify-collection-queue.json`
-- Spotify 字幕归档：`data/transcripts/spotify/`
+- Spotify 英文字幕归档：`data/transcripts/spotify_en/`
+- Spotify 中文字幕归档：`data/transcripts/spotify_zh/`
 - ASR 转写队列：`data/runs/*-transcription-queue.json`
 - Gemini 输入包：`data/gemini_inputs/<run_id>/`
 - Gemini 分段 episode briefs：`data/gemini_chunks/<run_id>/`

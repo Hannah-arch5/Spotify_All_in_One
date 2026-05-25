@@ -11,7 +11,7 @@ import unicodedata
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_TRANSCRIPT_DIR = ROOT / "data" / "transcripts" / "spotify"
+DEFAULT_TRANSCRIPT_DIR = ROOT / "data" / "transcripts" / "spotify_en"
 
 
 def _latest_manifest() -> Path:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_TRANSCRIPT_DIR = ROOT / "data" / "transcripts" / "spotify"
+DEFAULT_TRANSCRIPT_DIR = ROOT / "data" / "transcripts"
 
 
 def _parse_date(value: object) -> datetime | None:
@@ -47,7 +47,7 @@ def prune(transcript_dir: Path, keep_days: int, dry_run: bool) -> tuple[int, int
     deleted = 0
     unknown = 0
 
-    for path in sorted(transcript_dir.glob("*.json")):
+    for path in sorted(transcript_dir.glob("**/*.json")):
         transcript_date = _transcript_date(path)
         if transcript_date is None:
             unknown += 1

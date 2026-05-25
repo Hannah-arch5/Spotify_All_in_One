@@ -99,13 +99,14 @@ Chrome download output:
 
 Project transcript archive:
 
-- `data/transcripts/spotify/`
+- English/original transcripts: `data/transcripts/spotify_en/`
+- Chinese translated transcripts: `data/transcripts/spotify_zh/`
 - Use `scripts/import_spotify_transcripts.py` to copy newly downloaded Spotify JSON files into the project.
 - Use `scripts/import_spotify_transcripts.py --move` after verification to remove duplicate JSON files from Downloads.
 - User preference: after transcripts are confirmed archived and the report/review is OK, delete temporary JSON copies in `/Users/hannah/Downloads/Spotify Transcript Collector/`.
 - Use `scripts/prune_transcripts.py` to preview cleanup of archived transcripts older than 90 days.
 - Use `scripts/prune_transcripts.py --delete` to actually remove old archived transcripts after preview.
-- As of 2026-05-24, Downloads has been cleaned: 0 transcript JSON files remain there; 26 JSON files are archived in `data/transcripts/spotify/`.
+- As of 2026-05-24, Downloads has been cleaned: 0 transcript JSON files remain there; 26 English JSON files are archived in `data/transcripts/spotify_en/`.
 
 Important files:
 
@@ -255,7 +256,7 @@ Current Monday new episodes:
 
 Monday batch notes:
 
-- All 8 Spotify transcript JSON files were collected through the Chrome extension and imported into `data/transcripts/spotify/`.
+- All 8 Spotify transcript JSON files were collected through the Chrome extension and imported into `data/transcripts/spotify_en/`.
 - After archive verification and report review pass, the 8 temporary JSON files in `/Users/hannah/Downloads/Spotify Transcript Collector/` were deleted; Downloads now has 0 transcript JSON files.
 - Gemini `gemini-2.5-flash` generated 8 episode briefs and the final report successfully.
 - The first Gemini final report hallucinated leftover sections 9-26 from the earlier 26-episode trial. It was corrected by truncating the report to the real 8 sections, fixing two mistyped Spotify episode IDs, and rerunning `scripts/check_gemini_report.py`.
