@@ -1,6 +1,6 @@
 # Project Memory
 
-Updated: 2026-05-25 20:20 CST
+Updated: 2026-05-25 20:51 CST
 
 ## Goal
 
@@ -218,15 +218,7 @@ End-to-end pipeline:
 
 Automation schedule:
 
-- One-time heartbeat: `resume-spotify-report-trial`, scheduled for 2026-05-25 15:05 Asia/Shanghai.
-  - First try to resume the 26-episode trial from episode 20.
-  - If Gemini quota is still blocked, stop retrying the trial and switch to Monday's newest RSS/transcript workflow.
-  - Generate the latest episode list, transcript audit, imported transcript status, evidence pack if possible, and Spotify transcript collection queue.
-  - Do not mark seen.
-- One-time cron: `evening-retry-spotify-trial`, scheduled for 2026-05-25 21:05 Asia/Shanghai.
-  - Retry the 26-episode trial if afternoon quota was still blocked.
-  - Run report review if the final Markdown is produced.
-  - Do not mark the trial batch seen unless user approves after review.
+- One-time heartbeat `resume-spotify-report-trial` and one-time cron `evening-retry-spotify-trial` are obsolete because the 26-episode trial batch completed and passed review.
 - Recurring cron: `spotify-mwf-podcast-report`, scheduled weekly Monday / Wednesday / Friday at 15:00 Asia/Shanghai.
   - Intended future cadence: every 2-3 days, expected around 10 episodes per report rather than 26.
   - This should usually fit Gemini free-tier constraints when chunked generation is used.
@@ -241,7 +233,13 @@ Run generated after marking the 26-episode trial batch seen:
 - Evidence pack: `data/runs/20260525-201553-evidence-pack.json`
 - Evidence report: `reports/markdown/20260525-201553-evidence-pack.md`
 - Spotify collection queue: `reports/markdown/20260525-201553-spotify-collection-queue.md`
-- Status: 8 new episodes, 0/8 transcripts matched, 8 missing.
+- Gemini input package: `data/gemini_inputs/20260525-201553/`
+- Gemini chunk briefs: `data/gemini_chunks/20260525-201553/`
+- Final Gemini report: `reports/markdown/20260525-201553-gemini-report.md`
+- Gemini review: `reports/markdown/20260525-201553-gemini-review.md`
+- Review JSON: `data/runs/20260525-201553-gemini-review.json`
+- Mark-seen manifest: `data/runs/20260525-205316-manifest.json`
+- Status: 8 new episodes, 8/8 transcripts matched, Gemini report generated, review `通过`, then marked seen/processed so the Wednesday run will not repeat them.
 
 Current Monday new episodes:
 
@@ -254,21 +252,16 @@ Current Monday new episodes:
 7. Lenny's Podcast: Product | Growth | Career — `The AI paradox: More automation, more humans, more work | Dan Shipper`
 8. The AI Daily Brief — `Why Agents Still Need Humans`
 
-Next action for Monday batch:
+Monday batch notes:
 
-- Open the queue links in `reports/markdown/20260525-201553-spotify-collection-queue.md` in Chrome.
-- Let the Spotify Transcript Downloader extension download all 8 JSON transcripts into `/Users/hannah/Downloads/Spotify Transcript Collector/`.
-- Then run:
-
-```bash
-/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py
-/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_evidence_pack.py data/runs/20260525-201553-manifest.json
-/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_spotify_collection_queue.py data/runs/20260525-201553-evidence-pack.json
-```
+- All 8 Spotify transcript JSON files were collected through the Chrome extension and imported into `data/transcripts/spotify/`.
+- Gemini `gemini-2.5-flash` generated 8 episode briefs and the final report successfully.
+- The first Gemini final report hallucinated leftover sections 9-26 from the earlier 26-episode trial. It was corrected by truncating the report to the real 8 sections, fixing two mistyped Spotify episode IDs, and rerunning `scripts/check_gemini_report.py`.
+- Final review conclusion is `通过`.
+- After the pass, `scripts/check_new_episodes.py --since-days 3 --mark-seen` was run and produced `data/runs/20260525-205316-manifest.json`.
 
 ## Next Practical Steps
 
-1. Collect/download the 8 missing Spotify transcripts for Monday batch `20260525-201553`.
-2. Rebuild the Monday evidence pack and verify transcript coverage.
-3. If all 8 transcripts are matched, build the Gemini input package, run chunked Gemini generation, and review the report.
-4. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
+1. Next scheduled run should collect new RSS episodes on Wednesday 2026-05-27 at 15:00 Asia/Shanghai.
+2. Keep using chunked `gemini-2.5-flash`; watch for final-summary hallucinations and always run `scripts/check_gemini_report.py`.
+3. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
