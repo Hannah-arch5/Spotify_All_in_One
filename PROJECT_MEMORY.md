@@ -134,6 +134,15 @@ Fixes applied after Antigravity's version:
 - Do not misclassify Spotify API `title: Speaker 1` blocks as transcript text. Treat them as speaker labels.
 - Accept visible timestamps like `0:16` and `1:24:37` in DOM/manual transcript parsing.
 
+Codex expansion updates (up to V2.1.9):
+
+- Added multi-language relative day-of-week parsing for episodes published within the last 7 days.
+- Restricted DOM date scanning exclusively to the main content area (stopping at H2 boundaries) to avoid recommendation leak.
+- Decoupled API Episode ID tracking directly from the intercepted URL to eliminate race conditions.
+- Added fast polling (200ms) and bypassed title check waits to trigger downloads almost instantly when DOM is ready.
+- Fixed string concatenation bugs and restricted year regex matching.
+- Embedded `debugLogs` array into the downloaded JSON payload for diagnostics.
+
 User needs to reload the unpacked extension in Chrome after code changes:
 
 - Open `chrome://extensions/`.
