@@ -297,23 +297,36 @@ Monday batch notes:
 - Both completed reports have passed local review:
   - `20260523-222300`: `通过`, 0 errors, 0 warnings.
   - `20260525-201553`: `通过`, 0 errors, 0 warnings.
-- PDF copies were rendered with `scripts/render_report_pdf.py`:
-  - `reports/pdf/20260523-222300-gemini-report.pdf`
-  - `reports/pdf/20260525-201553-gemini-report.pdf`
-- Zotero archive completed on 2026-05-26:
+- Corrected delivery files were rendered on 2026-05-26 with `scripts/render_delivery_reports.py`.
+  - Word:
+    - `reports/word/260523-Spotify播客情报研报-26集试跑.docx`
+    - `reports/word/260525-Spotify播客情报研报-8集周批次.docx`
+  - PDF:
+    - `reports/pdf/260523-Spotify播客情报研报-26集试跑.pdf`
+    - `reports/pdf/260525-Spotify播客情报研报-8集周批次.pdf`
+  - Format: landscape, two-column body layout, justified body text, each episode starts on a new page. Long episodes can spill past one page, but the layout is tuned to keep episodes compact.
+  - Structural QA confirmed landscape orientation, two-column sections, expected episode/page breaks, and extractable PDF text. Full DOCX page-image QA could not run because LibreOffice/`soffice` is not installed.
+- Zotero archive corrected on 2026-05-26:
   - Target collection: `1.Spotify情报汇总`.
-  - Items: `Spotify 播客情报研报 20260523-222300`, `Spotify 播客情报研报 20260525-201553`.
+  - Direct top-level PDF items, not child attachments under report parent items:
+    - `260523-Spotify播客情报研报-26集试跑`
+    - `260525-Spotify播客情报研报-8集周批次`
   - Tags: `unread`, `2605`.
-  - PDF attachments were stored in Zotero storage.
-  - Zotero database backup created before write: `/Users/hannah/Zotero/zotero.sqlite.backup-1779733077`.
+  - The earlier incorrect parent report items were removed.
+  - Zotero database backups created before writes:
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733077`
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733816`
 - Google Drive archive is still pending because the Google Drive connector failed to start with a `failed to get client` / `https://chatgpt.com/backend-api/wham/apps` transport error.
-  - Local retry package staged at `reports/archive/google-drive-pending/202605/`.
   - Target folder remains `1.Spotify情报汇总`.
+  - Word files staged at `reports/archive/pending/2605/google-drive/`.
+- Discord todo delivery is still pending because no Discord sending tool or webhook credential is available in this workspace session.
+  - PDF files and the suggested Discord message are staged at `reports/archive/pending/2605/discord-todo/` and `reports/archive/pending/2605/README.md`.
+- Recurring Monday/Wednesday/Friday 15:00 automation `spotify-mwf-podcast-report` was updated to include the corrected date-prefixed filename, landscape Word/PDF formatting, direct-PDF Zotero import, Google Drive Word upload, and Discord todo delivery requirements.
 
 ## Next Practical Steps
 
-1. Retry Google Drive upload for staged files in `reports/archive/google-drive-pending/202605/` when the connector is available.
-2. Next scheduled run should collect new RSS episodes on Wednesday 2026-05-27 at 15:00 Asia/Shanghai.
-3. Keep using chunked `gemini-2.5-flash`; watch for final-summary hallucinations and always run `scripts/check_gemini_report.py`.
-4. Reload the unpacked Chrome STD extension after plugin code changes if transcript capture behaves unexpectedly.
-5. Later: add Telegram sending.
+1. Retry Google Drive upload for staged Word files in `reports/archive/pending/2605/google-drive/` when the connector is available.
+2. Configure a Discord todo sender or provide a Discord webhook/channel integration, then send the staged PDFs and message from `reports/archive/pending/2605/`.
+3. Next scheduled run should collect new RSS episodes on Wednesday 2026-05-27 at 15:00 Asia/Shanghai.
+4. Keep using chunked `gemini-2.5-flash`; watch for final-summary hallucinations and always run `scripts/check_gemini_report.py`.
+5. Reload the unpacked Chrome STD extension after plugin code changes if transcript capture behaves unexpectedly.

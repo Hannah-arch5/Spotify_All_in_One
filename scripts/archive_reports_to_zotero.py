@@ -10,6 +10,7 @@ import sqlite3
 import string
 import time
 from pathlib import Path
+from typing import Iterable
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,20 +84,52 @@ def _run_date(run_id: str) -> str:
         return datetime.now().strftime("%Y-%m-%d")
 
 
-def _existing_item_id(connection: sqlite3.Connection, title: str, collection_id: int) -> int | None:
+def _existing_item_id(
+    connection: sqlite3.Connection,
+    title: str,
+    collection_id: int,
+    item_type_id: int | None = None,
+) -> int | None:
+    type_clause = "and i.itemTypeID = ?" if item_type_id is not None else ""
+    params: tuple[object, ...] = (FIELD_TITLE, collection_id, title)
+    if item_type_id is not None:
+        params = (FIELD_TITLE, collection_id, title, item_type_id)
     row = connection.execute(
-        """
+        f"""
         select i.itemID
         from items i
         join collectionItems ci on ci.itemID = i.itemID
         join itemData d on d.itemID = i.itemID and d.fieldID = ?
         join itemDataValues v on v.valueID = d.valueID
         where ci.collectionID = ? and v.value = ?
+        {type_clause}
         limit 1
         """,
-        (FIELD_TITLE, collection_id, title),
+        params,
     ).fetchone()
     return int(row[0]) if row else None
+
+
+def _delete_item_tree(connection: sqlite3.Connection, item_id: int) -> None:
+    child_rows = connection.execute(
+        "select itemID from itemAttachments where parentItemID = ?",
+        (item_id,),
+    ).fetchall()
+    for (child_id,) in child_rows:
+        _delete_item_tree(connection, int(child_id))
+    connection.execute("delete from items where itemID = ?", (item_id,))
+
+
+def remove_legacy_report_items(connection: sqlite3.Connection, collection_id: int, titles: Iterable[str]) -> list[str]:
+    removed: list[str] = []
+    for title in titles:
+        while True:
+            item_id = _existing_item_id(connection, title, collection_id, ITEM_TYPE_REPORT)
+            if item_id is None:
+                break
+            _delete_item_tree(connection, item_id)
+            removed.append(f"removed_legacy_report={item_id} title={title}")
+    return removed
 
 
 def archive_report(
@@ -150,15 +183,67 @@ def archive_report(
     return f"archived item={item_id} attachment={attachment_id} title={title}"
 
 
+def archive_pdf_direct(
+    connection: sqlite3.Connection,
+    storage_dir: Path,
+    collection_id: int,
+    library_id: int,
+    pdf_path: Path,
+    title: str,
+    report_date: str,
+    tags: list[str],
+    replace_existing: bool,
+) -> str:
+    existing = _existing_item_id(connection, title, collection_id, ITEM_TYPE_ATTACHMENT)
+    if existing and not replace_existing:
+        return f"skipped_existing={existing} title={title}"
+    while existing:
+        _delete_item_tree(connection, existing)
+        existing = _existing_item_id(connection, title, collection_id, ITEM_TYPE_ATTACHMENT)
+
+    attachment_id, attachment_key = _new_item(connection, library_id, ITEM_TYPE_ATTACHMENT)
+    attachment_dir = storage_dir / attachment_key
+    attachment_dir.mkdir(parents=True, exist_ok=False)
+    target_pdf = attachment_dir / pdf_path.name
+    shutil.copy2(pdf_path, target_pdf)
+    pdf_bytes = target_pdf.read_bytes()
+    connection.execute(
+        """
+        insert into itemAttachments(
+            itemID, parentItemID, linkMode, contentType, path, syncState, storageModTime, storageHash
+        ) values (?, null, ?, ?, ?, 0, ?, ?)
+        """,
+        (
+            attachment_id,
+            LINK_MODE_IMPORTED_FILE,
+            "application/pdf",
+            f"storage:{target_pdf.name}",
+            int(target_pdf.stat().st_mtime * 1000),
+            hashlib.md5(pdf_bytes).hexdigest(),
+        ),
+    )
+    _set_field(connection, attachment_id, FIELD_TITLE, title)
+    _set_field(connection, attachment_id, FIELD_DATE, report_date)
+    _set_field(connection, attachment_id, FIELD_LANGUAGE, "zh-CN")
+    connection.execute("insert or ignore into collectionItems(collectionID, itemID) values (?, ?)", (collection_id, attachment_id))
+    for tag in tags:
+        connection.execute("insert or ignore into itemTags(itemID, tagID, type) values (?, ?, 0)", (attachment_id, _tag_id(connection, tag)))
+    return f"archived_direct_pdf={attachment_id} title={title}"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Archive generated podcast reports into local Zotero.")
     parser.add_argument("reports", nargs="+", type=Path, help="Markdown report paths.")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB)
     parser.add_argument("--storage-dir", type=Path, default=DEFAULT_STORAGE)
     parser.add_argument("--collection", default=DEFAULT_COLLECTION)
-    parser.add_argument("--tag", action="append", default=["unread", "2605"])
+    parser.add_argument("--tag", action="append", default=None)
     parser.add_argument("--backup", action="store_true")
+    parser.add_argument("--direct-pdf", action="store_true", help="Create top-level PDF attachment items directly in the collection.")
+    parser.add_argument("--replace-existing", action="store_true")
+    parser.add_argument("--remove-legacy-report-items", action="store_true")
     args = parser.parse_args()
+    tags = args.tag or ["unread", "2605"]
 
     if args.backup:
         backup_path = args.db.with_suffix(f".sqlite.backup-{int(time.time())}")
@@ -175,13 +260,32 @@ def main() -> None:
         if row is None:
             raise SystemExit(f"Zotero collection not found: {args.collection}")
         collection_id, library_id = int(row[0]), int(row[1])
+        if args.remove_legacy_report_items:
+            legacy_titles = [
+                f"Spotify 播客情报研报 {path.stem.replace('-gemini-report', '')}"
+                for path in args.reports
+            ]
+            for message in remove_legacy_report_items(connection, collection_id, legacy_titles):
+                print(message)
         for markdown_path in args.reports:
-            pdf_path = ROOT / "reports" / "pdf" / f"{markdown_path.stem}.pdf"
             if not markdown_path.exists():
                 raise SystemExit(f"Missing Markdown report: {markdown_path}")
+            run_id = markdown_path.stem.replace("-gemini-report", "")
+            if args.direct_pdf:
+                short = datetime.strptime(run_id[:8], "%Y%m%d").strftime("%y%m%d")
+                count = len(markdown_path.read_text(encoding="utf-8").split("#### 情报 ")) - 1
+                suffix = "26集试跑" if count == 26 else f"{count}集周批次"
+                pdf_path = ROOT / "reports" / "pdf" / f"{short}-Spotify播客情报研报-{suffix}.pdf"
+                title = pdf_path.stem
+                report_date = _run_date(run_id)
+                if not pdf_path.exists():
+                    raise SystemExit(f"Missing PDF report: {pdf_path}")
+                print(archive_pdf_direct(connection, args.storage_dir, collection_id, library_id, pdf_path, title, report_date, tags, args.replace_existing))
+                continue
+            pdf_path = ROOT / "reports" / "pdf" / f"{markdown_path.stem}.pdf"
             if not pdf_path.exists():
                 raise SystemExit(f"Missing PDF report: {pdf_path}")
-            print(archive_report(connection, args.storage_dir, collection_id, library_id, markdown_path, pdf_path, args.tag))
+            print(archive_report(connection, args.storage_dir, collection_id, library_id, markdown_path, pdf_path, tags))
         connection.commit()
     finally:
         connection.close()

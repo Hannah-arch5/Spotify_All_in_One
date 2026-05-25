@@ -10,6 +10,8 @@ data/state.sqlite
 data/transcripts/
 reports/markdown/
 reports/html/
+reports/word/
 reports/pdf/
+reports/qa/
 reports/archive/
 vendor/python/
