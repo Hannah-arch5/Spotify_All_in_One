@@ -243,6 +243,7 @@ Automation schedule:
   - Intended future cadence: every 2-3 days, expected around 10 episodes per report rather than 26.
   - This should usually fit Gemini free-tier constraints when chunked generation is used.
   - Updated on 2026-05-26 to prefer the verified `scripts/run_report_pipeline.py --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70 --cleanup-transcripts-on-pass --mark-seen-on-pass` command.
+  - Updated again on 2026-05-26 so passing reports must be rendered to PDF, archived into Zotero, and uploaded/staged for Google Drive before the run is considered complete.
 
 GitHub publishing preferences:
 
