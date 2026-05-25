@@ -11,4 +11,5 @@ data/transcripts/
 reports/markdown/
 reports/html/
 reports/pdf/
+reports/archive/
 vendor/python/

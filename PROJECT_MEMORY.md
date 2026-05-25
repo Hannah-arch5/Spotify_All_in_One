@@ -291,7 +291,28 @@ Monday batch notes:
 
 ## Next Practical Steps
 
-1. Next scheduled run should collect new RSS episodes on Wednesday 2026-05-27 at 15:00 Asia/Shanghai.
-2. Keep using chunked `gemini-2.5-flash`; watch for final-summary hallucinations and always run `scripts/check_gemini_report.py`.
-3. Reload the unpacked Chrome STD extension after plugin code changes if transcript capture behaves unexpectedly.
-4. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
+## Archive Status
+
+- Both completed reports have passed local review:
+  - `20260523-222300`: `通过`, 0 errors, 0 warnings.
+  - `20260525-201553`: `通过`, 0 errors, 0 warnings.
+- PDF copies were rendered with `scripts/render_report_pdf.py`:
+  - `reports/pdf/20260523-222300-gemini-report.pdf`
+  - `reports/pdf/20260525-201553-gemini-report.pdf`
+- Zotero archive completed on 2026-05-26:
+  - Target collection: `1.Spotify情报汇总`.
+  - Items: `Spotify 播客情报研报 20260523-222300`, `Spotify 播客情报研报 20260525-201553`.
+  - Tags: `unread`, `2605`.
+  - PDF attachments were stored in Zotero storage.
+  - Zotero database backup created before write: `/Users/hannah/Zotero/zotero.sqlite.backup-1779733077`.
+- Google Drive archive is still pending because the Google Drive connector failed to start with a `failed to get client` / `https://chatgpt.com/backend-api/wham/apps` transport error.
+  - Local retry package staged at `reports/archive/google-drive-pending/202605/`.
+  - Target folder remains `1.Spotify情报汇总`.
+
+## Next Practical Steps
+
+1. Retry Google Drive upload for staged files in `reports/archive/google-drive-pending/202605/` when the connector is available.
+2. Next scheduled run should collect new RSS episodes on Wednesday 2026-05-27 at 15:00 Asia/Shanghai.
+3. Keep using chunked `gemini-2.5-flash`; watch for final-summary hallucinations and always run `scripts/check_gemini_report.py`.
+4. Reload the unpacked Chrome STD extension after plugin code changes if transcript capture behaves unexpectedly.
+5. Later: add Telegram sending.
