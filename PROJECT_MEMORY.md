@@ -1,6 +1,6 @@
 # Project Memory
 
-Updated: 2026-05-25 20:51 CST
+Updated: 2026-05-26 CST
 
 ## Goal
 
@@ -225,14 +225,24 @@ End-to-end pipeline:
 - Script: `scripts/run_report_pipeline.py`
 - It runs RSS check, readable episode list, transcript audit/import, evidence pack, Spotify collection queue, Gemini input package, Gemini generation, and Gemini report review.
 - It stops with `blocked_missing_transcripts` if any transcript is missing.
+- It returns `blocked_gemini_generation` instead of crashing if Gemini quota/API generation stops mid-run; check `data/gemini_chunks/<run_id>/STATUS.json` when present and rerun later because chunked generation resumes existing briefs.
+- Default Gemini mode is now chunked generation with `gemini-2.5-flash`, matching the workflow that succeeded for the 26-episode trial and the Monday batch.
 - Optional `--mark-seen-on-pass` marks episodes seen only after the generated report review conclusion is `通过`.
+- Optional `--cleanup-transcripts-on-pass` removes Downloads transcript JSON files only after the report review conclusion is `通过`, using `scripts/import_spotify_transcripts.py --move` to verify archived copies first.
+
+Preferred automation command:
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --since-days 3 --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70 --cleanup-transcripts-on-pass --mark-seen-on-pass
+```
 
 Automation schedule:
 
-- One-time heartbeat `resume-spotify-report-trial` and one-time cron `evening-retry-spotify-trial` are obsolete because the 26-episode trial batch completed and passed review.
+- One-time heartbeat `resume-spotify-report-trial` and one-time cron `evening-retry-spotify-trial` were deleted on 2026-05-26 because the 26-episode trial batch completed and passed review.
 - Recurring cron: `spotify-mwf-podcast-report`, scheduled weekly Monday / Wednesday / Friday at 15:00 Asia/Shanghai.
   - Intended future cadence: every 2-3 days, expected around 10 episodes per report rather than 26.
   - This should usually fit Gemini free-tier constraints when chunked generation is used.
+  - Updated on 2026-05-26 to prefer the verified `scripts/run_report_pipeline.py --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70 --cleanup-transcripts-on-pass --mark-seen-on-pass` command.
 
 GitHub publishing preferences:
 
@@ -283,4 +293,5 @@ Monday batch notes:
 
 1. Next scheduled run should collect new RSS episodes on Wednesday 2026-05-27 at 15:00 Asia/Shanghai.
 2. Keep using chunked `gemini-2.5-flash`; watch for final-summary hallucinations and always run `scripts/check_gemini_report.py`.
-3. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.
+3. Reload the unpacked Chrome STD extension after plugin code changes if transcript capture behaves unexpectedly.
+4. Later: add Google Drive export, Zotero import/tagging, PDF formatting, and Telegram sending.

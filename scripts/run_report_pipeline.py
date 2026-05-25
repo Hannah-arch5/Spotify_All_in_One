@@ -12,15 +12,26 @@ ROOT = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 
 
+class PipelineStepError(RuntimeError):
+    def __init__(self, args: list[str], returncode: int, stdout: str, stderr: str):
+        self.args_list = args
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        super().__init__(f"{' '.join(args)} failed with exit code {returncode}")
+
+
 def _run(args: list[str]) -> str:
     completed = subprocess.run(
         [PYTHON, *args],
         cwd=ROOT,
-        check=True,
+        check=False,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+    if completed.returncode:
+        raise PipelineStepError(args, completed.returncode, completed.stdout.strip(), completed.stderr.strip())
     if completed.stderr.strip():
         print(completed.stderr.strip())
     return completed.stdout.strip()
@@ -81,33 +92,60 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
     package_dir = Path(_last_line(_run(["scripts/build_gemini_input_package.py", str(evidence_pack)])))
     outputs["gemini_package"] = str(package_dir)
 
-    generate_args = [
-        "scripts/generate_gemini_report.py",
-        "--package-dir",
-        str(package_dir),
-        "--model",
-        args.model,
-    ]
     if args.dry_run:
-        generate_args.append("--dry-run")
-    report_path = Path(_last_line(_run(generate_args)))
+        outputs["status"] = "dry_run_ready_for_gemini"
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+        return outputs
+
+    if args.gemini_mode == "single":
+        generate_args = [
+            "scripts/generate_gemini_report.py",
+            "--package-dir",
+            str(package_dir),
+            "--model",
+            args.model,
+        ]
+    else:
+        generate_args = [
+            "scripts/generate_chunked_gemini_report.py",
+            "--package-dir",
+            str(package_dir),
+            "--model",
+            args.model,
+            "--sleep-seconds",
+            str(args.sleep_seconds),
+            "--timeout",
+            str(args.timeout),
+        ]
+    try:
+        report_path = Path(_last_line(_run(generate_args)))
+    except PipelineStepError as exc:
+        outputs["status"] = "blocked_gemini_generation"
+        outputs["gemini_error"] = (exc.stderr or exc.stdout or str(exc))[:1200]
+        status_path = ROOT / "data" / "gemini_chunks" / package_dir.name / "STATUS.json"
+        if status_path.exists():
+            outputs["gemini_status"] = str(status_path)
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+        return outputs
     outputs["gemini_report"] = str(report_path)
 
-    if not args.dry_run:
-        review_stdout = _last_line(
-            _run(
-                [
-                    "scripts/check_gemini_report.py",
-                    str(report_path),
-                    "--manifest",
-                    str(package_dir / "episode-manifest.json"),
-                    "--evidence",
-                    str(package_dir / "transcript-evidence-full.json"),
-                ]
-            )
+    review_stdout = _last_line(
+        _run(
+            [
+                "scripts/check_gemini_report.py",
+                str(report_path),
+                "--manifest",
+                str(package_dir / "episode-manifest.json"),
+                "--evidence",
+                str(package_dir / "transcript-evidence-full.json"),
+            ]
         )
-        outputs["review_conclusion"] = review_stdout
-        if args.mark_seen_on_pass and review_stdout == "通过":
+    )
+    outputs["review_conclusion"] = review_stdout
+    if review_stdout == "通过":
+        if args.cleanup_transcripts_on_pass:
+            outputs["transcript_cleanup"] = _last_line(_run(["scripts/import_spotify_transcripts.py", "--move"]))
+        if args.mark_seen_on_pass:
             outputs["marked_seen_manifest"] = _last_line(
                 _run(
                     [
@@ -127,8 +165,16 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the podcast report pipeline end to end.")
     parser.add_argument("--since-days", type=int, default=3)
-    parser.add_argument("--model", default="gemini-2.5-pro")
+    parser.add_argument("--model", default="gemini-2.5-flash")
+    parser.add_argument("--gemini-mode", choices=["chunked", "single"], default="chunked")
+    parser.add_argument("--sleep-seconds", type=int, default=70)
+    parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--move-imported-transcripts", action="store_true")
+    parser.add_argument(
+        "--cleanup-transcripts-on-pass",
+        action="store_true",
+        help="After a passing report review, remove Downloads transcript JSON files already archived in the project.",
+    )
     parser.add_argument("--mark-seen-on-pass", action="store_true")
     parser.add_argument("--dry-run", action="store_true", help="Build inputs and prompt preview without calling Gemini.")
     args = parser.parse_args()
