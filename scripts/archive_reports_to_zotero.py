@@ -50,6 +50,7 @@ def _set_field(connection: sqlite3.Connection, item_id: int, field_id: int, valu
 
 
 def _tag_id(connection: sqlite3.Connection, tag: str) -> int:
+    tag = tag if tag.startswith("/") else f"/{tag}"
     connection.execute("insert or ignore into tags(name) values (?)", (tag,))
     row = connection.execute("select tagID from tags where name = ?", (tag,)).fetchone()
     if row is None:
@@ -277,7 +278,7 @@ def main() -> None:
     parser.add_argument("--replace-existing", action="store_true")
     parser.add_argument("--remove-legacy-report-items", action="store_true")
     args = parser.parse_args()
-    tags = args.tag or ["unread", "2605"]
+    tags = [tag if tag.startswith("/") else f"/{tag}" for tag in (args.tag or ["/unread", "/2605"])]
 
     if args.backup:
         backup_path = args.db.with_suffix(f".sqlite.backup-{int(time.time())}")

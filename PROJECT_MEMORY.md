@@ -305,7 +305,8 @@ Monday batch notes:
   - PDF:
     - `reports/pdf/260523-Spotify播客情报研报.pdf`
     - `reports/pdf/260525-Spotify播客情报研报.pdf`
-  - Format: landscape Letter, 1 inch margins, single-column body layout matching the reference Word file `/Users/hannah/Downloads/科技播客情报分析报告.docx`, black bold enlarged headings, no colored heading treatment, justified body text, inline bold keywords preserved, and no visible run/source metadata line.
+  - Format: landscape Letter, 1 inch margins, single-column body layout matching the reference Word file `/Users/hannah/Downloads/科技播客情报分析报告.docx`. The Word output uses the reference DOCX as a template, keeps `Google Sans` direct run fonts, Heading 1/2/3 title hierarchy, black headings, no colored heading treatment, inline bold keywords preserved, and no visible run/source metadata line.
+  - Do not introduce bullet-dot symbols (`•`) when the reference Word style does not use them; Markdown `-` lines are rendered as normal paragraphs with bold labels instead.
   - Pagination rule: do not force every episode onto a fresh page. Parts and episodes should flow continuously to avoid large blank areas, but every part/episode/topic/insight title must stay with its following body. If a title would land near the bottom of a page with no meaningful body text, start it on the next page.
   - Current continuous-layout PDF page counts after this fix: `260525` is 16 pages, `260523` is 44 pages. Automated text checks found 0 page endings where a title was stranded at the bottom.
   - The `第二部分` heading is kept with `情报 1`, not left behind at the end of the summary.
@@ -319,7 +320,7 @@ Monday batch notes:
   - Direct top-level PDF items, not child attachments under report parent items:
     - `260523-Spotify播客情报研报`
     - `260525-Spotify播客情报研报`
-  - Tags: `unread`, `2605`.
+  - Tags must include the leading slash: `/unread`, `/2605` (and future month tags as `/YYMM`). `scripts/archive_reports_to_zotero.py` now normalizes tag inputs to include `/`.
   - The earlier incorrect parent report items and wrong suffix-named direct PDF items were removed.
   - On 2026-05-26, Zotero direct PDF items were replaced again after the complete five-part `260525` report and reference-matched formatting were regenerated.
   - On 2026-05-26, Zotero direct PDF items were replaced again after the continuous pagination/no-orphan-heading fix.
@@ -330,6 +331,7 @@ Monday batch notes:
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779765281`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779765613`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779766254`
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779766700`
 - Google Drive archive is still pending because the Google Drive connector failed to start with a `failed to get client` / `https://chatgpt.com/backend-api/wham/apps` transport error.
   - Target folder remains `1.Spotify情报汇总`.
   - Word files staged at `reports/archive/pending/2605/google-drive/`.

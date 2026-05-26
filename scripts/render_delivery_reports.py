@@ -26,6 +26,8 @@ from reportlab.platypus import CondPageBreak, KeepTogether, Paragraph, SimpleDoc
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FONT = "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
+REFERENCE_DOCX = Path("/Users/hannah/Downloads/科技播客情报分析报告.docx")
+DOCX_FONT = "Google Sans"
 
 
 @dataclass
@@ -134,11 +136,11 @@ def paragraph_role(line: str) -> tuple[str, str]:
     if stripped.startswith("### "):
         return "h3", clean_inline(stripped[4:])
     if stripped.startswith("- "):
-        return "bullet", clean_inline(stripped[2:])
+        return "body", clean_inline(stripped[2:])
     if stripped.startswith("* "):
-        return "bullet", clean_inline(stripped[2:])
+        return "body", clean_inline(stripped[2:])
     if re.match(r"^\d+\.\s+", stripped):
-        return "number", clean_inline(stripped)
+        return "body", clean_inline(stripped)
     return "body", clean_inline(stripped)
 
 
@@ -171,13 +173,12 @@ def add_page_number_footer(section) -> None:
 def add_docx_paragraph(doc: Document, role: str, text: str) -> None:
     if role == "blank":
         return
+    style_names = {style.name for style in doc.styles if style.name}
     style = {
         "h1": "Heading 1",
         "h2": "Heading 2",
         "h3": "Heading 3",
-        "bullet": "List Bullet",
-        "number": "List Number",
-    }.get(role, "Body Text")
+    }.get(role, "Body Text" if "Body Text" in style_names else "normal")
     paragraph = doc.add_paragraph(style=style)
     paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY if role == "body" else WD_ALIGN_PARAGRAPH.LEFT
     if role in {"h1", "h2", "h3"}:
@@ -187,8 +188,19 @@ def add_docx_paragraph(doc: Document, role: str, text: str) -> None:
     for run_text, bold in runs:
         run = paragraph.add_run(run_text)
         run.bold = bold
-        run.font.name = "Arial"
-        run._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
+        run.font.name = DOCX_FONT
+        run._element.rPr.rFonts.set(qn("w:eastAsia"), DOCX_FONT)
+
+
+def template_document() -> Document:
+    doc = Document(REFERENCE_DOCX) if REFERENCE_DOCX.exists() else Document()
+    body = doc._body._element
+    sect_pr = body.sectPr
+    for child in list(body):
+        if child is sect_pr:
+            continue
+        body.remove(child)
+    return doc
 
 
 def build_docx(markdown_path: Path, out_path: Path) -> None:
@@ -196,7 +208,7 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
     markdown = markdown_path.read_text(encoding="utf-8")
     title, intro, second_part_heading, episodes = split_report(markdown)
 
-    doc = Document()
+    doc = template_document()
     section = doc.sections[0]
     section.orientation = WD_ORIENT.LANDSCAPE
     section.page_width, section.page_height = section.page_height, section.page_width
@@ -208,35 +220,34 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
     add_page_number_footer(section)
 
     styles = doc.styles
-    for name in ("Normal", "Body Text", "List Bullet", "List Number"):
+    for name in ("Normal", "normal", "Body Text", "List Bullet", "List Number"):
+        if name not in [style.name for style in styles]:
+            continue
         style = styles[name]
-        style.font.name = "Arial"
-        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
+        style.font.name = DOCX_FONT
+        style._element.rPr.rFonts.set(qn("w:eastAsia"), DOCX_FONT)
         style.font.size = Pt(11)
-        style.paragraph_format.space_after = Pt(0)
-        style.paragraph_format.line_spacing = None
+        style.paragraph_format.space_after = Pt(3.75)
+        style.paragraph_format.line_spacing = 1.15
     for name, size, color in (
         ("Heading 1", 24, RGBColor(0, 0, 0)),
         ("Heading 2", 18, RGBColor(0, 0, 0)),
         ("Heading 3", 14, RGBColor(0, 0, 0)),
     ):
         style = styles[name]
-        style.font.name = "Arial"
-        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
+        style.font.name = DOCX_FONT
+        style._element.rPr.rFonts.set(qn("w:eastAsia"), DOCX_FONT)
         style.font.size = Pt(size)
         style.font.bold = True
         style.font.color.rgb = color
         style.paragraph_format.space_before = Pt(12)
         style.paragraph_format.space_after = Pt(12 if name != "Heading 2" else 11.25)
 
-    p = doc.add_paragraph()
+    p = doc.add_paragraph(style="Heading 1")
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     r = p.add_run(delivery_name(markdown_path))
-    r.bold = True
-    r.font.name = "Arial"
-    r._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
-    r.font.size = Pt(24)
-    r.font.color.rgb = RGBColor(0, 0, 0)
+    r.font.name = DOCX_FONT
+    r._element.rPr.rFonts.set(qn("w:eastAsia"), DOCX_FONT)
     for line in intro:
         add_docx_paragraph(doc, *paragraph_role(line))
 
@@ -356,10 +367,6 @@ def draw_page(canvas, doc) -> None:
 def pdf_paragraph(style_map: dict[str, ParagraphStyle], role: str, text: str) -> Paragraph | Spacer:
     if role == "blank":
         return Spacer(1, 4)
-    if role == "bullet":
-        return Paragraph("• " + pdf_inline(label_bold_runs(text)), style_map["bullet"])
-    if role == "number":
-        return Paragraph(pdf_inline(label_bold_runs(text)), style_map["bullet"])
     if role == "body":
         return Paragraph(pdf_inline(label_bold_runs(text)), style_map["body"])
     paragraph = Paragraph(pdf_escape(text), style_map.get(role, style_map["body"]))
