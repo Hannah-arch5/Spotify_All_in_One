@@ -202,7 +202,7 @@ def _write_prompt(path: Path, manifest_name: str, evidence_name: str) -> None:
         "",
         "- 第二部分必须严格覆盖 Manifest 中的全部 episode，数量和顺序完全一致。",
         "- 有 Spotify transcript 的 episode，必须从 transcript 的 `segments` 或 `plain_text` 中取证。",
-        "- 关键金句和证据锚点必须带时间戳。",
+        "- 关键金句/结论只保留有意义的句子和中文解释，不要写时间戳、Speaker 1、发言者 1 或 Timestamp；时间戳只放在证据锚点。",
         "- 背景资料可以用于解释意义，但不得写成播客嘉宾原话。",
         "- 输出完成后，先按复查清单自检，再给出最终研报。",
         "",

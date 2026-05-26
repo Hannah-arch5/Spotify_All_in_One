@@ -309,6 +309,8 @@ Monday batch notes:
   - The `第二部分` heading is kept on the same page/block as `情报 1`, not left behind at the end of the summary.
   - On 2026-05-26, the `260525` report was found to be missing 第三/四/五部分 in the source Markdown. It was manually completed from the already-reviewed 8 episode briefs, then re-reviewed.
   - `scripts/check_gemini_report.py` now fails reports that lack any required top-level part from 第一部分 through 第五部分.
+  - The `关键金句/结论` section must contain only meaningful quote/conclusion sentences and Chinese explanation. It must not include timestamps, `Timestamp`, `Speaker 1`, `发言者 1`, or similar evidence markers; those belong only in `证据锚点`.
+  - `scripts/clean_key_quote_blocks.py` removes those markers from key quote blocks, and `scripts/check_gemini_report.py` fails future reports if they reappear.
   - Structural QA confirmed landscape orientation, single-column sections, required five-part structure, first-episode section placement, and extractable PDF text. Full DOCX page-image QA could not run because LibreOffice/`soffice` is not installed.
 - Zotero archive corrected on 2026-05-26:
   - Target collection: `1.Spotify情报汇总`.

@@ -117,7 +117,7 @@ def _episode_prompt(run_id: str, episode: dict[str, Any]) -> str:
 - Transcript 来源：Spotify transcript
 - 核心内容摘要：约 600 字，必须来自 transcript。
 - 情报价值点：约 150-250 字。
-- 关键金句 / 结论：2 条，必须包含英文原文或接近原文、中文翻译、timestamp。
+- 关键金句 / 结论：2 条，必须包含英文原文或接近原文、中文翻译或解释；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
 - 证据锚点：至少 3 个 timestamp + 简短证据说明。
 
 Manifest JSON:

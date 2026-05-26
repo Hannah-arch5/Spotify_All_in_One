@@ -128,6 +128,7 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
         print(json.dumps(outputs, ensure_ascii=False, indent=2))
         return outputs
     outputs["gemini_report"] = str(report_path)
+    outputs["key_quote_cleanup"] = _last_line(_run(["scripts/clean_key_quote_blocks.py", str(report_path)]))
 
     review_stdout = _last_line(
         _run(

@@ -30,6 +30,10 @@ KEY_QUOTE_BLOCK_RE = re.compile(
     r"关键金句\s*/\s*结论[：:](.*?)(?:\n-\s*证据锚点[：:]|\n证据锚点[：:]|\Z)",
     re.DOTALL,
 )
+KEY_QUOTE_FORBIDDEN_RE = re.compile(
+    r"(?:Timestamp\s*:|\bSpeaker\s*\d+\b|发言者\s*\d+|\[\d{1,2}:\d{2}(?::\d{2})?\]|\(\d{1,2}:\d{2}(?::\d{2})?\)|（\d{1,2}:\d{2}(?::\d{2})?）)",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -98,13 +102,21 @@ def _episode_transcript_text(evidence: dict[str, Any] | None, index: int) -> str
 
 def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> list[Finding]:
     findings: list[Finding] = []
-    if not transcript_text:
-        return findings
-    normalized_transcript = _normalize(transcript_text)
     block_match = KEY_QUOTE_BLOCK_RE.search(section["body"])
     if not block_match:
         return findings
     quote_block = block_match.group(1)
+    forbidden = KEY_QUOTE_FORBIDDEN_RE.search(quote_block)
+    if forbidden:
+        findings.append(
+            Finding(
+                "error",
+                f"情报 {section['number']} 的关键金句/结论含有时间戳或 Speaker 标记：{forbidden.group(0)}",
+            )
+        )
+    if not transcript_text:
+        return findings
+    normalized_transcript = _normalize(transcript_text)
     for raw_quote in QUOTE_CANDIDATE_RE.findall(quote_block):
         quote = raw_quote.strip()
         # Only police likely direct English transcript quotes. Chinese translations and short labels are too noisy.
