@@ -21,7 +21,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import CondPageBreak, KeepTogether, Paragraph, SimpleDocTemplate, Spacer
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -180,6 +180,9 @@ def add_docx_paragraph(doc: Document, role: str, text: str) -> None:
     }.get(role, "Body Text")
     paragraph = doc.add_paragraph(style=style)
     paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY if role == "body" else WD_ALIGN_PARAGRAPH.LEFT
+    if role in {"h1", "h2", "h3"}:
+        paragraph.paragraph_format.keep_with_next = True
+        paragraph.paragraph_format.keep_together = True
     runs = label_bold_runs(text) if role in {"body", "bullet", "number"} else [(text, False)]
     for run_text, bold in runs:
         run = paragraph.add_run(run_text)
@@ -238,7 +241,6 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
         add_docx_paragraph(doc, *paragraph_role(line))
 
     for index, episode in enumerate(episodes):
-        doc.add_page_break()
         if index == 0 and second_part_heading:
             add_docx_paragraph(doc, "h2", second_part_heading)
         add_docx_paragraph(doc, "h3", episode.title)
@@ -289,6 +291,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             textColor=colors.black,
             spaceBefore=3,
             spaceAfter=5,
+            keepWithNext=1,
             wordWrap="CJK",
         ),
         "h2": ParagraphStyle(
@@ -300,6 +303,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             textColor=colors.black,
             spaceBefore=3,
             spaceAfter=4,
+            keepWithNext=1,
             wordWrap="CJK",
         ),
         "h3": ParagraphStyle(
@@ -311,6 +315,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             textColor=colors.black,
             spaceBefore=3,
             spaceAfter=4,
+            keepWithNext=1,
             wordWrap="CJK",
         ),
         "body": ParagraphStyle(
@@ -357,7 +362,34 @@ def pdf_paragraph(style_map: dict[str, ParagraphStyle], role: str, text: str) ->
         return Paragraph(pdf_inline(label_bold_runs(text)), style_map["bullet"])
     if role == "body":
         return Paragraph(pdf_inline(label_bold_runs(text)), style_map["body"])
-    return Paragraph(pdf_escape(text), style_map.get(role, style_map["body"]))
+    paragraph = Paragraph(pdf_escape(text), style_map.get(role, style_map["body"]))
+    if role in {"h1", "h2", "h3"}:
+        paragraph.keepWithNext = 1
+    return paragraph
+
+
+def grouped_pdf_flowables(flowables: list[tuple[str, object]]) -> list[object]:
+    grouped: list[object] = []
+    index = 0
+    heading_roles = {"h1", "h2", "h3"}
+    while index < len(flowables):
+        role, flowable = flowables[index]
+        if role not in heading_roles:
+            grouped.append(flowable)
+            index += 1
+            continue
+
+        block = [flowable]
+        index += 1
+        while index < len(flowables) and flowables[index][0] in heading_roles:
+            block.append(flowables[index][1])
+            index += 1
+        if index < len(flowables):
+            block.append(flowables[index][1])
+            index += 1
+        grouped.append(CondPageBreak(6.2 * cm))
+        grouped.append(KeepTogether(block))
+    return grouped
 
 
 def pdf_escape(text: str) -> str:
@@ -384,15 +416,26 @@ def build_pdf(markdown_path: Path, out_path: Path, font_path: str) -> None:
         bottomMargin=2.54 * cm,
     )
     story: list = [Paragraph(delivery_name(markdown_path), styles["title"])]
+    flowables: list[tuple[str, object]] = []
     for line in intro:
-        story.append(pdf_paragraph(styles, *paragraph_role(line)))
+        role, text = paragraph_role(line)
+        if role == "blank":
+            continue
+        flowables.append((role, pdf_paragraph(styles, role, text)))
     for index, episode in enumerate(episodes):
-        story.append(PageBreak())
         if index == 0 and second_part_heading:
-            story.append(Paragraph(second_part_heading, styles["h2"]))
-        story.append(Paragraph(episode.title, styles["h3"]))
+            heading = Paragraph(second_part_heading, styles["h2"])
+            heading.keepWithNext = 1
+            flowables.append(("h2", heading))
+        heading = Paragraph(episode.title, styles["h3"])
+        heading.keepWithNext = 1
+        flowables.append(("h3", heading))
         for line in episode.lines:
-            story.append(pdf_paragraph(styles, *paragraph_role(line)))
+            role, text = paragraph_role(line)
+            if role == "blank":
+                continue
+            flowables.append((role, pdf_paragraph(styles, role, text)))
+    story.extend(grouped_pdf_flowables(flowables))
     doc.build(story, onFirstPage=draw_page, onLaterPages=draw_page)
 
 

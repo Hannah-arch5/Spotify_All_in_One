@@ -306,7 +306,9 @@ Monday batch notes:
     - `reports/pdf/260523-Spotify播客情报研报.pdf`
     - `reports/pdf/260525-Spotify播客情报研报.pdf`
   - Format: landscape Letter, 1 inch margins, single-column body layout matching the reference Word file `/Users/hannah/Downloads/科技播客情报分析报告.docx`, black bold enlarged headings, no colored heading treatment, justified body text, inline bold keywords preserved, and no visible run/source metadata line.
-  - The `第二部分` heading is kept on the same page/block as `情报 1`, not left behind at the end of the summary.
+  - Pagination rule: do not force every episode onto a fresh page. Parts and episodes should flow continuously to avoid large blank areas, but every part/episode/topic/insight title must stay with its following body. If a title would land near the bottom of a page with no meaningful body text, start it on the next page.
+  - Current continuous-layout PDF page counts after this fix: `260525` is 16 pages, `260523` is 44 pages. Automated text checks found 0 page endings where a title was stranded at the bottom.
+  - The `第二部分` heading is kept with `情报 1`, not left behind at the end of the summary.
   - On 2026-05-26, the `260525` report was found to be missing 第三/四/五部分 in the source Markdown. It was manually completed from the already-reviewed 8 episode briefs, then re-reviewed.
   - `scripts/check_gemini_report.py` now fails reports that lack any required top-level part from 第一部分 through 第五部分.
   - The `关键金句/结论` section must contain only meaningful quote/conclusion sentences and Chinese explanation. It must not include timestamps, `Timestamp`, `Speaker 1`, `发言者 1`, or similar evidence markers; those belong only in `证据锚点`.
@@ -320,11 +322,14 @@ Monday batch notes:
   - Tags: `unread`, `2605`.
   - The earlier incorrect parent report items and wrong suffix-named direct PDF items were removed.
   - On 2026-05-26, Zotero direct PDF items were replaced again after the complete five-part `260525` report and reference-matched formatting were regenerated.
+  - On 2026-05-26, Zotero direct PDF items were replaced again after the continuous pagination/no-orphan-heading fix.
   - Zotero database backups created before writes:
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733077`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733816`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779734613`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779765281`
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779765613`
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779766254`
 - Google Drive archive is still pending because the Google Drive connector failed to start with a `failed to get client` / `https://chatgpt.com/backend-api/wham/apps` transport error.
   - Target folder remains `1.Spotify情报汇总`.
   - Word files staged at `reports/archive/pending/2605/google-drive/`.
