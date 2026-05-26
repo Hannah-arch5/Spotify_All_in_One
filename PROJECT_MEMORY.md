@@ -305,9 +305,11 @@ Monday batch notes:
   - PDF:
     - `reports/pdf/260523-Spotify播客情报研报.pdf`
     - `reports/pdf/260525-Spotify播客情报研报.pdf`
-  - Format: landscape, single-column body layout matching the reference PDF `260511科技播客情报分析报告 - Google Docs.pdf`, black bold enlarged headings, no colored heading treatment, justified body text, and no visible run/source metadata line.
+  - Format: landscape Letter, 1 inch margins, single-column body layout matching the reference Word file `/Users/hannah/Downloads/科技播客情报分析报告.docx`, black bold enlarged headings, no colored heading treatment, justified body text, inline bold keywords preserved, and no visible run/source metadata line.
   - The `第二部分` heading is kept on the same page/block as `情报 1`, not left behind at the end of the summary.
-  - Structural QA confirmed landscape orientation, single-column sections, expected episode/page breaks, first-episode section placement, and extractable PDF text. Full DOCX page-image QA could not run because LibreOffice/`soffice` is not installed.
+  - On 2026-05-26, the `260525` report was found to be missing 第三/四/五部分 in the source Markdown. It was manually completed from the already-reviewed 8 episode briefs, then re-reviewed.
+  - `scripts/check_gemini_report.py` now fails reports that lack any required top-level part from 第一部分 through 第五部分.
+  - Structural QA confirmed landscape orientation, single-column sections, required five-part structure, first-episode section placement, and extractable PDF text. Full DOCX page-image QA could not run because LibreOffice/`soffice` is not installed.
 - Zotero archive corrected on 2026-05-26:
   - Target collection: `1.Spotify情报汇总`.
   - Direct top-level PDF items, not child attachments under report parent items:
@@ -315,10 +317,12 @@ Monday batch notes:
     - `260525-Spotify播客情报研报`
   - Tags: `unread`, `2605`.
   - The earlier incorrect parent report items and wrong suffix-named direct PDF items were removed.
+  - On 2026-05-26, Zotero direct PDF items were replaced again after the complete five-part `260525` report and reference-matched formatting were regenerated.
   - Zotero database backups created before writes:
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733077`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779733816`
     - `/Users/hannah/Zotero/zotero.sqlite.backup-1779734613`
+    - `/Users/hannah/Zotero/zotero.sqlite.backup-1779765281`
 - Google Drive archive is still pending because the Google Drive connector failed to start with a `failed to get client` / `https://chatgpt.com/backend-api/wham/apps` transport error.
   - Target folder remains `1.Spotify情报汇总`.
   - Word files staged at `reports/archive/pending/2605/google-drive/`.

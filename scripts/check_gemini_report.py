@@ -18,6 +18,13 @@ SECTION_RE = re.compile(r"^####\s+情报\s*(\d+)[：:](.*)$", re.MULTILINE)
 TITLE_RE = re.compile(r"原始标题[：:]\s*(.+)")
 LINK_RE = re.compile(r"原始链接[：:]\s*(.+)")
 TRANSCRIPT_SOURCE_RE = re.compile(r"Transcript\s*来源[：:]\s*(.+)", re.IGNORECASE)
+REQUIRED_PARTS = [
+    "第一部分",
+    "第二部分",
+    "第三部分",
+    "第四部分",
+    "第五部分",
+]
 QUOTE_CANDIDATE_RE = re.compile(r"[\"“](.{12,240}?)[\"”]")
 KEY_QUOTE_BLOCK_RE = re.compile(
     r"关键金句\s*/\s*结论[：:](.*?)(?:\n-\s*证据锚点[：:]|\n证据锚点[：:]|\Z)",
@@ -134,6 +141,10 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
     sections = _extract_sections(report)
 
     findings: list[Finding] = []
+    missing_parts = [part for part in REQUIRED_PARTS if not re.search(rf"^##\s+{part}", report, re.MULTILINE)]
+    for part in missing_parts:
+        findings.append(Finding("error", f"研报缺少必要结构：{part}。"))
+
     expected_count = len(expected_episodes)
     actual_count = len(sections)
     if actual_count != expected_count:

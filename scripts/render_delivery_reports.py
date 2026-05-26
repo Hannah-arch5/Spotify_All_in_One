@@ -99,14 +99,40 @@ def clean_inline(text: str) -> str:
     return text.strip()
 
 
+def inline_runs(text: str) -> list[tuple[str, bool]]:
+    text = text.strip()
+    parts = re.split(r"(\*\*.*?\*\*)", text)
+    runs: list[tuple[str, bool]] = []
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith("**") and part.endswith("**"):
+            runs.append((part[2:-2], True))
+        else:
+            runs.append((part.replace("*", ""), False))
+    return runs
+
+
+def label_bold_runs(text: str) -> list[tuple[str, bool]]:
+    if "：" in text:
+        label, rest = text.split("：", 1)
+        if len(label) <= 12:
+            return [(label, True), ("：" + rest, False)]
+    if ":" in text:
+        label, rest = text.split(":", 1)
+        if len(label) <= 18:
+            return [(label, True), (":" + rest, False)]
+    return inline_runs(text)
+
+
 def paragraph_role(line: str) -> tuple[str, str]:
     stripped = line.strip()
     if not stripped or stripped == "---":
         return "blank", ""
     if stripped.startswith("## "):
-        return "h1", clean_inline(stripped[3:])
+        return "h2", clean_inline(stripped[3:])
     if stripped.startswith("### "):
-        return "h2", clean_inline(stripped[4:])
+        return "h3", clean_inline(stripped[4:])
     if stripped.startswith("- "):
         return "bullet", clean_inline(stripped[2:])
     if stripped.startswith("* "):
@@ -148,12 +174,18 @@ def add_docx_paragraph(doc: Document, role: str, text: str) -> None:
     style = {
         "h1": "Heading 1",
         "h2": "Heading 2",
+        "h3": "Heading 3",
         "bullet": "List Bullet",
         "number": "List Number",
     }.get(role, "Body Text")
     paragraph = doc.add_paragraph(style=style)
     paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY if role == "body" else WD_ALIGN_PARAGRAPH.LEFT
-    paragraph.add_run(text)
+    runs = label_bold_runs(text) if role in {"body", "bullet", "number"} else [(text, False)]
+    for run_text, bold in runs:
+        run = paragraph.add_run(run_text)
+        run.bold = bold
+        run.font.name = "Arial"
+        run._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
 
 
 def build_docx(markdown_path: Path, out_path: Path) -> None:
@@ -165,41 +197,42 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
     section = doc.sections[0]
     section.orientation = WD_ORIENT.LANDSCAPE
     section.page_width, section.page_height = section.page_height, section.page_width
-    section.top_margin = Cm(1.6)
-    section.bottom_margin = Cm(1.3)
-    section.left_margin = Cm(1.8)
-    section.right_margin = Cm(1.8)
+    section.top_margin = Cm(2.54)
+    section.bottom_margin = Cm(2.54)
+    section.left_margin = Cm(2.54)
+    section.right_margin = Cm(2.54)
     set_doc_columns(section, 1)
     add_page_number_footer(section)
 
     styles = doc.styles
     for name in ("Normal", "Body Text", "List Bullet", "List Number"):
         style = styles[name]
-        style.font.name = "Arial Unicode MS"
-        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial Unicode MS")
-        style.font.size = Pt(8.9)
-        style.paragraph_format.space_after = Pt(2.2)
-        style.paragraph_format.line_spacing = 1.02
+        style.font.name = "Arial"
+        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
+        style.font.size = Pt(11)
+        style.paragraph_format.space_after = Pt(0)
+        style.paragraph_format.line_spacing = None
     for name, size, color in (
-        ("Heading 1", 14, RGBColor(0, 0, 0)),
-        ("Heading 2", 12, RGBColor(0, 0, 0)),
+        ("Heading 1", 24, RGBColor(0, 0, 0)),
+        ("Heading 2", 18, RGBColor(0, 0, 0)),
+        ("Heading 3", 14, RGBColor(0, 0, 0)),
     ):
         style = styles[name]
-        style.font.name = "Arial Unicode MS"
-        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial Unicode MS")
+        style.font.name = "Arial"
+        style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
         style.font.size = Pt(size)
         style.font.bold = True
         style.font.color.rgb = color
-        style.paragraph_format.space_before = Pt(2)
-        style.paragraph_format.space_after = Pt(4)
+        style.paragraph_format.space_before = Pt(12)
+        style.paragraph_format.space_after = Pt(12 if name != "Heading 2" else 11.25)
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     r = p.add_run(delivery_name(markdown_path))
     r.bold = True
-    r.font.name = "Arial Unicode MS"
-    r._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial Unicode MS")
-    r.font.size = Pt(18)
+    r.font.name = "Arial"
+    r._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
+    r.font.size = Pt(24)
     r.font.color.rgb = RGBColor(0, 0, 0)
     for line in intro:
         add_docx_paragraph(doc, *paragraph_role(line))
@@ -207,8 +240,8 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
     for index, episode in enumerate(episodes):
         doc.add_page_break()
         if index == 0 and second_part_heading:
-            add_docx_paragraph(doc, "h1", second_part_heading)
-        add_docx_paragraph(doc, "h1", episode.title)
+            add_docx_paragraph(doc, "h2", second_part_heading)
+        add_docx_paragraph(doc, "h3", episode.title)
         for line in episode.lines:
             add_docx_paragraph(doc, *paragraph_role(line))
 
@@ -229,8 +262,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryTitle",
             parent=base["Title"],
             fontName=font_name,
-            fontSize=18,
-            leading=22,
+            fontSize=24,
+            leading=28,
             alignment=TA_LEFT,
             textColor=colors.black,
             spaceAfter=10,
@@ -251,8 +284,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryH1",
             parent=base["Heading1"],
             fontName=font_name,
-            fontSize=13,
-            leading=15,
+            fontSize=18,
+            leading=21,
             textColor=colors.black,
             spaceBefore=3,
             spaceAfter=5,
@@ -262,8 +295,19 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryH2",
             parent=base["Heading2"],
             fontName=font_name,
-            fontSize=11.5,
-            leading=13.5,
+            fontSize=18,
+            leading=21,
+            textColor=colors.black,
+            spaceBefore=3,
+            spaceAfter=4,
+            wordWrap="CJK",
+        ),
+        "h3": ParagraphStyle(
+            "DeliveryH3",
+            parent=base["Heading3"],
+            fontName=font_name,
+            fontSize=14,
+            leading=16.5,
             textColor=colors.black,
             spaceBefore=3,
             spaceAfter=4,
@@ -273,8 +317,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryBody",
             parent=base["BodyText"],
             fontName=font_name,
-            fontSize=8.8,
-            leading=10.5,
+            fontSize=8.5,
+            leading=10.1,
             alignment=TA_JUSTIFY,
             spaceAfter=2.8,
             wordWrap="CJK",
@@ -283,8 +327,8 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             "DeliveryBullet",
             parent=base["BodyText"],
             fontName=font_name,
-            fontSize=8.8,
-            leading=10.5,
+            fontSize=8.5,
+            leading=10.1,
             leftIndent=12,
             firstLineIndent=-7,
             alignment=TA_LEFT,
@@ -308,10 +352,20 @@ def pdf_paragraph(style_map: dict[str, ParagraphStyle], role: str, text: str) ->
     if role == "blank":
         return Spacer(1, 4)
     if role == "bullet":
-        return Paragraph("• " + text, style_map["bullet"])
+        return Paragraph("• " + pdf_inline(label_bold_runs(text)), style_map["bullet"])
     if role == "number":
-        return Paragraph(text, style_map["bullet"])
-    return Paragraph(text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"), style_map.get(role, style_map["body"]))
+        return Paragraph(pdf_inline(label_bold_runs(text)), style_map["bullet"])
+    if role == "body":
+        return Paragraph(pdf_inline(label_bold_runs(text)), style_map["body"])
+    return Paragraph(pdf_escape(text), style_map.get(role, style_map["body"]))
+
+
+def pdf_escape(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def pdf_inline(runs: list[tuple[str, bool]]) -> str:
+    return "".join(f"<b>{pdf_escape(text)}</b>" if bold else pdf_escape(text) for text, bold in runs)
 
 
 def build_pdf(markdown_path: Path, out_path: Path, font_path: str) -> None:
@@ -324,10 +378,10 @@ def build_pdf(markdown_path: Path, out_path: Path, font_path: str) -> None:
     doc = SimpleDocTemplate(
         str(out_path),
         pagesize=landscape(letter),
-        rightMargin=1.8 * cm,
-        leftMargin=1.8 * cm,
-        topMargin=1.55 * cm,
-        bottomMargin=1.25 * cm,
+        rightMargin=2.54 * cm,
+        leftMargin=2.54 * cm,
+        topMargin=2.54 * cm,
+        bottomMargin=2.54 * cm,
     )
     story: list = [Paragraph(delivery_name(markdown_path), styles["title"])]
     for line in intro:
@@ -335,8 +389,8 @@ def build_pdf(markdown_path: Path, out_path: Path, font_path: str) -> None:
     for index, episode in enumerate(episodes):
         story.append(PageBreak())
         if index == 0 and second_part_heading:
-            story.append(Paragraph(second_part_heading, styles["h1"]))
-        story.append(Paragraph(episode.title, styles["h1"]))
+            story.append(Paragraph(second_part_heading, styles["h2"]))
+        story.append(Paragraph(episode.title, styles["h3"]))
         for line in episode.lines:
             story.append(pdf_paragraph(styles, *paragraph_role(line)))
     doc.build(story, onFirstPage=draw_page, onLaterPages=draw_page)
