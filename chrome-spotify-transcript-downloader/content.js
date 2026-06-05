@@ -303,9 +303,14 @@ async function batchTranslateSegments(segments) {
   const flushChunk = async (text, indices) => {
     if (!text) return;
     try {
-      const q = encodeURIComponent(text);
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${q}`;
-      const response = await fetch(url);
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `q=${encodeURIComponent(text)}`
+      });
       const res = await response.json();
       
       let translatedText = "";
@@ -319,6 +324,9 @@ async function batchTranslateSegments(segments) {
       for (let i = 0; i < indices.length; i++) {
         segments[indices[i]].translation = translations[i] || "";
       }
+      
+      // Add a small delay to avoid Google Translate API rate limit (HTTP 429)
+      await new Promise(r => setTimeout(r, 1000));
     } catch (err) {
       console.error("[STD] Translation chunk failed:", err);
     }
@@ -328,7 +336,7 @@ async function batchTranslateSegments(segments) {
     const textToTranslate = segments[i].text.trim().replace(/\n/g, " ");
     if (!textToTranslate) continue;
     
-    // Increase chunk size to 4500 and remove the sleep since network latency acts as natural rate limit
+    // Chunk size kept at 4500, but now safe because it's a POST request
     if (currentChunkText.length + textToTranslate.length > 4500) {
       await flushChunk(currentChunkText, currentChunkIndices);
       currentChunkText = "";
