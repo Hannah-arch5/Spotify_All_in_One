@@ -1294,3 +1294,29 @@ Monday batch notes:
   - Latest local hashes:
     - DOCX SHA-256: `785a0c23ebbba5a403e4bcf28fec9c2b69c6d6ba30e2a31bf9aaf2b137b2505a`
     - PDF SHA-256: `2adfdf687bfda077a8676247e8a6be4c787810d627fa570e606fd83aa8872483`
+
+## 2026-06-10 260608 Final Delivery Completion
+
+- Final accepted 260608 report:
+  - Title: `把 AI 从效率工具变成可信生产系统：重构组织、所有权与判断力 (Turning AI from an Efficiency Tool into a Trusted Production System: Rebuilding Organizations, Ownership, and Judgment)`
+  - DOCX: `reports/word/260608-Spotify播客情报研报.docx`
+  - PDF: `reports/pdf/260608-Spotify播客情报研报.pdf`
+  - DOCX SHA-256: `785a0c23ebbba5a403e4bcf28fec9c2b69c6d6ba30e2a31bf9aaf2b137b2505a`
+  - PDF SHA-256: `2adfdf687bfda077a8676247e8a6be4c787810d627fa570e606fd83aa8872483`
+- External delivery completed:
+  - Zotero direct-PDF archive completed with active item key `Q8H25OBD`; active Zotero storage PDF hash matches the final local PDF hash.
+  - Google Drive DOCX upload completed and verified in the Drive listing as `260608-Spotify播客情报研报.docx`.
+  - Discord `#todo` final corrected PDF sent with notification id `1781043972682-9d933612-3013-46ac-b5f0-2284fc48c328-discord`; `notification_sent` timestamp `2026-06-09T22:26:17.336Z`.
+- Transcript hygiene:
+  - `~/Downloads/Spotify Transcript Collector` currently has `0` loose transcript JSON backups after archive cleanup.
+- Memory and skill status:
+  - Cross-project formatting rules were added to `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` under `Cross-Project Report Formatting Gates`.
+  - Local Spotify MWF skill and project skill copy include the title, quote, evidence-anchor, synthesis, and conditional pagination gates.
+  - Public GitHub skill archive is clean and contains latest pushed commits:
+    - `bfdc41c Add mandatory report quality gates`
+    - `6b2a12a Add conditional pagination gate`
+- Project git note:
+  - Existing project commits already captured automation hardening:
+    - `ea83caf Add Spotify report quality gates`
+    - `172175c Add conditional pagination gate`
+  - Worktree still contains prior unrelated dirty/untracked automation files; do not stage generated `data/` blindly.
