@@ -1104,3 +1104,173 @@ Monday batch notes:
   - Current branch remains `feature/transpod-auto-translate`.
   - Worktree remains dirty with prior project/code/docs/generated-data changes. Do not stage generated `data/` blindly.
   - `git remote -v` was previously empty for this project repo; GitHub push for this repo still requires a configured remote/target repository.
+
+## 2026-06-08 Monday 260608 Spotify Report Delivered (Transcript-Ready 15 Episodes)
+
+- Used `spotify-mwf-report` skill workflow for the latest fixed M/W/F window.
+- Window:
+  - Source manifest: `data/runs/20260608-172952-597227-manifest.json`
+  - Fixed schedule window: `2026-06-05T07:00:00+00:00` to `2026-06-08T07:00:00+00:00` (2026-06-05 15:00 to 2026-06-08 15:00 Asia/Shanghai).
+  - Source episode count: 17.
+  - Delivered transcript-ready manifest: `data/runs/20260608-172952-597227-transcript-ready-manifest.json`
+  - Delivered episode count: 15.
+- Transcript collection:
+  - STD Chrome/Spotify detail-page workflow used; opened episode detail pages and clicked native Spotify `Transcript`.
+  - Imported/available transcripts after final import: `english_seen=16`, `chinese_seen=5`.
+  - Source evidence pack after retries: `data/runs/20260608-172952-597227-evidence-pack.json`, with `matched_count=15`, `missing_count=2`.
+  - Delivered evidence pack: `data/runs/20260608-172952-597227-transcript-ready-evidence-pack.json`, with `matched_count=15`, `missing_count=0`.
+  - Two episodes were excluded from the delivered report because no real transcript was available and no lower-fidelity fallback was used:
+    - 厚雪长波 | `能分析数据不等于真的理解宏观经济，但AI快做到了`
+    - All-In with Chamath, Jason, Sacks & Friedberg | `Inside the Private Stock Market Boom: SpaceX, Anthropic, OpenAI & the Rise of Secondaries`
+  - Notes on missing transcripts:
+    - The 厚雪长波 episode could not be found as an exact Spotify episode via search; Xiaoyuzhou/RSS pages exposed show notes and metadata but no accessible transcript text.
+    - The All-In episode had an exact Spotify page, but the page had no native `Transcript` tab; Libsyn/RSS pages had notes only.
+- Gemini report:
+  - Package: `data/gemini_inputs/20260608-172952-597227-transcript-ready/`.
+  - Chunk directory: `data/gemini_chunks/20260608-172952-597227-transcript-ready/`.
+  - Final Markdown: `reports/markdown/20260608-172952-597227-transcript-ready-gemini-report.md`.
+  - `gemini-2.5-flash` generated the first 6 episode briefs, then hit free-tier quota. Resumed with `gemini-2.5-flash-lite` for episodes 7-15 and final synthesis.
+  - Review initially returned `需修改` with 7 non-verbatim quote warnings. Fixed by converting suspicious quoted text to explicit paraphrased conclusions.
+  - Final review: `通过`.
+  - Review files:
+    - `data/runs/20260608-172952-597227-transcript-ready-gemini-review.json`
+    - `reports/markdown/20260608-172952-597227-transcript-ready-gemini-review.md`
+- Render/audit:
+  - Word: `reports/word/260608-Spotify播客情报研报.docx`
+  - PDF: `reports/pdf/260608-Spotify播客情报研报.pdf`
+  - Delivery-format audit passed:
+    - H2 count: 5.
+    - Episode heading count: 15.
+    - Required labels all counted 15 times.
+    - PDF page count: 39.
+    - No audit issues.
+  - Final hashes:
+    - DOCX SHA-256: `e0c8c8de662131582550f72c928255815e27c3013700363e5c6830b8165cedce`
+    - PDF SHA-256: `1ade42621513cec525fc9b4f59da9a5f5c9342dea06f5abf0b9a308ae9a49b15`
+- Zotero archive:
+  - First attempt failed with `sqlite3.OperationalError: database is locked` because Zotero was open.
+  - Quit Zotero, then archived successfully.
+  - Direct PDF item: `archived_direct_pdf=4375 title=260608-Spotify播客情报研报`
+  - Active Zotero PDF: `/Users/hannah/Zotero/storage/CRSSW8CA/260608-Spotify播客情报研报.pdf`
+  - Zotero PDF hash matches local final PDF: `1ade42621513cec525fc9b4f59da9a5f5c9342dea06f5abf0b9a308ae9a49b15`
+- External delivery:
+  - Staged Drive DOCX: `reports/archive/pending/2606/google-drive/260608-Spotify播客情报研报.docx`
+  - Staged Discord PDF: `reports/archive/pending/2606/discord-todo/260608-Spotify播客情报研报.pdf`
+  - Staged hashes match local final files.
+  - Google Drive upload completed through `rclone copy` to `gdrive:1.Spotify情报汇总/`.
+  - Google Drive verification listing includes `260608-Spotify播客情报研报.docx`.
+  - Discord delivery completed through live Discord Studio cwd `/Users/hannah/.discord-studio/Discord_Studio`.
+  - Discord sent record: `notification_sent` id `1780915508154-2eca5a5a-a744-4c0a-aa4b-5fe9a01d451d-discord`, sent at `2026-06-08T10:46:05.518Z`.
+  - Discord delivery workaround: `SPOTIFY_DISCORD_SEND_CMD` parsing failed because `.env` command quoting was stripped by `load_project_env()`. Direct `npm run send:discord` was used successfully. Fix `env_utils.load_project_env()` quoting behavior before relying on scheduled Discord sends.
+  - Discord Studio watchdog issue observed: default port 3000 was already occupied and the watchdog log showed repeated `EADDRINUSE`; a temporary `PORT=3001 npm start` run consumed the queue and confirmed send. Investigate service/port ownership before trusting unattended delivery.
+- Transcript cleanup:
+  - Ran `scripts/import_spotify_transcripts.py --move` after delivery.
+  - Result: `imported=0 skipped=21 removed=21 english_seen=16 chinese_seen=5`.
+  - Verified `/Users/hannah/Downloads/Spotify Transcript Collector/` has `0` JSON files.
+- Seen/processed marking:
+  - `marked_seen=15 manifest=data/runs/20260608-172952-597227-transcript-ready-manifest.json`
+  - The original 17-episode source manifest was not marked as fully delivered because 2 episodes still lack real transcripts.
+- LaunchAgent/Git status after delivery:
+  - LaunchAgent `com.hannah.spotify-podcast-report` remains `state = not running`, `runs = 1`, `last exit code = 78: EX_CONFIG`; manual delivery succeeded, but scheduled automation still needs config debugging.
+  - Current branch remains `feature/transpod-auto-translate`.
+  - `git remote -v` is empty for this project repo, so GitHub updates for this project still require a configured target remote.
+  - Worktree remains dirty with prior code/docs/generated-data changes plus this report's generated artifacts. Do not stage generated `data/` blindly.
+
+## 2026-06-08 260608 Report Revision Note
+
+- User flagged that sections 3/4/5 of the 260608 report were too fragmented and read like per-episode summaries rather than integrated analysis.
+- Root cause:
+  - The chunked Gemini workflow generated strong per-episode briefs, but the final synthesis prompt over-preserved episode-level bullets.
+  - Because the run resumed across `gemini-2.5-flash` and `gemini-2.5-flash-lite` after quota limits, the final synthesis was structurally safe but analytically conservative.
+- Fix applied locally:
+  - Rewrote sections 3/4/5 in `reports/markdown/20260608-172952-597227-transcript-ready-gemini-report.md` into integrated cross-episode analysis:
+    - Section 3 now synthesizes production systems, organization systems, capital systems, infrastructure systems, and human judgment systems.
+    - Section 4 now frames second-order shifts: execution scarcity to judgment scarcity, asset ownership to context ownership, speed to controllability, and model choice to trusted workflow systems.
+    - Section 5 now gives unified strategic conclusions rather than audience-by-audience generic advice.
+  - Reran Gemini report review: `通过`.
+  - Rerendered local Word/PDF:
+    - Word: `reports/word/260608-Spotify播客情报研报.docx`
+    - PDF: `reports/pdf/260608-Spotify播客情报研报.pdf`
+  - Reran delivery-format audit:
+    - H2 count: 5.
+    - Episode heading count: 15.
+    - Required labels all counted 15 times.
+    - PDF page count: 38.
+    - No audit issues.
+  - Revised local hashes:
+    - DOCX SHA-256: `58f1741924e3efd0e94506334c44b97157262da03a3669dfbacdd6785a824e6d`
+    - PDF SHA-256: `4828fd288deff6ed1d866d7e94eccd14a08768f02df531a2441834e4c2f145a2`
+- Important: external copies on Google Drive, Discord, and Zotero still correspond to the originally delivered version unless explicitly re-uploaded/re-sent/re-archived.
+
+## 2026-06-08 Mandatory Report Quality Gates
+
+- User feedback from the 260608 PDF review must be treated as hard delivery gates for all future Spotify M/W/F reports, not optional style preferences.
+- Main title gate:
+  - The main report title must be constructive, insight-led, and immediately communicate the report's central thesis.
+  - The title must include an English translation.
+  - Never deliver a generic title, date pileup, run ID pileup, or a title that only says `Spotify 播客情报研报`.
+  - A user should understand the report's main strategic theme from the title alone.
+- Episode quote gate:
+  - Every episode, including episode 1, must have `关键金句 / 结论` with the same quality standard.
+  - For non-Chinese transcripts, include at least one source-language original sentence plus a Chinese translation/explanation on the next line.
+  - Translation/explanation lines must be italicized and must not include labels like `中文解释：`, `中文翻译：`, `中文翻译/解释：`, `英文解释：`, `英文翻译：`, or `英文翻译/解释：`; write the translated/explanatory sentence directly.
+  - If a quote cannot be verified as exact or near-exact from transcript, label it as `转述结论`; do not present it as a direct quote.
+  - Root cause of the 260608 episode-1 issue: the quote cleanup/review step converted suspicious quote text into paraphrased conclusions to pass quote safety, but there was no second gate requiring episode 1 to still retain source-language original + translation quality. This is now a hard gate.
+- Evidence-anchor gate:
+  - Evidence anchors must be meaningful and should support a claim, example, mechanism, number, decision, disagreement, or strategic implication.
+  - Do not include greetings, mutual thanks, ad reads, housekeeping, closing pleasantries, repeated intros/outros, or generic low-value anchors.
+  - Screenshot example from user: an ending anchor like `[1:18:11] 播客结束时，Zach Braff 和主持人互相表达了感谢和欣赏。` is not meaningful evidence and must be removed before delivery.
+- Synthesis gate:
+  - Sections 3/4/5 must be integrated cross-episode analysis, second-order thinking, and strategic conclusions.
+  - They must not read like episode-by-episode summaries grouped under loose topics.
+- Process update:
+  - These gates have been added to `/Users/hannah/.codex/skills/spotify-mwf-report/SKILL.md`, `/Users/hannah/.codex/skills/spotify-mwf-report/references/workflow.md`, and the project skill copy under `.codex-skills/spotify-mwf-report/`.
+  - If the skill changes, sync the public GitHub skill archive as well.
+
+## 2026-06-08 260608 Quote Formatting Correction
+
+- User clarified the quote translation formatting rule:
+  - Under `关键金句 / 结论`, all translation/explanation lines must be italicized.
+  - Do not write label prefixes such as `中文解释：`, `中文翻译：`, `中文翻译/解释：`, `英文解释：`, `英文翻译：`, or `英文翻译/解释：`.
+  - The correct format is source quote on one line, then a direct italicized translation/explanation on the next line.
+- Applied to `reports/markdown/20260608-172952-597227-transcript-ready-gemini-report.md`:
+  - Removed all `中文解释` / `中文翻译` label prefixes from quote translation lines.
+  - Ensured translation/explanation lines use italic Markdown.
+  - Episode 1 now has source-language original quotes plus direct italicized Chinese lines.
+- Updated automation:
+  - `scripts/generate_chunked_gemini_report.py` prompt now forbids translation labels and requires direct italic Chinese lines.
+  - `scripts/audit_delivery_report_format.py` now fails if quote translation lines contain translation labels, and checks episode 1 for italicized Chinese translation/explanation.
+  - Local skill and project skill workflow now record the same rule.
+- Validation:
+  - Reran Gemini report review: `通过`.
+  - Rerendered DOCX/PDF with Microsoft Word.
+  - Reran delivery-format audit: no issues; H2 count 5; episode heading count 15; required labels all counted 15 times; PDF page count 39.
+  - Latest local hashes:
+    - DOCX SHA-256: `d9ed42e6a9bab031b0c6da65428d103fe63cd869e4ed83b5d14fdcb5b84bc228`
+    - PDF SHA-256: `36d6e9eaf143bb06a27e8ccfae1e908d50aac7e139275c000be2a75ec7737dcf`
+
+## 2026-06-10 260608 Final Formatting Hardening
+
+- User clarified four additional formatting requirements:
+  - `英文翻译/解释：` label text is also forbidden; no translation/explanation prefix labels of any language should appear under `关键金句 / 结论`.
+  - All translation/explanation lines, Chinese or English, must be italicized consistently.
+  - The main title must read like a constructive thesis/synthesis sentence, not a list of abstract keywords.
+  - Headings and subtitle-like bold lines must stay with their following body text; do not allow a heading alone at the bottom of a page.
+- Applied to the 260608 report:
+  - New main title: `把 AI 从效率工具变成可信生产系统：重构组织、所有权与判断力 (Turning AI from an Efficiency Tool into a Trusted Production System: Rebuilding Organizations, Ownership, and Judgment)`
+  - Removed all `中文翻译/解释`, `中文解释`, `英文翻译/解释`, and related label prefixes from the Markdown.
+  - Ensured translation/explanation lines are Markdown italic lines.
+  - Fixed previously non-italic translation/explanation lines in episodes 14 and 15.
+  - Rerendered DOCX/PDF with Microsoft Word.
+  - Verified PDF page 34 no longer has a section/title orphan at the bottom; third-part title and following content remain together.
+- Automation hardening:
+  - `scripts/render_delivery_reports.py` now treats all key-quote translation/explanation lines as italic, not only Chinese lines.
+  - `scripts/render_delivery_reports.py` now applies `keep_with_next` to generated report title and later-section bold subtitle paragraphs.
+  - `scripts/audit_delivery_report_format.py` now blocks translation labels in Chinese or English, checks translation/explanation line italics, checks heading pagination flags, and checks later-section subtitle pagination flags.
+  - Local skill and project skill copies now include the same no-label italic translation rule.
+- Validation:
+  - Reran Gemini report review: `通过`.
+  - Reran delivery-format audit: no issues; H2 count 5; episode heading count 15; required labels all counted 15 times; PDF page count 39.
+  - Latest local hashes:
+    - DOCX SHA-256: `76b9344f8ea8c0fa6530b1a787871e1f9295ff66d5846d82d4d9d78826e187b4`
+    - PDF SHA-256: `e6a136147e20fe8f4e3ade153975a6b755afb696ddce896fc0adf21336e8202b`

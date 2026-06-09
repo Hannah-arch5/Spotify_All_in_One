@@ -12,6 +12,8 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+from env_utils import gemini_api_key
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = "gemini-2.5-flash"
@@ -31,10 +33,7 @@ def _write_json(path: Path, data: Any) -> None:
 
 
 def _api_key() -> str:
-    key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not key:
-        raise SystemExit("Missing GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
-    return key
+    return gemini_api_key()
 
 
 def _generate_text(
@@ -117,8 +116,8 @@ def _episode_prompt(run_id: str, episode: dict[str, Any]) -> str:
 - Transcript 来源：Spotify transcript
 - 核心内容摘要：约 600 字，必须来自 transcript。
 - 情报价值点：约 150-250 字。
-- 关键金句 / 结论：2 条，必须包含英文原文或接近原文、中文翻译或解释；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
-- 证据锚点：至少 3 个 timestamp + 简短证据说明。
+- 关键金句 / 结论：2 条；如 transcript 为英文，至少 1 条必须包含英文原句或高度接近原文，下一行直接写斜体中文翻译/解释，例如 `*这句话说明……*`。如 transcript 为中文但需要英文翻译，也直接写斜体英文译文。不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。如无法核验原句，必须写成 `转述结论`，不要伪装成直接引语；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
+- 证据锚点：至少 3 个 timestamp + 简短证据说明。证据必须有信息价值，能支撑具体观点、机制、数字、例子、分歧或战略判断。不要使用寒暄、感谢、广告、片头片尾、泛泛介绍、互相称赞或结束语作为证据锚点。
 
 Manifest JSON:
 ```json
@@ -134,16 +133,21 @@ Transcript:
 
 def _final_prompt(run_id: str, episode_briefs: list[str]) -> str:
     joined = "\n\n---\n\n".join(episode_briefs)
-    return f"""请基于以下 26 个已经按 manifest 顺序生成的 episode brief，生成最终中文播客情报研报。
+    episode_count = len(episode_briefs)
+    return f"""请基于以下 {episode_count} 个已经按 manifest 顺序生成的 episode brief，生成最终中文播客情报研报。
 
 要求：
+- 必须先输出一个一级标题 `# ...`。标题必须建设性、观点明确，让读者一眼抓住本期研报的核心主题；标题必须包含英文翻译，格式如 `# 中文标题 (English Title)`。不要使用日期、run id、窗口信息或泛泛的“Spotify 播客情报研报”作为主标题。
 - 不要新增 brief 之外的 episode。
+- 第二部分必须且只能包含情报 1 到情报 {episode_count}。
 - 第二部分必须逐字保留每个 brief 的 `#### 情报 N` 结构、原始标题、原始链接、Transcript 来源、关键金句和证据锚点。
 - 可以润色每个 brief 的中文表达，但不得删除任何 episode，不得改变顺序。
+- 情报 1 的 `关键金句 / 结论` 必须和其他 episode 同质量：如果源 transcript 为英文，至少保留 1 条英文原句或高度接近原文，并在下一行直接写斜体中文翻译/解释；不要只留下转述结论，不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。
+- 证据锚点必须有信息价值。删除寒暄、感谢、广告、片头片尾、泛泛介绍、互相称赞或结束语等低价值锚点。
 - 第一部分写约 700 字摘要。
-- 第三部分做跨节目专题分析，必须指出支撑 episode 编号。
-- 第四部分写第二层思维，必须能回到 episode 编号。
-- 第五部分写结论与战略意义。
+- 第三部分做真正的跨节目专题分析：抽出贯穿多集的结构性主题，不要按 episode 逐个总结。
+- 第四部分写第二层思维：必须提出跨节目抽象判断和背后机制，不要复述单集内容。
+- 第五部分写结论与战略意义：必须形成统一战略判断，不要写成泛泛建议清单。
 - 输出 Markdown。
 
 Run ID: {run_id}

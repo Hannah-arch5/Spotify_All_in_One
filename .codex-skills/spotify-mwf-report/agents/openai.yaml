@@ -1,0 +1,3 @@
+display_name: Spotify MWF Report
+short_description: Run Hannah's Monday/Wednesday/Friday Spotify podcast report workflow.
+default_prompt: 做今天 Spotify 播客研报，检查 STD transcript，并完成 Zotero、Google Drive、Discord 交付。
