@@ -1274,3 +1274,23 @@ Monday batch notes:
   - Latest local hashes:
     - DOCX SHA-256: `76b9344f8ea8c0fa6530b1a787871e1f9295ff66d5846d82d4d9d78826e187b4`
     - PDF SHA-256: `e6a136147e20fe8f4e3ade153975a6b755afb696ddce896fc0adf21336e8202b`
+
+## 2026-06-10 Conditional Pagination Correction
+
+- User clarified that part/section headings should not always start on a new page.
+- Hard rule:
+  - If a heading or subtitle-like bold heading and its following body would begin in the bottom quarter of a page, insert a page break before that heading.
+  - If the heading is above the bottom quarter and there is enough readable space, do not force a new page.
+  - This is a position-based rule, not a fixed "parts 3/4/5 always start new page" rule.
+- Applied to the 260608 report:
+  - The fifth part heading was appearing at the bottom of page 37.
+  - Inserted `<!-- pagebreak -->` immediately before `## 第五部分：结论与战略意义` in the Markdown.
+  - `scripts/render_delivery_reports.py` now supports `<!-- pagebreak -->` markers.
+  - Rerendered DOCX/PDF with Microsoft Word.
+  - Verified page 37 no longer contains `第五部分`; the fifth part now starts on page 38 with its body.
+- Validation:
+  - Gemini report review: `通过`.
+  - Delivery-format audit: no issues; H2 count 5; episode heading count 15; required labels all counted 15 times; PDF page count 39.
+  - Latest local hashes:
+    - DOCX SHA-256: `785a0c23ebbba5a403e4bcf28fec9c2b69c6d6ba30e2a31bf9aaf2b137b2505a`
+    - PDF SHA-256: `2adfdf687bfda077a8676247e8a6be4c787810d627fa570e606fd83aa8872483`

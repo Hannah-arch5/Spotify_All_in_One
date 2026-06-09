@@ -249,6 +249,8 @@ def label_bold_runs(text: str, italic: bool = False, *, allow_leading_subtitle_b
 
 def paragraph_role(line: str) -> tuple[str, str]:
     stripped = line.strip()
+    if stripped == "<!-- pagebreak -->":
+        return "pagebreak", ""
     if not stripped or stripped == "---":
         return "blank", ""
     if stripped.startswith("## "):
@@ -405,6 +407,9 @@ def apply_reference_paragraph_format(paragraph, role: str, is_first_second_headi
 
 
 def add_docx_paragraph(doc: Document, role: str, text: str, *, italic: bool = False, allow_leading_subtitle_bold: bool = False):
+    if role == "pagebreak":
+        doc.add_page_break()
+        return None
     if role == "blank":
         return None
     style_names = {style.name for style in doc.styles if style.name}
@@ -453,6 +458,9 @@ def report_body_lines(markdown: str) -> Iterable[str]:
     saw_title = False
     for raw in markdown.splitlines():
         line = raw.rstrip()
+        if line.strip() == "<!-- pagebreak -->":
+            yield line
+            continue
         if line.startswith("<!--"):
             continue
         if line.strip().startswith("**Run ID:"):

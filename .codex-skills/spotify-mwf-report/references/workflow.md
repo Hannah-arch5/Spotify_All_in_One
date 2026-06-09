@@ -56,6 +56,7 @@
   - Required labels match episode count.
   - `关键金句 / 结论` exists for every episode including episode 1, and exact quotes are either source-language plus italicized unlabeled translation/explanation, or clearly marked paraphrases.
   - Evidence anchors are substantive and do not contain low-value greetings/thanks/housekeeping as final anchors.
+  - Pagination quality: if a heading or subtitle-like bold heading and the following body begin in the bottom quarter of a page, insert `<!-- pagebreak -->` before that heading and rerender. Do not force all major sections onto new pages; apply the break only when the heading position is too low.
   - PDF page count is plausible.
   - No audit issues.
 - Record final DOCX/PDF paths and hashes.
