@@ -1320,3 +1320,48 @@ Monday batch notes:
     - `ea83caf Add Spotify report quality gates`
     - `172175c Add conditional pagination gate`
   - Worktree still contains prior unrelated dirty/untracked automation files; do not stage generated `data/` blindly.
+
+## 2026-06-11 260610 Report Delivery Completion
+
+- Window and manifest:
+  - Fixed M/W/F schedule window: `2026-06-08T07:00:00+00:00` through `2026-06-10T07:00:00+00:00`.
+  - Valid manifest: `data/runs/20260611-123804-595580-manifest.json`.
+  - Episode count: `9`.
+  - Earlier manifest `data/runs/20260611-123738-679177-manifest.json` was invalid because sandboxed DNS caused `feed_failures=26`; reran with external network approval and got `feed_failures=0`.
+- Transcript collection:
+  - Collected all 9 episode detail pages through Spotify STD v2.0 with `Auto-Translate to Chinese` enabled.
+  - Downloads verification before import: `18` JSON files, `9` unique Spotify episode ids, each with one original transcript and one `_zh` Chinese transcript.
+  - Chinese completeness verification: every `_zh` transcript had `translation` for every segment after fixing one STD omission in Joe Rogan episode `0Zn6XR8I047mUcq37vU8zU`; missing segment was the final closing line `Bye everybody.`, patched to `大家再见。`.
+  - Import result: `imported=18 skipped=0 removed=0 english_seen=9 chinese_seen=9`.
+  - Required Chinese audit passed with `--require-zh-transcripts`; `missing_transcripts=0`.
+- Gemini generation:
+  - Used chunked Gemini mode with `gemini-2.5-flash`.
+  - First generation attempt failed after partial progress due to a network/API connection interruption, not quota. Chunk resume preserved completed episode briefs and continued from the saved chunk directory.
+  - Final report Markdown: `reports/markdown/20260611-123804-595580-gemini-report.md`.
+  - Manual revision after review:
+    - Added explicit `## 第一部分` and `## 第二部分` headings.
+    - Promoted third/fourth/fifth sections to `##`.
+    - Converted four review-flagged weak direct quotes into `转述结论`.
+  - Gemini report review result: `通过`.
+- Final report:
+  - Title: `AI与资源双重革命：重塑全球经济与战略格局 (AI and Resource Dual Revolution: Reshaping Global Economy and Strategic Landscape)`.
+  - DOCX: `reports/word/260610-Spotify播客情报研报.docx`.
+  - PDF: `reports/pdf/260610-Spotify播客情报研报.pdf`.
+  - DOCX SHA-256: `29e638d8beb81660afb2011f0b0612759888991f2947a06d24b76fe05624721c`.
+  - PDF SHA-256: `ba8c850defb53f923a806c3cf3ac057c5720c821565d45045d35e9bced053350`.
+- Delivery-format audit:
+  - Passed with no issues.
+  - H2 count: `5`.
+  - Episode heading count: `9`.
+  - Required labels each counted `9`.
+  - PDF page count: `25`.
+- External delivery:
+  - Zotero direct-PDF archive completed: `archived_direct_pdf=4376 title=260610-Spotify播客情报研报`.
+  - Active Zotero PDF: `/Users/hannah/Zotero/storage/Q6380UC1/260610-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched local final PDF hash.
+  - Google Drive DOCX uploaded and verified in Drive listing as `260610-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF sent with notification id `1781155006576-439a6d24-6e97-4f99-93ba-1015affe9f2b-discord`; `notification_sent` timestamp `2026-06-11T05:16:48.193Z`.
+- Cleanup and state:
+  - Transcript cleanup after delivery: `imported=0 skipped=18 removed=18 english_seen=9 chinese_seen=9`.
+  - Downloads leftover JSON count: `0`.
+  - Mark seen result: `marked_seen=9 manifest=data/runs/20260611-123804-595580-manifest.json`.
