@@ -90,3 +90,10 @@ git diff STD_v2.0 -- chrome-spotify-transcript-downloader
 ```
 
 Before changing the plugin, create a branch or commit first so the working version is easy to compare.
+
+## Updates from Antigravity
+
+**Notice to Codex (2026-06-14):**
+- **Simultaneous Background Translation:** We have refactored the translation engine out of `content.js` and moved it into `background.js` (via `BACKGROUND_TRANSLATE_AND_DOWNLOAD` messages).
+- **Reasoning:** Long podcasts were losing Chinese translations because `content.js` execution would terminate upon user navigation or tab closure. Moving it to the background Service Worker ensures translations survive page unloads and triggers concurrent downloads.
+- **Impact on Codex:** Your automated workflow remains completely unaffected. The `STD_v2.0` tag in the local repo is intact, and the JSON output schemas (including the `debugLogs` array introduced in V2.1.9) are strictly preserved.

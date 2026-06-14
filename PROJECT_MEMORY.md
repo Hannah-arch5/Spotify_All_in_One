@@ -157,6 +157,7 @@ Codex expansion updates (up to V2.1.9):
 - Fixed string concatenation bugs and restricted year regex matching.
 - Embedded `debugLogs` array into the downloaded JSON payload for diagnostics.
 - Switched Google Translate API from GET to POST and restored a 1s delay per batch to resolve HTTP 414 and 429 failures causing missing Chinese transcripts.
+- Decoupled `batchTranslateSegments` from `content.js` to `background.js` via `BACKGROUND_TRANSLATE_AND_DOWNLOAD` to achieve simultaneous download of Chinese/English and prevent page navigation/closures from killing the translation process midway.
 
 User needs to reload the unpacked extension in Chrome after code changes:
 
