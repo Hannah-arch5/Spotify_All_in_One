@@ -227,22 +227,16 @@ function handleAPICaptured(url, data) {
     
     const translateCb = document.getElementById('std-auto-translate-cb');
     if (translateCb && translateCb.checked) {
-      setTimeout(async () => {
-        logDebug(`Starting background translation...`);
+      setTimeout(() => {
+        logDebug(`Sending translation payload to background worker...`);
         const statusEl = document.getElementById('std-status-text');
-        if (statusEl) statusEl.innerHTML = `<span style="color: #FFA500;">Translating transcript...</span>`;
+        if (statusEl) statusEl.innerHTML = `<span style="color: #00FF00;">✓ Sent to background for translation.</span>`;
         
-        const translated = await batchTranslateSegments(payload.segments);
-        if (!translated) {
-          if (statusEl) statusEl.innerHTML = `<span style="color: #FF6B6B;">Translation incomplete. Retry later.</span>`;
-          return;
-        }
-        
-        const translatedMeta = { ...finalMeta };
-        translatedMeta.episodeTitle = finalMeta.episodeTitle + "_zh";
-        triggerDownload(payload, translatedMeta);
-        
-        if (statusEl) statusEl.innerHTML = `<span style="color: #00FF00;">✓ Translation downloaded.</span>`;
+        chrome.runtime.sendMessage({
+          type: 'BACKGROUND_TRANSLATE_AND_DOWNLOAD',
+          payload: payload,
+          metadata: finalMeta
+        });
       }, 500);
     }
   }
@@ -279,21 +273,15 @@ function handleManualDownload() {
 
     const translateCb = document.getElementById('std-auto-translate-cb');
     if (translateCb && translateCb.checked) {
-      setTimeout(async () => {
+      setTimeout(() => {
         const statusEl = document.getElementById('std-status-text');
-        if (statusEl) statusEl.innerHTML = `<span style="color: #FFA500;">Translating transcript...</span>`;
+        if (statusEl) statusEl.innerHTML = `<span style="color: #00FF00;">✓ Sent to background for translation.</span>`;
         
-        const translated = await batchTranslateSegments(payload.segments);
-        if (!translated) {
-          if (statusEl) statusEl.innerHTML = `<span style="color: #FF6B6B;">Translation incomplete. Retry later.</span>`;
-          return;
-        }
-        
-        const translatedMeta = { ...metadata };
-        translatedMeta.episodeTitle = metadata.episodeTitle + "_zh";
-        triggerDownload(payload, translatedMeta);
-        
-        if (statusEl) statusEl.innerHTML = `<span style="color: #00FF00;">✓ Translation downloaded.</span>`;
+        chrome.runtime.sendMessage({
+          type: 'BACKGROUND_TRANSLATE_AND_DOWNLOAD',
+          payload: payload,
+          metadata: metadata
+        });
       }, 500);
     }
   } else {
@@ -301,101 +289,7 @@ function handleManualDownload() {
   }
 }
 
-async function batchTranslateSegments(segments) {
-  if (!segments || segments.length === 0) return false;
-  console.log(`[STD] Starting batch translation for ${segments.length} segments...`);
-  
-  let currentChunkText = "";
-  let currentChunkIndices = [];
 
-  const buildChunkText = (indices) => indices
-    .map(index => segments[index].text.trim().replace(/\n/g, " "))
-    .filter(Boolean)
-    .join('\n');
-  
-  const flushChunk = async (text, indices) => {
-    if (!text) return true;
-    for (let attempt = 1; attempt <= 5; attempt++) {
-      try {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: `q=${encodeURIComponent(text)}`
-      });
-      if (!response.ok) {
-        throw new Error(`Translate HTTP ${response.status}`);
-      }
-      const res = await response.json();
-      
-      let translatedText = "";
-      if (res && res[0]) {
-        res[0].forEach(item => {
-          if (item[0]) translatedText += item[0];
-        });
-      }
-      
-      const translations = translatedText.split('\n').map(s => s.trim());
-      const hasAllTranslations = translations.length >= indices.length && indices.every((_, i) => translations[i]);
-      if (!hasAllTranslations) {
-        if (indices.length > 1) {
-          const middle = Math.ceil(indices.length / 2);
-          const leftIndices = indices.slice(0, middle);
-          const rightIndices = indices.slice(middle);
-          const leftOk = await flushChunk(buildChunkText(leftIndices), leftIndices);
-          const rightOk = await flushChunk(buildChunkText(rightIndices), rightIndices);
-          return leftOk && rightOk;
-        }
-        throw new Error(`Translate returned ${translations.filter(Boolean).length}/${indices.length} non-empty lines`);
-      }
-      for (let i = 0; i < indices.length; i++) {
-        segments[indices[i]].translation = translations[i];
-      }
-      
-      // Keep requests slow enough to avoid Google Translate rate limits.
-      await new Promise(r => setTimeout(r, 5000));
-      return true;
-      } catch (err) {
-        console.error(`[STD] Translation chunk failed attempt ${attempt}/5:`, err);
-        if (attempt === 5) return false;
-        await new Promise(r => setTimeout(r, 15000 * attempt));
-      }
-    }
-  };
-
-  for (let i = 0; i < segments.length; i++) {
-    const textToTranslate = segments[i].text.trim().replace(/\n/g, " ");
-    if (!textToTranslate) continue;
-    
-    // Smaller chunks reduce empty/partial translation responses and rate-limit pressure.
-    if (currentChunkText.length + textToTranslate.length > 2500) {
-      const ok = await flushChunk(currentChunkText, currentChunkIndices);
-      if (!ok) return false;
-      currentChunkText = "";
-      currentChunkIndices = [];
-    }
-    
-    if (currentChunkText.length > 0) {
-      currentChunkText += '\n';
-    }
-    currentChunkText += textToTranslate;
-    currentChunkIndices.push(i);
-  }
-  
-  if (currentChunkText.length > 0) {
-    const ok = await flushChunk(currentChunkText, currentChunkIndices);
-    if (!ok) return false;
-  }
-  const missingCount = segments.filter(segment => segment && segment.text && !segment.translation).length;
-  if (missingCount > 0) {
-    console.error(`[STD] Batch translation incomplete: ${missingCount} missing translations.`);
-    return false;
-  }
-  console.log(`[STD] Batch translation complete.`);
-  return true;
-}
 
 function triggerDownload(payload, metadata) {
   const dateStr = metadata.publishedDate || "unknown";
