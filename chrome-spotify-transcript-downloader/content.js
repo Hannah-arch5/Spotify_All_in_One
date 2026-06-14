@@ -232,7 +232,11 @@ function handleAPICaptured(url, data) {
         const statusEl = document.getElementById('std-status-text');
         if (statusEl) statusEl.innerHTML = `<span style="color: #FFA500;">Translating transcript...</span>`;
         
-        await batchTranslateSegments(payload.segments);
+        const translated = await batchTranslateSegments(payload.segments);
+        if (!translated) {
+          if (statusEl) statusEl.innerHTML = `<span style="color: #FF6B6B;">Translation incomplete. Retry later.</span>`;
+          return;
+        }
         
         const translatedMeta = { ...finalMeta };
         translatedMeta.episodeTitle = finalMeta.episodeTitle + "_zh";
@@ -279,7 +283,11 @@ function handleManualDownload() {
         const statusEl = document.getElementById('std-status-text');
         if (statusEl) statusEl.innerHTML = `<span style="color: #FFA500;">Translating transcript...</span>`;
         
-        await batchTranslateSegments(payload.segments);
+        const translated = await batchTranslateSegments(payload.segments);
+        if (!translated) {
+          if (statusEl) statusEl.innerHTML = `<span style="color: #FF6B6B;">Translation incomplete. Retry later.</span>`;
+          return;
+        }
         
         const translatedMeta = { ...metadata };
         translatedMeta.episodeTitle = metadata.episodeTitle + "_zh";
@@ -294,15 +302,21 @@ function handleManualDownload() {
 }
 
 async function batchTranslateSegments(segments) {
-  if (!segments || segments.length === 0) return;
+  if (!segments || segments.length === 0) return false;
   console.log(`[STD] Starting batch translation for ${segments.length} segments...`);
   
   let currentChunkText = "";
   let currentChunkIndices = [];
+
+  const buildChunkText = (indices) => indices
+    .map(index => segments[index].text.trim().replace(/\n/g, " "))
+    .filter(Boolean)
+    .join('\n');
   
   const flushChunk = async (text, indices) => {
-    if (!text) return;
-    try {
+    if (!text) return true;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
       const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t`;
       const response = await fetch(url, {
         method: 'POST',
@@ -311,6 +325,9 @@ async function batchTranslateSegments(segments) {
         },
         body: `q=${encodeURIComponent(text)}`
       });
+      if (!response.ok) {
+        throw new Error(`Translate HTTP ${response.status}`);
+      }
       const res = await response.json();
       
       let translatedText = "";
@@ -321,14 +338,30 @@ async function batchTranslateSegments(segments) {
       }
       
       const translations = translatedText.split('\n').map(s => s.trim());
+      const hasAllTranslations = translations.length >= indices.length && indices.every((_, i) => translations[i]);
+      if (!hasAllTranslations) {
+        if (indices.length > 1) {
+          const middle = Math.ceil(indices.length / 2);
+          const leftIndices = indices.slice(0, middle);
+          const rightIndices = indices.slice(middle);
+          const leftOk = await flushChunk(buildChunkText(leftIndices), leftIndices);
+          const rightOk = await flushChunk(buildChunkText(rightIndices), rightIndices);
+          return leftOk && rightOk;
+        }
+        throw new Error(`Translate returned ${translations.filter(Boolean).length}/${indices.length} non-empty lines`);
+      }
       for (let i = 0; i < indices.length; i++) {
-        segments[indices[i]].translation = translations[i] || "";
+        segments[indices[i]].translation = translations[i];
       }
       
-      // Add a small delay to avoid Google Translate API rate limit (HTTP 429)
-      await new Promise(r => setTimeout(r, 1000));
-    } catch (err) {
-      console.error("[STD] Translation chunk failed:", err);
+      // Keep requests slow enough to avoid Google Translate rate limits.
+      await new Promise(r => setTimeout(r, 5000));
+      return true;
+      } catch (err) {
+        console.error(`[STD] Translation chunk failed attempt ${attempt}/5:`, err);
+        if (attempt === 5) return false;
+        await new Promise(r => setTimeout(r, 15000 * attempt));
+      }
     }
   };
 
@@ -336,9 +369,10 @@ async function batchTranslateSegments(segments) {
     const textToTranslate = segments[i].text.trim().replace(/\n/g, " ");
     if (!textToTranslate) continue;
     
-    // Chunk size kept at 4500, but now safe because it's a POST request
-    if (currentChunkText.length + textToTranslate.length > 4500) {
-      await flushChunk(currentChunkText, currentChunkIndices);
+    // Smaller chunks reduce empty/partial translation responses and rate-limit pressure.
+    if (currentChunkText.length + textToTranslate.length > 2500) {
+      const ok = await flushChunk(currentChunkText, currentChunkIndices);
+      if (!ok) return false;
       currentChunkText = "";
       currentChunkIndices = [];
     }
@@ -351,9 +385,16 @@ async function batchTranslateSegments(segments) {
   }
   
   if (currentChunkText.length > 0) {
-    await flushChunk(currentChunkText, currentChunkIndices);
+    const ok = await flushChunk(currentChunkText, currentChunkIndices);
+    if (!ok) return false;
+  }
+  const missingCount = segments.filter(segment => segment && segment.text && !segment.translation).length;
+  if (missingCount > 0) {
+    console.error(`[STD] Batch translation incomplete: ${missingCount} missing translations.`);
+    return false;
   }
   console.log(`[STD] Batch translation complete.`);
+  return true;
 }
 
 function triggerDownload(payload, metadata) {

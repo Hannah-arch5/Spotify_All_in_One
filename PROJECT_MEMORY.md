@@ -1365,3 +1365,113 @@ Monday batch notes:
   - Transcript cleanup after delivery: `imported=0 skipped=18 removed=18 english_seen=9 chinese_seen=9`.
   - Downloads leftover JSON count: `0`.
   - Mark seen result: `marked_seen=9 manifest=data/runs/20260611-123804-595580-manifest.json`.
+
+## 2026-06-11 260610 Quote And Pagination Correction
+
+- User rejected the first 260610 delivery because two hard gates were still not satisfied:
+  - Several `关键金句 / 结论` items used `转述结论` instead of meaningful source-language original quotes plus italic translations.
+  - Fourth/fifth part pagination was wrong: the fourth-part heading previously appeared too low, and after a first pagebreak fix the fourth/fifth sections still produced heading/intro pages with large blank space before the body.
+- Root causes:
+  - During review cleanup, weak direct quotes were converted into `转述结论` instead of returning to transcript JSON and selecting verifiable source-language quotes.
+  - `scripts/render_delivery_reports.py` over-applied `keep_together` to long later-section bold-subtitle paragraphs. Word then pushed whole long paragraphs to the next page, leaving pages with only a heading and intro.
+  - `scripts/audit_delivery_report_format.py` coupled two separate rules: allowing structural bold subtitles and requiring short subtitles to keep with following paragraphs.
+- Fix applied:
+  - Replaced all remaining `转述结论` items in `reports/markdown/20260611-123804-595580-gemini-report.md` with transcript-verifiable English original quotes and direct italic Chinese translations.
+  - Added explicit `<!-- pagebreak -->` before `## 第四部分` and `## 第五部分`.
+  - Updated `scripts/render_delivery_reports.py` so only short/standalone later-section subtitles force `keep_with_next`; long subtitle+body paragraphs are allowed to split naturally.
+  - Updated `scripts/audit_delivery_report_format.py` so long structural bold subtitle paragraphs are allowed, while only short subtitle headings require pagination keep behavior.
+- Validation after correction:
+  - Gemini report review: `通过`.
+  - Text gate: `转述结论 count=0`, `关键金句 / 结论 count=9`, `pagebreak count=2`.
+  - Delivery-format audit: no issues; H2 count `5`; episode heading count `9`; required labels each counted `9`; PDF page count `26`.
+  - PDF page check:
+    - Page 23 now contains fourth-part heading, intro, and body list content.
+    - Page 25 now contains fifth-part heading, intro, and body list content.
+    - No fourth/fifth part heading-only or heading+intro-only blank page remains.
+- Corrected hashes:
+  - DOCX SHA-256: `2ae42b27b0b8c79dab0c2b6b6d30c59d05ee8a2caa603a4dd703ab847a234e0f`.
+  - PDF SHA-256: `759d3ec140572eff1596160452b3c31938534e1c54ad5755c3419f15adc1f497`.
+- Corrected external delivery:
+  - Zotero replaced existing item `4376`; active storage path `/Users/hannah/Zotero/storage/MUDJK4SJ/260610-Spotify播客情报研报.pdf`; Zotero PDF hash matches corrected local PDF hash.
+  - Google Drive DOCX re-uploaded and verified in listing as `260610-Spotify播客情报研报.docx`.
+  - Discord `#todo` corrected PDF sent with message `Spotify 播客情报研报：260610-Spotify播客情报研报（金句与分页修正版）`; notification id `1781161922610-01050b98-4e44-4120-a402-8fd710c31b1d-discord`; `notification_sent` timestamp `2026-06-11T07:12:05.401Z`.
+- Hard process reminder:
+  - Never satisfy quote safety by downgrading key quotes to `转述结论` unless the episode truly has no meaningful verifiable source-language quote; first go back to transcript JSON and select exact source lines.
+  - Pagination validation must include PDF page text/visual spot checks for later sections, not only automated DOCX flags.
+
+## 2026-06-11 260610 Conditional Pagination Final Correction
+
+- User clarified the pagination rule again:
+  - Do not force fourth/fifth sections to restart on new pages.
+  - If the remaining page area is still usable and does not leave the heading in the bottom quarter, keep the next section on the same page.
+  - Avoid creating pages where more than roughly one quarter is blank only because of a manual pagebreak.
+- Root cause of the second correction:
+  - The previous fix inserted explicit `<!-- pagebreak -->` before both fourth and fifth parts. That removed bottom-heading orphaning but violated the conditional-pagination rule by creating unnecessary blank space.
+- Final fix applied:
+  - Removed the explicit pagebreaks before `## 第四部分` and `## 第五部分`.
+  - Kept the renderer change that prevents long bold subtitle+body paragraphs from being forced together, so the page can fill naturally instead of leaving large blank areas.
+- Final validation:
+  - Gemini report review: `通过`.
+  - Delivery-format audit: no issues; H2 count `5`; episode heading count `9`; required labels each counted `9`; PDF page count `24`.
+  - PDF page check:
+    - Page 22 contains the end of third part and the start/body of fourth part; no forced blank page.
+    - Page 23 contains the end of fourth part and the start/body of fifth part; no forced blank page.
+  - Text gate remains clean: `转述结论 count=0`.
+- Final corrected hashes:
+  - DOCX SHA-256: `7fa1e6ff77f7cc503d46eee2c9e9787915a4a94634084d7585c0bfb8bd7cecd7`.
+  - PDF SHA-256: `6117f112e9daaab43adefb11066ee15fe45ec52817a14d6cf516489050e36c48`.
+- Final external delivery:
+  - Zotero replaced existing item `4376`; active storage path `/Users/hannah/Zotero/storage/44QJ2L18/260610-Spotify播客情报研报.pdf`; Zotero PDF hash matches final local PDF hash.
+  - Google Drive DOCX re-uploaded and verified in listing as `260610-Spotify播客情报研报.docx`.
+  - Discord `#todo` final PDF sent with message `Spotify 播客情报研报：260610-Spotify播客情报研报（金句与条件分页最终版）`; notification id `1781162211003-2954aef8-f6a5-44be-aa14-56a9f0096787-discord`; `notification_sent` timestamp `2026-06-11T07:16:53.208Z`.
+- Skill/GitHub note:
+  - Local skill files were updated to require transcript-level quote selection before using `转述结论`.
+  - Public GitHub skill archive sync is pending because the current Codex approval/usage limit blocked the required `git commit/push` step.
+
+## 2026-06-14 260612 Report Delivery Completion
+
+- Window and manifest:
+  - Fixed M/W/F schedule window: `2026-06-10T07:00:00+00:00` through `2026-06-12T07:00:00+00:00`.
+  - Valid manifest: `data/runs/20260613-203919-703967-manifest.json`.
+  - Episode count: `14`; feed failures: `0`.
+- Transcript collection:
+  - STD original transcript coverage was complete: `14/14` episodes.
+  - STD Chinese transcript coverage was incomplete: `11/14` complete Chinese transcripts.
+  - Missing Chinese transcripts were left as a plugin issue for Antigravity, per user instruction:
+    - `2c50dZKpJcLjAfGXhOMRxD` / Dean Radin.
+    - `5lRsk2WfpnX79ElLcQSiOE` / Arthur Brooks.
+    - `07gKzPFkbvGF0cHoeG7ARS` / Joey Diaz.
+  - Hard correction: never use Gemini or any LLM to fabricate/fill missing Chinese subtitles. Chinese subtitles must come from the user's STD plugin download flow. If STD cannot produce complete `_zh` files, record the gap as a plugin blocker or proceed only with explicit user direction based on source transcripts.
+  - Non-STD/partial Chinese repair artifacts were quarantined under `data/quarantine/`; the temporary Gemini Chinese-repair scripts were deleted.
+- STD plugin note for Antigravity follow-up:
+  - `chrome-spotify-transcript-downloader/content.js` was patched so `_zh` downloads are not saved when translation is incomplete.
+  - The patch also added retry/splitting behavior for failed translation chunks, but long-episode Chinese translation still needs plugin-level repair by Antigravity.
+- Gemini generation:
+  - Generated from the validated evidence package without requiring Chinese transcripts, using complete original transcripts and user approval to continue the report.
+  - Gemini model used for the final report: `gemini-2.5-flash-lite` because `gemini-2.5-flash` free quota had been exhausted.
+  - Final report Markdown: `reports/markdown/20260613-203919-703967-gemini-report.md`.
+- Final report:
+  - Title: `当 AI 从工具变成基础设施：重估算力、生命科学、实体产业与人的意义系统 (When AI Becomes Infrastructure: Repricing Compute, Biology, Physical Industry, and Human Meaning)`.
+  - DOCX: `reports/word/260612-Spotify播客情报研报.docx`.
+  - PDF: `reports/pdf/260612-Spotify播客情报研报.pdf`.
+  - DOCX SHA-256: `e07915bbbb049c7ee331f59001a9e459f95eb574f6b8096785a7e37666d220dc`.
+  - PDF SHA-256: `23f151148d28d77764c94646adf2ccce32431b0b48bfe71b27500636537c53ce`.
+- Quality gates:
+  - Gemini report review passed: `通过`.
+  - Delivery-format audit passed with no issues.
+  - H2 count: `5`.
+  - Episode heading count: `14`.
+  - Required labels each counted `14`.
+  - PDF page count: `36`.
+  - Pagination spot check confirmed later sections do not have heading-only pages and are not forced onto new pages unnecessarily.
+- External delivery:
+  - Zotero direct-PDF archive completed: `archived_direct_pdf=4378 title=260612-Spotify播客情报研报`.
+  - Active Zotero PDF: `/Users/hannah/Zotero/storage/O5YEV91X/260612-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the final local PDF hash.
+  - Google Drive DOCX uploaded and verified in Drive listing as `260612-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF sent with message `Spotify 播客情报研报：260612-Spotify播客情报研报`; notification id `1781420887334-e0d7d79f-d6fa-41ae-8615-6b24356d43da-discord`; `sentAt` timestamp `2026-06-14T07:10:03.427Z`.
+  - Discord Studio note: default port `3000` was already in use; a temporary worker was started on `PORT=3001` to send this PDF, then stopped after confirmation.
+- Cleanup and state:
+  - Transcript cleanup after delivery: `imported=0 skipped=28 removed=28 english_seen=17 chinese_seen=11`.
+  - `~/Downloads/Spotify Transcript Collector` has `0` loose transcript JSON backups after cleanup.
+  - Mark seen result: `marked_seen=14 manifest=data/runs/20260613-203919-703967-manifest.json`.
