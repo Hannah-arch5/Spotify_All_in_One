@@ -1476,3 +1476,52 @@ Monday batch notes:
   - Transcript cleanup after delivery: `imported=0 skipped=28 removed=28 english_seen=17 chinese_seen=11`.
   - `~/Downloads/Spotify Transcript Collector` has `0` loose transcript JSON backups after cleanup.
   - Mark seen result: `marked_seen=14 manifest=data/runs/20260613-203919-703967-manifest.json`.
+
+## 2026-06-15 260615 Report Delivery Completion
+
+- Window and manifest:
+  - Fixed M/W/F schedule window: `2026-06-12T07:00:00+00:00` through `2026-06-15T07:00:00+00:00`.
+  - Valid original manifest: `data/runs/20260615-190753-801514-manifest.json`.
+  - Original episode count: `16`; feed failures: `0`.
+  - First sandboxed manifest `data/runs/20260615-190725-530653-manifest.json` was invalid because sandboxed DNS caused `feed_failures=26`; reran with external network approval.
+- Transcript collection:
+  - STD collected `14/16` original transcripts and matched Chinese transcripts for the deliverable set.
+  - User explicitly authorized skipping 2 episodes after STD collection was blocked:
+    - `小Lin说 | SpaceX上市，背后在玩什么资本游戏?`: Spotify search and the `小Lin說` show page did not expose this latest episode; no correct Spotify detail page was found.
+    - `The Joe Rogan Experience | #2514 - Cameron Hanes`: Spotify detail page existed, but it had no native `Transcript` tab, so STD could not collect a transcript.
+  - Derived deliverable manifest: `data/runs/20260615-190753-801514-skip2-manifest.json`.
+  - Deliverable episode count: `14`.
+  - Evidence pack: `data/runs/20260615-190753-801514-skip2-evidence-pack.json`.
+  - Language audit passed for deliverable set: `english_found_count=14`, `chinese_found_count=14`, `chinese_missing_count=0`.
+- Gemini generation and correction:
+  - `gemini-2.5-flash` returned HTTP `503`; reran with `gemini-2.5-flash-lite`.
+  - Final report Markdown: `reports/markdown/20260615-190753-801514-skip2-gemini-report.md`.
+  - Main title: `当 AI 进入执行层：个人、产品、市场与太空基础设施都在重写生产函数 (When AI Enters the Execution Layer: Rewriting the Production Function Across People, Products, Markets, and Space Infrastructure)`.
+  - Manual correction added required `## 第一部分` through `## 第五部分`, integrated sections 3/4/5 as cross-episode synthesis, and replaced review-flagged quote text with transcript-verifiable original lines.
+  - Added one conditional `<!-- pagebreak -->` before the fourth part after PDF spot check showed the fourth-part heading at the bottom of page 30.
+- Quality gates:
+  - Gemini report review passed: `通过`.
+  - Delivery-format audit passed with no issues.
+  - H2 count: `5`.
+  - Episode heading count: `14`.
+  - Required labels each counted `14`.
+  - PDF page count: `32`.
+  - PDF spot check confirmed the fourth part now starts with body on page 31; third/fifth parts were not globally forced onto new pages.
+- Final report:
+  - DOCX: `reports/word/260615-Spotify播客情报研报.docx`.
+  - PDF: `reports/pdf/260615-Spotify播客情报研报.pdf`.
+  - DOCX SHA-256: `035603232e62f20dbeab448a957ab5e68361d7a9f223a2c6d0a549aea4b72f97`.
+  - PDF SHA-256: `5a80a4b9ef3e48e031966a131e10d14a9388ac60c3f8e9b6dd17b85c54a6d5c3`.
+- External delivery:
+  - Zotero direct-PDF archive completed: `archived_direct_pdf=4379 title=260615-Spotify播客情报研报`.
+  - Active Zotero PDF: `/Users/hannah/Zotero/storage/OPZQ0DNC/260615-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the final local PDF hash.
+  - Google Drive DOCX uploaded and verified in Drive listing as `260615-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF sent with message `Spotify 播客情报研报：260615-Spotify播客情报研报`; notification id `1781527872138-536a8937-1f8e-49b2-86a0-e71a9963153c-discord`; `sentAt` timestamp `2026-06-15T12:51:14.110Z`.
+- Cleanup and state:
+  - Transcript cleanup after delivery: `imported=0 skipped=28 removed=28 english_seen=14 chinese_seen=14`.
+  - `~/Downloads/Spotify Transcript Collector` has `0` loose transcript JSON backups after cleanup.
+  - Mark seen result: `marked_seen=16 manifest=data/runs/20260615-190753-801514-manifest.json`.
+- Automation fix:
+  - Discord send initially failed because `scripts/env_utils.py` stripped trailing quote characters from unquoted `.env` values, turning `SPOTIFY_DISCORD_SEND_CMD=... "{pdf}"` into an invalid template.
+  - Fixed `scripts/env_utils.py` so quote removal only happens when the entire value is wrapped in matching quotes.
