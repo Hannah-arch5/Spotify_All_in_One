@@ -74,10 +74,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const metadata = message.metadata;
         
         console.log(`[STD] Background translation started for: ${metadata.episodeTitle}`);
-        await batchTranslateSegments(payload.segments);
+        const translationSuccess = await batchTranslateSegments(payload.segments);
         
         const translatedMeta = { ...metadata };
-        translatedMeta.episodeTitle = metadata.episodeTitle + "_zh";
+        const suffix = translationSuccess ? "_zh" : "_zh_INCOMPLETE";
+        translatedMeta.episodeTitle = metadata.episodeTitle + suffix;
         
         const dateStr = translatedMeta.publishedDate || "unknown";
         const cleanPodcast = cleanFilename(translatedMeta.podcastName);
@@ -184,7 +185,8 @@ async function batchTranslateSegments(segments) {
     if (!textToTranslate) continue;
     
     // Smaller chunks reduce empty/partial translation responses and rate-limit pressure.
-    if (currentChunkText.length + textToTranslate.length > 2500) {
+    // 4500 is safe for POST requests and halves the total number of requests.
+    if (currentChunkText.length + textToTranslate.length > 4500) {
       const ok = await flushChunk(currentChunkText, currentChunkIndices);
       if (!ok) return false;
       currentChunkText = "";
