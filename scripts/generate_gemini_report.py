@@ -11,6 +11,8 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+from env_utils import gemini_api_key
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = "gemini-2.5-pro"
@@ -85,9 +87,7 @@ def generate(
         print(preview_path)
         return preview_path
 
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        raise SystemExit("Missing GEMINI_API_KEY or GOOGLE_API_KEY environment variable.")
+    api_key = gemini_api_key()
 
     endpoint = API_ENDPOINT.format(model=urllib.parse.quote(model, safe=""))
     url = f"{endpoint}?key={urllib.parse.quote(api_key)}"

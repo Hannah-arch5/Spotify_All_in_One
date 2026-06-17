@@ -102,17 +102,30 @@ GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runt
 GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/generate_chunked_gemini_report.py --package-dir data/gemini_inputs/20260523-222300 --model gemini-2.5-flash --sleep-seconds 70
 ```
 
-端到端运行整条流水线：
+端到端运行整条流水线。常规 Monday / Wednesday / Friday 自动化必须使用固定 15:00 Asia/Shanghai 窗口，避免延迟运行时因 `--since-days` 产生漏抓：
 
 ```bash
-GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --since-days 3
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --schedule-window current --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70
 ```
 
 如果希望研报复查通过后自动标记本批 episode 已处理：
 
 ```bash
-GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --since-days 3 --mark-seen-on-pass
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --schedule-window current --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70 --mark-seen-on-pass
 ```
+
+生产自动化请优先使用服务入口。它会按固定窗口运行 pipeline、渲染 Word/PDF、审计格式、归档 Zotero、上传 Google Drive、发送 Discord，最后才把 manifest 中的 episode 标记为已处理：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_scheduled_report_service.py
+```
+
+配置从 `.env` 读取，模板见 `.env.example`。外部投递不要依赖 Codex 交互授权；应在本机服务环境中预先配置：
+
+- Google Drive：配置 `SPOTIFY_GOOGLE_DRIVE_UPLOAD_CMD`，命令必须直接上传到 `1.Spotify情报汇总` 文件夹。
+- Discord：配置 `SPOTIFY_DISCORD_SEND_CMD`、`SPOTIFY_DISCORD_CWD` 和 `SPOTIFY_DISCORD_CHANNEL_ID`。
+- Zotero：如果继续写本地数据库，设置 `SPOTIFY_ZOTERO_QUIT_BEFORE_WRITE=1`，避免 Zotero 打开时锁住 sqlite。
+- 中文 transcript：如需缺中文即阻塞，设置 `SPOTIFY_REQUIRE_ZH_TRANSCRIPTS=1` 或运行时加 `--require-zh-transcripts`。
 
 生成 ASR 转写队列：
 
@@ -140,6 +153,8 @@ GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runt
 - Gemini 分段 episode briefs：`data/gemini_chunks/<run_id>/`
 - Gemini 自动生成研报：`reports/markdown/*-gemini-report.md`
 - Gemini 研报复查结果：`data/runs/*-gemini-review.json` 和 `reports/markdown/*-gemini-review.md`
+- Transcript 语言覆盖审计：`data/runs/*-transcript-language-audit.json` 和 `reports/markdown/*-transcript-language-audit.md`
+- 生产自动化日志：`data/service_logs/*-scheduled-report.json`
 - RSS 原始缓存：`data/feeds/`
 - 去重数据库：`data/state.sqlite`
 

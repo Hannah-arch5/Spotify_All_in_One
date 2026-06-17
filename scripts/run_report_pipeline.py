@@ -49,17 +49,15 @@ def _read_json(path: Path) -> dict:
 def run(args: argparse.Namespace) -> dict[str, str | int]:
     outputs: dict[str, str | int] = {}
 
-    manifest_path = Path(
-        _last_line(
-            _run(
-                [
-                    "scripts/check_new_episodes.py",
-                    "--since-days",
-                    str(args.since_days),
-                ]
-            )
-        )
-    )
+    if args.manifest:
+        manifest_path = args.manifest
+    else:
+        check_args = ["scripts/check_new_episodes.py"]
+        if args.schedule_window:
+            check_args.extend(["--schedule-window", args.schedule_window])
+        else:
+            check_args.extend(["--since-days", str(args.since_days)])
+        manifest_path = Path(_last_line(_run(check_args)))
     outputs["manifest"] = str(manifest_path)
     manifest = _read_json(manifest_path)
     new_episode_count = manifest["summary"]["new_episode_count"]
@@ -88,6 +86,20 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
         outputs["status"] = "blocked_missing_transcripts"
         print(json.dumps(outputs, ensure_ascii=False, indent=2))
         return outputs
+
+    language_audit_args = ["scripts/audit_transcript_languages.py", str(evidence_pack)]
+    if args.require_zh_transcripts:
+        language_audit_args.append("--require-zh")
+    try:
+        language_audit_lines = _run(language_audit_args).splitlines()
+    except PipelineStepError as exc:
+        outputs["transcript_language_audit"] = str(ROOT / "data" / "runs" / f"{manifest['run_id']}-transcript-language-audit.json")
+        outputs["status"] = "blocked_missing_zh_transcripts"
+        outputs["transcript_language_error"] = (exc.stderr or exc.stdout or str(exc))[:1200]
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+        return outputs
+    if language_audit_lines:
+        outputs["transcript_language_audit"] = language_audit_lines[0]
 
     package_dir = Path(_last_line(_run(["scripts/build_gemini_input_package.py", str(evidence_pack)])))
     outputs["gemini_package"] = str(package_dir)
@@ -146,17 +158,16 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
     if review_stdout == "通过":
         if args.cleanup_transcripts_on_pass:
             outputs["transcript_cleanup"] = _last_line(_run(["scripts/import_spotify_transcripts.py", "--move"]))
-        if args.mark_seen_on_pass:
-            outputs["marked_seen_manifest"] = _last_line(
-                _run(
-                    [
-                        "scripts/check_new_episodes.py",
-                        "--since-days",
-                        str(args.since_days),
-                        "--mark-seen",
-                    ]
-                )
-            )
+        if args.mark_seen_on_pass and args.manifest:
+            outputs["mark_seen_skipped"] = "mark_seen_on_pass is only supported for live --since-days runs; fixed-window manifests should be marked deliberately after review."
+        elif args.mark_seen_on_pass:
+            mark_seen_args = ["scripts/check_new_episodes.py"]
+            if args.schedule_window:
+                mark_seen_args.extend(["--schedule-window", args.schedule_window])
+            else:
+                mark_seen_args.extend(["--since-days", str(args.since_days)])
+            mark_seen_args.append("--mark-seen")
+            outputs["marked_seen_manifest"] = _last_line(_run(mark_seen_args))
 
     outputs["status"] = "done"
     print(json.dumps(outputs, ensure_ascii=False, indent=2))
@@ -165,12 +176,23 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the podcast report pipeline end to end.")
+    parser.add_argument("--manifest", type=Path, help="Use an existing episode manifest instead of checking RSS.")
     parser.add_argument("--since-days", type=int, default=3)
+    parser.add_argument(
+        "--schedule-window",
+        choices=["current"],
+        help="Use the latest fixed Monday/Wednesday/Friday 15:00 Asia/Shanghai report window instead of --since-days.",
+    )
     parser.add_argument("--model", default="gemini-2.5-flash")
     parser.add_argument("--gemini-mode", choices=["chunked", "single"], default="chunked")
     parser.add_argument("--sleep-seconds", type=int, default=70)
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--move-imported-transcripts", action="store_true")
+    parser.add_argument(
+        "--require-zh-transcripts",
+        action="store_true",
+        help="Block before Gemini if any episode lacks a matched Chinese transcript.",
+    )
     parser.add_argument(
         "--cleanup-transcripts-on-pass",
         action="store_true",

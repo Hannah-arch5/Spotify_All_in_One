@@ -424,7 +424,8 @@ def add_docx_paragraph(doc: Document, role: str, text: str, *, italic: bool = Fa
     if role in {"h1", "h2", "h3"}:
         paragraph.paragraph_format.keep_with_next = True
         paragraph.paragraph_format.keep_together = True
-    if role == "body" and allow_leading_subtitle_bold and re.match(r"^\s*(?:\d+\.\s*)?\*\*.+?\*\*", text.strip()):
+    leading_subtitle = re.match(r"^\s*(?:\d+\.\s*)?\*\*.+?\*\*([：:]?)(.*)$", text.strip())
+    if role == "body" and allow_leading_subtitle_bold and leading_subtitle and len(leading_subtitle.group(2).strip()) <= 24:
         paragraph.paragraph_format.keep_with_next = True
         paragraph.paragraph_format.keep_together = True
     runs = (

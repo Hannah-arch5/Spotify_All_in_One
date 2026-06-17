@@ -1,0 +1,16 @@
+{
+  "started_at": "2026-06-04T00:10:28.332114+08:00",
+  "status": "blocked_missing_transcripts",
+  "pipeline": {
+    "manifest": "/Users/hannah/Documents/Spotify All in One/data/runs/20260604-001028-422744-manifest.json",
+    "new_episode_count": 11,
+    "episode_list": "/Users/hannah/Documents/Spotify All in One/reports/markdown/20260604-001028-422744-episode-list.md",
+    "transcript_audit": "/Users/hannah/Documents/Spotify All in One/reports/markdown/20260604-001028-422744-transcript-audit.md",
+    "transcript_import": "imported=0 skipped=0 removed=0 english_seen=0 chinese_seen=0 english_dir=/Users/hannah/Documents/Spotify All in One/data/transcripts/spotify_en chinese_dir=/Users/hannah/Documents/Spotify All in One/data/transcripts/spotify_zh",
+    "evidence_pack": "/Users/hannah/Documents/Spotify All in One/data/runs/20260604-001028-422744-evidence-pack.json",
+    "missing_transcripts": 7,
+    "spotify_collection_queue": "/Users/hannah/Documents/Spotify All in One/reports/markdown/20260604-001028-422744-spotify-collection-queue.md",
+    "status": "blocked_missing_transcripts"
+  },
+  "finished_at": "2026-06-04T00:11:03.643763+08:00"
+}

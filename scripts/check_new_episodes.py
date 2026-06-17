@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 
 from src.config import Podcast, load_podcasts
 from src.rss import Episode, cache_feed, fetch_feed, parse_feed
+from src.schedule import current_report_window
 from src.state import connect, mark_seen, seen_guids
 
 
@@ -52,12 +53,30 @@ def _podcast_status(podcast: Podcast, status: str, **extra: object) -> dict[str,
     return payload
 
 
+def _parse_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    normalized = value.strip()
+    if normalized.endswith("Z"):
+        normalized = f"{normalized[:-1]}+00:00"
+    parsed = datetime.fromisoformat(normalized)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
 def run(args: argparse.Namespace) -> Path:
     podcasts = load_podcasts(ROOT / "config" / "podcasts.yaml")
     connection = connect(ROOT / "data" / "state.sqlite")
     already_seen = seen_guids(connection)
     now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(days=args.since_days) if args.since_days else None
+    if args.schedule_window == "current":
+        cutoff, until = current_report_window(now)
+    else:
+        cutoff = _parse_datetime(args.since)
+        until = _parse_datetime(args.until)
+    if cutoff is None:
+        cutoff = now - timedelta(days=args.since_days) if args.since_days else None
 
     statuses: list[dict[str, object]] = []
     all_candidates: list[Episode] = []
@@ -83,7 +102,8 @@ def run(args: argparse.Namespace) -> Path:
         windowed = [
             episode
             for episode in episodes
-            if cutoff is None or episode.published_at is None or episode.published_at >= cutoff
+            if (cutoff is None or episode.published_at is None or episode.published_at >= cutoff)
+            and (until is None or episode.published_at is None or episode.published_at < until)
         ]
         candidates = [episode for episode in windowed if episode.guid not in already_seen]
         all_candidates.extend(candidates)
@@ -113,11 +133,13 @@ def run(args: argparse.Namespace) -> Path:
     if args.mark_seen:
         mark_seen(connection, all_candidates)
 
-    run_id = now.astimezone().strftime("%Y%m%d-%H%M%S")
+    run_id = now.astimezone().strftime("%Y%m%d-%H%M%S-%f")
     manifest = {
         "run_id": run_id,
         "created_at": now.isoformat(),
         "since_days": args.since_days,
+        "since": cutoff.isoformat() if cutoff else None,
+        "until": until.isoformat() if until else None,
         "marked_seen": args.mark_seen,
         "sort_rule": "episode.published_at desc",
         "summary": {
@@ -145,6 +167,19 @@ def main() -> None:
         type=int,
         default=3,
         help="Only consider episodes published within this many days. Use 0 for no date limit.",
+    )
+    parser.add_argument(
+        "--since",
+        help="Inclusive lower publish-time bound as ISO datetime. Overrides --since-days when provided.",
+    )
+    parser.add_argument(
+        "--until",
+        help="Exclusive upper publish-time bound as ISO datetime.",
+    )
+    parser.add_argument(
+        "--schedule-window",
+        choices=["current"],
+        help="Use the latest fixed Monday/Wednesday/Friday 15:00 Asia/Shanghai report window.",
     )
     parser.add_argument(
         "--mark-seen",

@@ -130,6 +130,13 @@ def is_later_part_subtitle_bold(paragraph, run_index: int) -> bool:
     return bool(run_text.endswith(("：", ":")) or after.startswith(("：", ":")) or not after or paragraph.text.strip().startswith("**"))
 
 
+def later_part_subtitle_requires_keep(paragraph, run_index: int) -> bool:
+    if not is_later_part_subtitle_bold(paragraph, run_index):
+        return False
+    after = "".join(run.text for run in paragraph.runs[run_index + 1:]).strip()
+    return len(after) <= 24
+
+
 def audit_docx(path: Path) -> dict[str, Any]:
     doc = Document(path)
     paragraphs = doc.paragraphs
@@ -250,7 +257,7 @@ def audit_docx(path: Path) -> dict[str, Any]:
                 loose_labels.append((p.text[:80], points(p.paragraph_format.space_after)))
         if p.style.name in {"Heading 1", "Heading 2", "Heading 3"}:
             continue
-        if current_part_number >= 3 and is_later_part_subtitle_bold(p, 0):
+        if current_part_number >= 3 and later_part_subtitle_requires_keep(p, 0):
             if not p.paragraph_format.keep_with_next:
                 subtitle_pagination_failures.append(p.text[:80])
         if p.text.strip() and p.style.name in {"Body Text", "Normal", "normal"}:

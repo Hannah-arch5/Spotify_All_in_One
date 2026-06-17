@@ -158,6 +158,7 @@ Codex expansion updates (up to V2.1.9):
 - Embedded `debugLogs` array into the downloaded JSON payload for diagnostics.
 - Switched Google Translate API from GET to POST and restored a 1s delay per batch to resolve HTTP 414 and 429 failures causing missing Chinese transcripts.
 - Decoupled `batchTranslateSegments` from `content.js` to `background.js` via `BACKGROUND_TRANSLATE_AND_DOWNLOAD` to achieve simultaneous download of Chinese/English and prevent page navigation/closures from killing the translation process midway.
+- Added strict fallback for Google Translate `HTTP 429` rate limits in background worker: if translations fail completely (due to >1-2 hr podcast length), chunk size is increased to `4500` for POST to halve request count, and downloaded JSON files are forced to have `_zh_INCOMPLETE` suffix to prevent spoofing the pipeline.
 
 User needs to reload the unpacked extension in Chrome after code changes:
 
