@@ -1,6 +1,6 @@
 # Antigravity Plugin Notes
 
-Current stable tag: `STD_v2.0`
+Current stable tag: `STD_v3.0`
 
 This tag is the verified working version for the Spotify Transcript Downloader workflow.
 
@@ -80,13 +80,13 @@ Safe future improvements:
 If later plugin changes break transcript collection, restore the stable version with:
 
 ```bash
-git checkout STD_v2.0 -- chrome-spotify-transcript-downloader
+git checkout STD_v3.0 -- chrome-spotify-transcript-downloader
 ```
 
-To inspect what changed after `STD_v2.0`:
+To inspect what changed after `STD_v3.0`:
 
 ```bash
-git diff STD_v2.0 -- chrome-spotify-transcript-downloader
+git diff STD_v3.0 -- chrome-spotify-transcript-downloader
 ```
 
 Before changing the plugin, create a branch or commit first so the working version is easy to compare.
