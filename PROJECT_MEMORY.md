@@ -1572,3 +1572,21 @@ Monday batch notes:
   - Transcript cleanup after delivery: `imported=0 skipped=12 removed=12 english_seen=6 chinese_seen=6`.
   - `~/Downloads/Spotify Transcript Collector` has `0` loose transcript JSON backups after cleanup.
   - Mark seen result: `marked_seen=6 manifest=data/runs/20260617-203901-457955-manifest.json`.
+
+## 2026-06-17 260616 Episode 5 Timestamp Suffix Correction
+
+- User noticed timestamp suffixes in the fifth episode narrative summary. Root cause: Gemini placed inline parenthetical transcript timestamps such as `(0:43)` and `(1:18-3:15)` inside the `核心内容摘要` prose instead of limiting timestamps to `证据锚点`.
+- Correction:
+  - Removed all inline timestamp suffixes from 情报 5 `核心内容摘要`.
+  - Kept timestamped citations in `证据锚点`, where they belong.
+- Validation:
+  - Gemini report review: `通过`.
+  - Delivery-format audit passed with no issues.
+  - PDF page count: `18`.
+- Corrected final report hashes:
+  - DOCX SHA-256: `bc05a25615d5c94f20cf7c800a25a5230716885f89eba106c412f4026e536e4a`.
+  - PDF SHA-256: `ce149b97a6550f939b14b934f38e9708b93d119072df2c1311e05cb94b0424ee`.
+- Corrected external delivery:
+  - Zotero replaced existing `260616-Spotify播客情报研报`; active storage path `/Users/hannah/Zotero/storage/1UN0J47E/260616-Spotify播客情报研报.pdf`; Zotero PDF hash matched corrected local PDF hash.
+  - Google Drive DOCX re-uploaded and verified in listing as `260616-Spotify播客情报研报.docx`.
+  - Discord `#todo` corrected PDF sent with message `Spotify 播客情报研报：260616-Spotify播客情报研报（第5集时间戳修正版）`; notification id `1781702534891-7b38da1b-d53f-4987-a227-e9eaf8c02129-discord`; `sentAt` timestamp `2026-06-17T13:22:47.118Z`.
