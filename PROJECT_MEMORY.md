@@ -1525,3 +1525,50 @@ Monday batch notes:
 - Automation fix:
   - Discord send initially failed because `scripts/env_utils.py` stripped trailing quote characters from unquoted `.env` values, turning `SPOTIFY_DISCORD_SEND_CMD=... "{pdf}"` into an invalid template.
   - Fixed `scripts/env_utils.py` so quote removal only happens when the entire value is wrapped in matching quotes.
+
+## 2026-06-17 260616 Report Delivery Completion
+
+- Window and manifest:
+  - Fixed M/W/F schedule window: `2026-06-15T07:00:00+00:00` through `2026-06-17T07:00:00+00:00`.
+  - Valid manifest: `data/runs/20260617-203901-457955-manifest.json`.
+  - Episode count: `6`; feed failures: `0`.
+  - First sandboxed run `data/runs/20260617-203829-062728-manifest.json` was invalid because sandboxed DNS caused `feed_failures=26`; reran with external network approval.
+- Transcript collection:
+  - Used Spotify detail pages and STD v2.0 only; no Gemini/LLM subtitle repair.
+  - Collected all 6 original transcripts and all 6 `_zh` Chinese transcripts.
+  - Import result after collection: `english_seen=6`, `chinese_seen=6`.
+  - Required Chinese audit passed: `missing_transcripts=0`, `chinese_missing_count=0`.
+- Gemini generation and correction:
+  - Sent validated transcript/evidence package to Gemini with approval.
+  - Model: `gemini-2.5-flash`; chunked generation completed `6/6` episode briefs and final report.
+  - Final report Markdown: `reports/markdown/20260617-203901-457955-gemini-report.md`.
+  - Initial Gemini review was `不通过` because `第一部分` was missing and two quote blocks were not transcript-verifiable.
+  - Manual correction added `## 第一部分：本期核心判断`, replaced weak quotes with exact transcript lines, added one missing evidence anchor for 情报 1, and removed a redundant final paragraph that caused a nearly blank last PDF page.
+  - Final main title: `AI 的瓶颈不在模型，而在组织能否把能力变成可治理的生产力 (AI's Bottleneck Is Not Models, but Turning Capability into Governed Productivity)`.
+- Quality gates:
+  - Gemini report review passed: `通过`.
+  - Delivery-format audit passed with no issues.
+  - H2 count: `5`.
+  - Episode heading count: `6`.
+  - Required labels each counted `6`.
+  - Forbidden translation labels and `转述结论` count: `0`.
+  - PDF page count: `18`.
+  - PDF visual spot check:
+    - Page 17 starts fourth part with body; no orphan heading.
+    - Page 18 contains fifth part heading and full body; no unnecessary forced new page and no blank final page.
+- Final report:
+  - DOCX: `reports/word/260616-Spotify播客情报研报.docx`.
+  - PDF: `reports/pdf/260616-Spotify播客情报研报.pdf`.
+  - DOCX SHA-256: `b578faee5647106401f4c39d7c92a8c60b70d3b08c9d392570052e73b4210cba`.
+  - PDF SHA-256: `783d5f45e0d04fa0b778eb267276e8098b98c251467f0b4855bd50a3fbf79def`.
+- External delivery:
+  - Zotero direct-PDF archive completed: `archived_direct_pdf=4380 title=260616-Spotify播客情报研报`.
+  - Active Zotero PDF: `/Users/hannah/Zotero/storage/B3NZ4KVQ/260616-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched final local PDF hash.
+  - Google Drive DOCX uploaded and verified in Drive listing as `260616-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF sent with message `Spotify 播客情报研报：260616-Spotify播客情报研报`; notification id `1781701986600-f8ecc954-4af2-4653-9078-191678e4a3b8-discord`; `sentAt` timestamp `2026-06-17T13:14:38.104Z`.
+  - Discord note: first manual send attempt failed before sending because a relative staged path was passed from the Discord Studio cwd; reran with absolute PDF path. A temporary `PORT=3001` Discord Studio worker was started to consume the queue because port `3000` was already in use, then stopped after `notification_sent`.
+- Cleanup and state:
+  - Transcript cleanup after delivery: `imported=0 skipped=12 removed=12 english_seen=6 chinese_seen=6`.
+  - `~/Downloads/Spotify Transcript Collector` has `0` loose transcript JSON backups after cleanup.
+  - Mark seen result: `marked_seen=6 manifest=data/runs/20260617-203901-457955-manifest.json`.
