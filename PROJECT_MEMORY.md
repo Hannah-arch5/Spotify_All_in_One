@@ -1591,3 +1591,46 @@ Monday batch notes:
   - Zotero replaced existing `260616-Spotify播客情报研报`; active storage path `/Users/hannah/Zotero/storage/1UN0J47E/260616-Spotify播客情报研报.pdf`; Zotero PDF hash matched corrected local PDF hash.
   - Google Drive DOCX re-uploaded and verified in listing as `260616-Spotify播客情报研报.docx`.
   - Discord `#todo` corrected PDF sent with message `Spotify 播客情报研报：260616-Spotify播客情报研报（第5集时间戳修正版）`; notification id `1781702534891-7b38da1b-d53f-4987-a227-e9eaf8c02129-discord`; `sentAt` timestamp `2026-06-17T13:22:47.118Z`.
+
+## 2026-06-20 260619 Report Delivery Completion
+
+- Window and manifest:
+  - Fixed M/W/F schedule window: `2026-06-17T07:00:00+00:00` through `2026-06-19T07:00:00+00:00`.
+  - Valid manifest: `data/runs/20260620-002923-520241-manifest.json`.
+  - Episode count: `14`; feed failures: `0`.
+  - Initial sandboxed manifest `data/runs/20260620-002842-470690-manifest.json` was invalid because all `26` feeds failed DNS resolution.
+- Transcript collection:
+  - Used Spotify episode detail pages and the native `Transcript` tab with STD v2.0 only; no Gemini/LLM subtitle repair.
+  - Original transcript coverage: `14/14`.
+  - Complete Chinese transcript coverage: `12/14`.
+  - Two very long episodes produced STD-protected `_zh_INCOMPLETE` files after repeated sequential retries:
+    - Modern Wisdom / `2vDdVwP6EFnowZ1mDBWwyR`: `3283` segments, `2001` translated, `1282` missing.
+    - Joe Rogan / `2qPV5TPce1CWPg8lpvZbIv`: `2456` segments; the final retry produced no complete Chinese file.
+  - Report generation used the complete original transcripts for all 14 episodes and did not use incomplete Chinese files.
+  - Fixed `scripts/audit_transcript_languages.py` so `_zh_INCOMPLETE` files and files with any untranslated non-empty segment cannot satisfy the Chinese coverage gate. Corrected audit: `english_found_count=14`, `chinese_found_count=12`, `chinese_missing_count=2`.
+- Gemini generation and review:
+  - Final model: `gemini-2.5-flash-lite`; the first two briefs generated with `gemini-2.5-flash` were resumed rather than discarded.
+  - Final Markdown: `reports/markdown/20260620-002923-520241-gemini-report.md`.
+  - Added all five required sections; rewrote sections 3/4/5 as integrated cross-episode analysis, second-order thinking, and strategic conclusions.
+  - Replaced review-flagged merged/paraphrased quotes with exact transcript lines, restored episode 12 evidence anchors, corrected episode 2 Spotify URL casing, removed the remaining `转述结论`, and normalized all quote translations as unlabeled italics.
+  - Gemini report review: `通过`, with `0` errors and `0` warnings.
+- Final report:
+  - Title: `系统协同创造真正竞争力：让 AI、供应链与人的韧性转化为可持续增长 (System Coordination Creates Real Advantage: Turning AI, Supply Chains, and Human Resilience into Sustainable Growth)`.
+  - DOCX: `reports/word/260619-Spotify播客情报研报.docx`.
+  - PDF: `reports/pdf/260619-Spotify播客情报研报.pdf`.
+  - DOCX SHA-256: `9ca8c22c7cf2a7437f186d0554ede85154832ca96511e7efee6fa3b642678e16`.
+  - PDF SHA-256: `00250c34311a5043711ca0713eccc1f7afbe603a26c6d8cedc7fd4bc7a7e7a0f`.
+- Quality gates:
+  - Delivery-format audit passed with no issues.
+  - H2 count: `5`; episode headings: `14`; all required episode labels counted `14`.
+  - PDF page count: `33`.
+  - Visual inspection covered all pages and enlarged section transitions. Third/fourth/fifth parts follow conditional pagination; none was unconditionally forced to a new page, and no heading is orphaned in the bottom quarter.
+- External delivery:
+  - Zotero direct-PDF archive completed: item `4381`, title `260619-Spotify播客情报研报`.
+  - Active Zotero PDF: `/Users/hannah/Zotero/storage/PIHCPMTK/260619-Spotify播客情报研报.pdf`; hash matches the local PDF.
+  - Google Drive DOCX uploaded and verified in the configured folder as `260619-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF sent; notification id `1781889807850-6b09da39-a552-4311-854f-1d4250e4dc55-discord`; `notification_sent` at `2026-06-19T17:23:31.154Z`.
+- Cleanup and state:
+  - Transcript cleanup: `imported=0 skipped=30 removed=30 english_seen=14 chinese_seen=16` (the Chinese count includes four retained `_zh_INCOMPLETE` diagnostic archives; two were later superseded by complete retries, while two remain real gaps).
+  - `~/Downloads/Spotify Transcript Collector` loose JSON count: `0`.
+  - Mark seen: `marked_seen=14 manifest=data/runs/20260620-002923-520241-manifest.json`.

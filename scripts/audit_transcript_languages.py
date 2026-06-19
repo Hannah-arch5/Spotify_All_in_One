@@ -56,6 +56,18 @@ def _zh_transcripts(chinese_dir: Path) -> list[dict[str, object]]:
         except (OSError, json.JSONDecodeError):
             continue
         segments = data.get("segments")
+        translated_segments = 0
+        missing_translation_segments = 0
+        if isinstance(segments, list):
+            translated_segments = sum(
+                1 for segment in segments if isinstance(segment, dict) and segment.get("translation")
+            )
+            missing_translation_segments = sum(
+                1
+                for segment in segments
+                if isinstance(segment, dict) and segment.get("text") and not segment.get("translation")
+            )
+        complete = "_zh_incomplete" not in path.stem.casefold() and missing_translation_segments == 0
         rows.append(
             {
                 "path": str(path),
@@ -66,6 +78,9 @@ def _zh_transcripts(chinese_dir: Path) -> list[dict[str, object]]:
                 "published_date": data.get("publishedDate"),
                 "language": data.get("transcriptLanguage"),
                 "segments_count": len(segments) if isinstance(segments, list) else 0,
+                "translated_segments_count": translated_segments,
+                "missing_translation_segments_count": missing_translation_segments,
+                "complete": complete,
             }
         )
     return rows
@@ -84,7 +99,11 @@ def _score(episode: dict[str, object], transcript: dict[str, object]) -> float:
 
 
 def _match_zh(episode: dict[str, object], transcripts: list[dict[str, object]]) -> dict[str, object] | None:
-    scored = [(_score(episode, transcript), transcript) for transcript in transcripts]
+    scored = [
+        (_score(episode, transcript), transcript)
+        for transcript in transcripts
+        if transcript.get("complete")
+    ]
     scored.sort(key=lambda item: item[0], reverse=True)
     if not scored or scored[0][0] < 0.82:
         return None
@@ -169,6 +188,8 @@ def _write_markdown(path: Path, payload: dict[str, object]) -> None:
                     f"- 中文文件：`{match['path']}`",
                     f"- 匹配分数：{match['match_score']}",
                     f"- 字幕段落数：{match['segments_count']}",
+                    f"- 已翻译段落数：{match['translated_segments_count']}",
+                    f"- 缺失翻译段落数：{match['missing_translation_segments_count']}",
                 ]
             )
         lines.append("")
