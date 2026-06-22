@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 import shutil
 
 
@@ -30,6 +31,45 @@ def _is_chinese_translation(path: Path) -> bool:
     return any(isinstance(segment, dict) and segment.get("translation") for segment in segments)
 
 
+def _load_transcript(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _is_complete_chinese(path: Path, data: dict) -> bool:
+    if "_zh_incomplete" in path.stem.casefold():
+        return False
+    segments = data.get("segments")
+    if not isinstance(segments, list) or not segments:
+        return False
+    return not any(
+        isinstance(segment, dict) and segment.get("text") and not segment.get("translation")
+        for segment in segments
+    )
+
+
+def _identity(path: Path, data: dict, language: str) -> tuple[str, str]:
+    episode_id = str(data.get("spotifyEpisodeId") or "").strip()
+    if not episode_id:
+        episode_id = "|".join(
+            [
+                str(data.get("podcastName") or "").strip().casefold(),
+                str(data.get("episodeTitle") or "").strip().casefold(),
+            ]
+        )
+    return episode_id or path.stem.casefold(), language
+
+
+def _canonical_name(path: Path) -> str:
+    return re.sub(r"\s+\(\d+\)(?=\.json$)", "", path.name)
+
+
+def _candidate_score(path: Path, data: dict) -> tuple[int, int, float]:
+    segments = data.get("segments")
+    segment_count = len(segments) if isinstance(segments, list) else 0
+    duplicate_suffix = bool(re.search(r"\s+\(\d+\)\.json$", path.name))
+    return (0 if duplicate_suffix else 1, segment_count, path.stat().st_mtime)
+
+
 def import_transcripts(
     source_dir: Path,
     english_dir: Path,
@@ -47,14 +87,40 @@ def import_transcripts(
     english = 0
     chinese = 0
 
+    source_rows: list[tuple[Path, dict, str, bool]] = []
+    selected: dict[tuple[str, str], tuple[Path, dict, str, bool]] = {}
     for source_path in sorted(source_dir.glob("*.json")):
+        try:
+            data = _load_transcript(source_path)
+        except (OSError, json.JSONDecodeError):
+            source_rows.append((source_path, {}, "invalid", False))
+            continue
         is_zh = _is_chinese_translation(source_path)
-        target_dir = chinese_dir if is_zh else english_dir
-        target_path = target_dir / source_path.name
-        if is_zh:
-            chinese += 1
-        else:
-            english += 1
+        language = "zh" if is_zh else "en"
+        is_valid = not is_zh or _is_complete_chinese(source_path, data)
+        row = (source_path, data, language, is_valid)
+        source_rows.append(row)
+        if not is_valid:
+            continue
+        key = _identity(source_path, data, language)
+        current = selected.get(key)
+        if current is None or _candidate_score(source_path, data) > _candidate_score(current[0], current[1]):
+            selected[key] = row
+
+    selected_paths = {row[0] for row in selected.values()}
+    english = sum(1 for row in selected.values() if row[2] == "en")
+    chinese = sum(1 for row in selected.values() if row[2] == "zh")
+
+    for source_path, _, language, is_valid in source_rows:
+        if not is_valid or source_path not in selected_paths:
+            skipped += 1
+            if move:
+                source_path.unlink()
+                removed += 1
+            continue
+
+        target_dir = chinese_dir if language == "zh" else english_dir
+        target_path = target_dir / _canonical_name(source_path)
         if _same_file_content(source_path, target_path):
             skipped += 1
             if move:

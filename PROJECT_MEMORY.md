@@ -1634,3 +1634,41 @@ Monday batch notes:
   - Transcript cleanup: `imported=0 skipped=30 removed=30 english_seen=14 chinese_seen=16` (the Chinese count includes four retained `_zh_INCOMPLETE` diagnostic archives; two were later superseded by complete retries, while two remain real gaps).
   - `~/Downloads/Spotify Transcript Collector` loose JSON count: `0`.
   - Mark seen: `marked_seen=14 manifest=data/runs/20260620-002923-520241-manifest.json`.
+
+## 2026-06-22 260622 Report Delivery Completion And Transcript Archive Deduplication
+
+- Current fixed window: `2026-06-19T07:00:00+00:00` through `2026-06-22T07:00:00+00:00`.
+- Valid manifest: `data/runs/20260622-155545-738013-manifest.json`; episode count `14`; feed failures `0`.
+- STD collection:
+  - Complete original transcripts: `14/14`.
+  - Complete Chinese transcripts: `13/14`.
+  - Disney / Acquired episode `5wMsOS4l8OLwqzEIVG3ofh` has `3479` original segments; repeated sequential STD translation still produced `_zh_INCOMPLETE`, so no incomplete Chinese file was admitted to the formal archive.
+- Transcript archive deduplication hard rule added to `scripts/import_spotify_transcripts.py`:
+  - Group downloads by `spotifyEpisodeId + language`.
+  - Archive at most one original and one complete Chinese transcript per episode.
+  - Strip Chrome duplicate suffixes such as ` (1)` from canonical archive filenames.
+  - Reject `_zh_INCOMPLETE` and any Chinese file with untranslated non-empty segments.
+  - On final `--move` cleanup, remove duplicate and incomplete Downloads files instead of copying them into formal transcript directories.
+  - Tested against the current Downloads set plus synthetic duplicate English/Chinese files: formal result `14` English, `10` complete Chinese at test time, `0` incomplete, `0` duplicate-suffix files. After sequential retries, the actual formal archive is `14` English plus `13` complete Chinese.
+- Gemini report:
+  - Markdown: `reports/markdown/20260622-155545-738013-gemini-report.md`.
+  - Final title: `把变化变成复利：用自有 IP、学习闭环与直接触达构建 AI 时代的长期优势 (Turning Change into Compounding Advantage: Building Durable AI-Era Moats with Owned IP, Learning Loops, and Direct Reach)`.
+  - Review passed with `0` errors and `0` warnings; all `14` key-quote translation blocks passed italic-format validation.
+- Final report and quality gates:
+  - DOCX: `reports/word/260622-Spotify播客情报研报.docx`; SHA-256 `379a5fe336a5e4d56d26c6664f244746573555e697ce43d0064ecf2bcc94a522`.
+  - PDF: `reports/pdf/260622-Spotify播客情报研报.pdf`; SHA-256 `7bc13f3f7835adc797d25ef0647d2e466162a3e4537e53959417f444f9a03001`.
+  - Delivery-format audit passed: `5` H2 sections, `14` episode headings, and all required episode labels counted `14`.
+  - PDF page count: `37`; full contact-sheet review plus enlarged pages `1`, `34`, `35`, `36`, and `37` found no overlap, clipping, blank page, or orphan heading.
+  - Sections 3/4/5 use conditional pagination. Section 5 begins around two-thirds down page 36, above the bottom-quarter threshold, and includes its conclusion and body on the same page; forcing a page break would create unnecessary whitespace.
+- External delivery:
+  - Zotero direct-PDF archive: item `4383`, title `260622-Spotify播客情报研报`, storage path `/Users/hannah/Zotero/storage/NRA3MWF8/260622-Spotify播客情报研报.pdf`; Zotero hash matches the final local PDF.
+  - Google Drive DOCX upload completed and the configured remote listing verified `260622-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF sent after fresh explicit user authorization; notification id `1782127831847-9b5d287e-357b-4dbe-b02a-20f23a6d7367-discord`; `notification_sent` at `2026-06-22T11:30:34.443Z`.
+- Transcript cleanup and hard verification:
+  - Final cleanup result: `imported=0 skipped=37 removed=37 english_seen=14 chinese_seen=13`.
+  - Downloads loose transcript JSON count after cleanup: `0`.
+  - Exact episode-ID audit against this evidence pack: formal English archive `14` files for `14` episode IDs; formal complete-Chinese archive `13` files for `13` episode IDs; duplicate IDs `0` in both archives.
+  - The sole Chinese gap remains Disney / Acquired episode `5wMsOS4l8OLwqzEIVG3ofh`; no `_zh_INCOMPLETE` file was admitted to the formal archive.
+- Final state:
+  - Mark seen result: `marked_seen=14 manifest=data/runs/20260622-155545-738013-manifest.json`.
+  - Zotero, Google Drive, Discord, transcript cleanup, duplicate audit, and mark-seen gates are all complete.
