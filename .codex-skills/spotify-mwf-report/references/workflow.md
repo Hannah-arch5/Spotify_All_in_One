@@ -27,6 +27,10 @@
   - Use one tab sequentially if Spotify complains about too many open tabs.
 - Import transcripts:
   - `scripts/import_spotify_transcripts.py`
+- Enforce archive uniqueness by `spotifyEpisodeId + language`:
+  - Keep at most one original transcript and one complete Chinese transcript per episode.
+  - Treat Chrome retry suffixes such as ` (1)` as duplicate downloads, not distinct archives.
+  - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
 - Chinese transcript gaps can be reported, but English/original transcript coverage is the main generation gate unless the user requires Chinese.
 
@@ -88,9 +92,10 @@
 - Always clean STD Downloads after report review and required delivery succeed:
   - `scripts/import_spotify_transcripts.py --move`
   - Verify `/Users/hannah/Downloads/Spotify Transcript Collector/` has zero JSON files.
+- Audit the current evidence pack's episode IDs in `data/transcripts/spotify_en/` and `data/transcripts/spotify_zh/` after cleanup. Confirm each language has at most one file per episode and report `duplicate_ids=0` for both directories. A missing complete Chinese transcript may be reported as a gap; an incomplete or duplicate file must not be retained to make coverage appear complete.
 - Mark manifests seen only after delivery gates pass:
   - `scripts/mark_manifest_seen.py <manifest>`
-- If any required external delivery is blocked and not skipped by the user, do not mark seen.
+- If any required external delivery is blocked and not skipped by the user, or transcript archive deduplication fails, do not mark seen.
 
 ## 9. Memory And Git
 
@@ -103,6 +108,7 @@
   - Drive verification.
   - Discord `notification_sent` ids.
   - Transcript cleanup result.
+  - Formal original/Chinese transcript counts and duplicate-ID audit result.
   - Mark-seen result.
   - Any root cause found during debugging.
 - For git:

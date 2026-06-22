@@ -117,6 +117,8 @@ Project transcript archive:
 - Chinese translated transcripts: `data/transcripts/spotify_zh/`
 - Use `scripts/import_spotify_transcripts.py` to copy newly downloaded Spotify JSON files into the project.
 - Use `scripts/import_spotify_transcripts.py --move` after verification to remove duplicate JSON files from Downloads.
+- Transcript deduplication is a hard completion gate: use `spotifyEpisodeId + language` as the archive identity and retain at most one original transcript plus one complete Chinese transcript per episode. Chrome retry files such as ` (1)`, `_zh_INCOMPLETE` files, and Chinese files with any untranslated non-empty segment must not be admitted as separate formal archives.
+- After final `--move` cleanup, verify Downloads contains zero transcript JSON files and audit the current run's episode IDs in both formal transcript directories. Duplicate episode IDs must be `0`; do not mark the manifest seen until this passes.
 - User preference: after transcripts are confirmed archived and the report/review is OK, delete temporary JSON copies in `/Users/hannah/Downloads/Spotify Transcript Collector/`.
 - Use `scripts/prune_transcripts.py` to preview cleanup of archived transcripts older than 90 days.
 - Use `scripts/prune_transcripts.py --delete` to actually remove old archived transcripts after preview.
@@ -1672,3 +1674,12 @@ Monday batch notes:
 - Final state:
   - Mark seen result: `marked_seen=14 manifest=data/runs/20260622-155545-738013-manifest.json`.
   - Zotero, Google Drive, Discord, transcript cleanup, duplicate audit, and mark-seen gates are all complete.
+
+## 2026-06-22 Transcript Deduplication Skill Hard Gate
+
+- Promoted transcript deduplication from a one-run fix to a permanent project and Skill completion gate.
+- Formal archive identity is `spotifyEpisodeId + language`; retain at most one original transcript and one complete Chinese transcript per episode.
+- Chrome retry copies such as ` (1)`, `_zh_INCOMPLETE` files, and Chinese files with untranslated non-empty segments must not enter the formal archive.
+- Final cleanup must leave Downloads with zero transcript JSON files and report `duplicate_ids=0` for both formal language directories before mark-seen.
+- Updated the project Skill source and the installed Skill at `/Users/hannah/.codex/skills/spotify-mwf-report/`.
+- Synced the public GitHub Skill repository `Hannah-arch5/Spotify_MWF_Report_Skill`; remote commit `f21d4bb` (`Enforce transcript archive deduplication`).
