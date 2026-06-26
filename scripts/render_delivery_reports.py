@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import re
 import subprocess
 from pathlib import Path
@@ -66,7 +66,13 @@ def delivery_name(markdown_path: Path) -> str:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         episodes = manifest.get("episodes") or []
         if episodes and episodes[0].get("published_at"):
-            date_part = episodes[0]["published_at"][:10].replace("-", "")[2:]
+            published_at = episodes[0]["published_at"]
+            try:
+                published_dt = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+                local_dt = published_dt.astimezone(timezone(timedelta(hours=8)))
+                date_part = local_dt.strftime("%y%m%d")
+            except ValueError:
+                date_part = published_at[:10].replace("-", "")[2:]
             return f"{date_part}-Spotify播客情报研报"
     return f"{short_date(run_id)}-Spotify播客情报研报"
 

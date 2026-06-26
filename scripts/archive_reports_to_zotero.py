@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import hashlib
 import json
 import random
@@ -153,7 +153,12 @@ def _delivery_stem(markdown_path: Path) -> str:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         episodes = manifest.get("episodes") or []
         if episodes and episodes[0].get("published_at"):
-            short = episodes[0]["published_at"][:10].replace("-", "")[2:]
+            published_at = episodes[0]["published_at"]
+            try:
+                published_dt = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+                short = published_dt.astimezone(timezone(timedelta(hours=8))).strftime("%y%m%d")
+            except ValueError:
+                short = published_at[:10].replace("-", "")[2:]
             return f"{short}-Spotify播客情报研报"
     short = datetime.strptime(run_id[:8], "%Y%m%d").strftime("%y%m%d")
     return f"{short}-Spotify播客情报研报"

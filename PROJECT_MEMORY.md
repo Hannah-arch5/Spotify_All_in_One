@@ -1683,3 +1683,95 @@ Monday batch notes:
 - Final cleanup must leave Downloads with zero transcript JSON files and report `duplicate_ids=0` for both formal language directories before mark-seen.
 - Updated the project Skill source and the installed Skill at `/Users/hannah/.codex/skills/spotify-mwf-report/`.
 - Synced the public GitHub Skill repository `Hannah-arch5/Spotify_MWF_Report_Skill`; remote commit `f21d4bb` (`Enforce transcript archive deduplication`).
+
+## 2026-06-24 Latest Report Completed
+
+- Fixed M/W/F window manifest: `data/runs/20260624-215758-613431-manifest.json`; episode count `10`; feed failures `0`.
+- Spotify/STD collection root-cause correction:
+  - The first browser pass incorrectly reported nine missing native transcripts because Spotify had only rendered the title/description after about two seconds.
+  - After reloading each correct episode detail page and waiting about `6.5` seconds, all `10/10` native `Transcript` tabs appeared and STD collection succeeded.
+  - Hard lesson: never declare a Spotify transcript missing from the initial partial DOM. Reload the verified episode detail URL, wait about `6.5` seconds for the Description/Transcript/Chapters tab list, and only then decide.
+- Final transcript state:
+  - Complete original transcripts: `10/10`; complete Chinese transcripts admitted to the formal archive: `10/10`.
+  - Required Chinese dry-run passed with `status=dry_run_ready_for_gemini` and `missing_transcripts=0`.
+  - No Gemini/LLM subtitle repair was used. The five initially incomplete Chinese transcripts were retried sequentially through STD/native Spotify Transcript only.
+- Gemini/report status:
+  - Gemini input package: `data/gemini_inputs/20260624-215758-613431`.
+  - Episode chunks were generated with `gemini-2.5-flash-lite`; final synthesis used `gemini-2.5-flash` after `flash-lite` hit final-report quota.
+  - Final Markdown: `reports/markdown/20260624-215758-613431-gemini-report.md`.
+  - Final constructive bilingual title: `智能涌现与资本新纪元：AI 驱动的产业变革与韧性增长 (Emergence of Intelligence and a New Era of Capital: AI-Driven Industrial Transformation and Resilient Growth)`.
+  - Manual review fixes restored required 第一/二/三/四/五部分 structure, replaced weak quote blocks with transcript-verifiable original quotes, added substantive Taylor Sheridan evidence anchors, and removed/avoided low-value anchors.
+  - `scripts/check_gemini_report.py` passed with `Errors: 0`, `Warnings: 0`.
+- Delivery render/audit:
+  - DOCX: `reports/word/260624-Spotify播客情报研报.docx`; SHA-256 `5955efade370a81684882be584bb27436bb99c6ad9bb81804e1bef34b8cf387a`.
+  - PDF: `reports/pdf/260624-Spotify播客情报研报.pdf`; SHA-256 `7100fbfef0a948fe86b9f1f7723e38fd3c9003992f6f49c1846bea7d260848cd`.
+  - Delivery format audit passed: 5 H2 parts, 10 episode headings, required labels all `10`, PDF `25` pages, no issues.
+  - Visual pagination check inserted one conditional `<!-- pagebreak -->` before `第三部分`; `第四部分` was left flowing because forcing a break would leave more than a quarter page blank.
+  - Fixed `scripts/render_delivery_reports.py` and `scripts/archive_reports_to_zotero.py` so delivery filenames use the first episode's `published_at` converted to Asia/Shanghai local date. This prevents UTC evening episodes from producing the previous day's `YYMMDD` filename.
+- Zotero:
+  - Archived as direct PDF item `4384`, title `260624-Spotify播客情报研报`, tags `/unread` and `/2606`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1782479790`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/EKJCFHLK/260624-Spotify播客情报研报.pdf`.
+  - Active Zotero PDF SHA-256 matches local final PDF: `7100fbfef0a948fe86b9f1f7723e38fd3c9003992f6f49c1846bea7d260848cd`.
+- Google Drive and Discord:
+  - Google Drive staged/uploaded DOCX: `reports/archive/pending/2606/google-drive/260624-Spotify播客情报研报.docx`; folder listing verified the file is present.
+  - Discord staged PDF: `reports/archive/pending/2606/discord-todo/260624-Spotify播客情报研报.pdf`.
+  - Normal Discord Studio queue created notification `1782479890249-dd6d0b92-b013-48a5-805a-f68691327179-discord`, but the Studio process could not connect directly to `discord.com` without the local proxy.
+  - Direct Discord Bot API fallback through `HTTPS_PROXY=http://127.0.0.1:7897` succeeded; Discord message id `1520057764917805098`; the queued notification was marked `notification_sent` at `2026-06-26T13:27:17.261Z`.
+  - Follow-up automation note: Discord Studio needs proxy-aware send/connect handling so future LaunchAgent runs do not require the direct fallback.
+- Cleanup and mark-seen:
+  - Final `scripts/import_spotify_transcripts.py --move` result: `imported=0 skipped=26 removed=26 english_seen=10 chinese_seen=10`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` JSON count after cleanup: `0`.
+  - Duplicate-ID audit after cleanup: original/English `duplicate_ids=0`, Chinese `duplicate_ids=0`, missing `0` for both languages.
+  - Removed one stale duplicate archived English transcript for Taylor Sheridan from an older date so the formal archive keeps one original transcript per `spotifyEpisodeId`.
+  - Manifest marked seen: `marked_seen=10`.
+- Skill/GitHub:
+  - Updated the project Skill source and installed Skill so STD transcript collection must wait about `6.5` seconds for Spotify's native Description/Transcript/Chapters tab list before declaring a transcript missing.
+  - Synced the public GitHub Skill repository `Hannah-arch5/Spotify_MWF_Report_Skill`; remote commit `c0ca63f` (`Require Spotify transcript tab wait`).
+
+## 2026-06-27 260626 Report Delivery Completion
+
+- Fixed M/W/F schedule window:
+  - Manifest: `data/runs/20260627-005250-308727-manifest.json`.
+  - Window: `2026-06-24T07:00:00+00:00` through `2026-06-26T07:00:00+00:00`.
+  - Episode count: `11`.
+  - Feed failures: `1`; Dwarkesh Podcast RSS returned `502`.
+- Transcript collection:
+  - Used Spotify episode detail pages, native Spotify `Transcript` tabs, and STD only.
+  - Complete original/English transcripts: `11/11`.
+  - Complete Chinese transcripts admitted to formal archive: `10/11`.
+  - Joe Rogan / `#2518 - Tim Dillon` (`0fp0NvYfTIhz2mOozKqMnF`) produced only `_zh_INCOMPLETE` after repeated STD retries, so no incomplete Chinese file was archived.
+  - User clarified on `2026-06-27`: Chinese transcripts are not used to generate the report; use English/original transcripts for generation. Chinese remains an archive/completeness artifact unless explicitly requested.
+- Gemini/report status:
+  - Gemini input package: `data/gemini_inputs/20260627-005250-308727`.
+  - `gemini-2.5-flash-lite` quota was exhausted after `0` episode chunks; reran with `gemini-2.5-flash`.
+  - Final Markdown: `reports/markdown/20260627-005250-308727-gemini-report.md`.
+  - Final constructive bilingual title: `在AI加速中重建韧性：把技术红利转化为可信增长 (Rebuilding Resilience in the AI Acceleration: Turning Technical Leverage into Trusted Growth)`.
+  - Manual review fixes restored the required 第一/二/三/四/五部分 structure, removed timestamp suffixes from key quotes, fixed the Latent Space URL casing, replaced weak quote blocks with transcript-verifiable original lines, and added substantive evidence anchors.
+  - `scripts/check_gemini_report.py` passed: `通过`.
+- Delivery render/audit:
+  - DOCX: `reports/word/260626-Spotify播客情报研报.docx`; SHA-256 `88be169d591624941ff530244d84d36010f58f23e3716af287ac2bbace5a6db0`.
+  - PDF: `reports/pdf/260626-Spotify播客情报研报.pdf`; SHA-256 `38ae0ca23b39bd78b84d8e2c964d969019d1a98ea738b77f82810876ca2f1010`.
+  - Delivery format audit passed with no issues: `5` H2 sections, `11` episode headings, all required labels counted `11`, PDF page count `29`.
+  - Visual pagination check confirmed sections 3/4/5 follow conditional pagination: headings are not orphaned in the bottom quarter, and no unnecessary blank section page was introduced.
+- Zotero:
+  - Quit Zotero before direct DB write.
+  - Direct-PDF archive completed: item `4385`, title `260626-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1782497820`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/FBGFHTEA/260626-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `38ae0ca23b39bd78b84d8e2c964d969019d1a98ea738b77f82810876ca2f1010`.
+- Google Drive and Discord:
+  - Google Drive staged/uploaded DOCX: `reports/archive/pending/2606/google-drive/260626-Spotify播客情报研报.docx`; Drive listing verified the file is present.
+  - Discord staged PDF: `reports/archive/pending/2606/discord-todo/260626-Spotify播客情报研报.pdf`.
+  - Normal Discord Studio queue created notification `1782497939157-69624b3f-ba11-4aee-96c4-12f43993b9df-discord`, but no `notification_sent` event appeared from the background poller.
+  - Direct Discord Bot API fallback through `HTTPS_PROXY=http://127.0.0.1:7897` succeeded, then the queued notification was marked `notification_sent` at `2026-06-26T18:23:35.296545Z`; direct message id was not captured in the appended event.
+  - Follow-up automation note: Discord Studio still needs proxy-aware/background-poller cleanup; current cron log shows repeated `EADDRINUSE` on `127.0.0.1:3000`.
+- Cleanup and state:
+  - Final transcript cleanup: `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=22 removed=22 english_seen=11 chinese_seen=10`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Exact current-run episode-ID audit after cleanup: English/original `11/11`, Chinese `10/11`, `duplicate_ids=0` for both formal archive directories, and no `_zh_INCOMPLETE` files in formal archive.
+  - Chinese gap remains Joe Rogan / `#2518 - Tim Dillon` only; report generation was allowed because original/English coverage was complete and the user explicitly said to use English only.
+  - Mark seen result: `marked_seen=11 manifest=data/runs/20260627-005250-308727-manifest.json`.
+- Skill/Git:
+  - Updated project and installed `spotify-mwf-report` skill so Chinese transcripts are documented as archive/completeness artifacts, not the default report-generation source.
+  - Current main project repo still has no configured Git remote, so GitHub push cannot be performed from this clone until a remote is added.

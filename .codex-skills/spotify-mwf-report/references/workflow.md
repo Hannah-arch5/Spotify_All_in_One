@@ -23,6 +23,7 @@
   - Use Chrome with the user's logged-in Spotify session and STD extension.
   - Open each Spotify episode detail page, not a search result page.
   - Click the native Spotify `Transcript` tab.
+  - Do not decide "no transcript" from the first partial DOM render. Reload the verified episode detail URL and wait about `6.5` seconds for Spotify's Description/Transcript/Chapters tab list; only declare missing after that tab list is available and no `Transcript` tab appears.
   - Wait for STD to download JSON files into `/Users/hannah/Downloads/Spotify Transcript Collector/`.
   - Use one tab sequentially if Spotify complains about too many open tabs.
 - Import transcripts:
@@ -32,7 +33,7 @@
   - Treat Chrome retry suffixes such as ` (1)` as duplicate downloads, not distinct archives.
   - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
-- Chinese transcript gaps can be reported, but English/original transcript coverage is the main generation gate unless the user requires Chinese.
+- Chinese transcript gaps can be reported, but English/original transcript coverage is the main generation gate unless the user explicitly requires Chinese. Do not use Chinese transcripts as the report-generation source by default; treat them as archive/completeness artifacts.
 
 ## 4. Gemini Report
 
