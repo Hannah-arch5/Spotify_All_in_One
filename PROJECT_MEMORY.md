@@ -1774,4 +1774,12 @@ Monday batch notes:
   - Mark seen result: `marked_seen=11 manifest=data/runs/20260627-005250-308727-manifest.json`.
 - Skill/Git:
   - Updated project and installed `spotify-mwf-report` skill so Chinese transcripts are documented as archive/completeness artifacts, not the default report-generation source.
-  - Current main project repo still has no configured Git remote, so GitHub push cannot be performed from this clone until a remote is added.
+  - Current main project repo still has no configured Git remote, so the main project clone itself cannot push to a project remote until one is added.
+
+## 2026-06-27 GitHub Skill Sync Resolved
+
+- Re-authenticated local GitHub CLI as `Hannah-arch5` after the previous local token was invalid.
+- Synced the public skill repository `Hannah-arch5/Spotify_MWF_Report_Skill` on `main`.
+- Remote commit: `7c2008c` (`Clarify Chinese transcript generation gate`).
+- Verified remote `SKILL.md` now says Chinese transcripts are archive/completeness artifacts, not the default report-generation source.
+- Verified remote `references/workflow.md` now says English/original transcript coverage is the main generation gate unless the user explicitly requires Chinese.
