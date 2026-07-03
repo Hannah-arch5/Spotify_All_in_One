@@ -1842,4 +1842,31 @@ Monday batch notes:
 - GitHub skill sync:
   - Public repository `Hannah-arch5/Spotify_MWF_Report_Skill` was updated on `main`.
   - Remote commit: `f6ab779` (`Clarify Gemini review and PDF line-break gates`).
-- Delivery is not yet completed for 260701 at this checkpoint: Zotero, Google Drive, Discord, transcript cleanup, archive duplicate audit, and mark-seen still remain pending.
+- Delivery was not yet completed at this checkpoint; Zotero, Google Drive, Discord, transcript cleanup, archive duplicate audit, and mark-seen were still pending.
+
+## 2026-07-04 260701 Delivery Completion
+
+- User authorized uploading 260701 to all platforms.
+- Zotero:
+  - Quit Zotero before direct DB write.
+  - Direct-PDF archive completed: attachment/item id `4388`, title `260701-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1783107657`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/I0SY15XQ/260701-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched local final PDF hash: `c97529bb1ce53784140c5ac69eed2cd6e5452ce2f352561bd6c4b881f8c6d9c6`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260701-Spotify播客情报研报.docx`; SHA-256 `fa70f725b4cbedb9e87c677c399850951ef8228780e564d2e11f97c990a55592`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260701-Spotify播客情报研报.pdf`; SHA-256 `c97529bb1ce53784140c5ac69eed2cd6e5452ce2f352561bd6c4b881f8c6d9c6`.
+  - Google Drive upload verified by Drive listing: `260701-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified via live Discord Studio `notification_sent`: id `1783107702543-6646fbeb-2095-47b9-bd10-3f49736621fa-discord`, sent at `2026-07-03T19:41:44.852Z`.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=9 removed=9 english_seen=9 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run episode-ID audit after cleanup: English/original `9/9`, Chinese `0/9`, `duplicate_ids=0` for both formal archive directories.
+  - No `_zh_INCOMPLETE` files or untranslated incomplete Chinese files were retained in the formal archive for the current run.
+  - Language audit files:
+    - `data/runs/20260701-164134-157872-transcript-language-audit.json`.
+    - `reports/markdown/20260701-164134-157872-transcript-language-audit.md`.
+  - Chinese transcript coverage gap remains `9/9` for this run; this was allowed because Chinese transcripts are an archive/completeness artifact, not the report-generation source.
+- Mark seen:
+  - `marked_seen=9 manifest=data/runs/20260701-164134-157872-manifest.json`.
+- 260701 workflow is now complete end to end.
