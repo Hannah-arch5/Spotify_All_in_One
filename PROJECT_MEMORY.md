@@ -1783,3 +1783,63 @@ Monday batch notes:
 - Remote commit: `7c2008c` (`Clarify Chinese transcript generation gate`).
 - Verified remote `SKILL.md` now says Chinese transcripts are archive/completeness artifacts, not the default report-generation source.
 - Verified remote `references/workflow.md` now says English/original transcript coverage is the main generation gate unless the user explicitly requires Chinese.
+
+## 2026-07-01 260629 Delivery Completion And 260701 Start
+
+- Completed the latest 260629 report batch before starting today's 260701 batch.
+- Final 260629 artifacts:
+  - Markdown: `reports/markdown/20260630-161442-996638-gemini-report.md`.
+  - DOCX: `reports/word/260629-Spotify播客情报研报.docx`; staged hash `32578fc72bd165ba4bc74e591bbccfc264ffbb38abb0b42e8e4b5227b67a7402`.
+  - PDF: `reports/pdf/260629-Spotify播客情报研报.pdf`; SHA-256 `3e2167906330a4693ad3eaeba4d8572d3781b33d414a97b28e6827`.
+- 260629 final format fixes:
+  - Restored the older required section titles: `本期核心判断`, `逐集情报与证据`, `跨节目专题分析`, `第二层思维`, `结论与战略意义`.
+  - Restored episode-level spacing: each episode heading, `核心内容摘要`, `情报价值点`, `关键金句 / 结论`, and `证据锚点` must be visually separated and readable.
+  - Kept sections 3/4/5 conditional-pagination only; do not force every major section onto a new page.
+  - `scripts/render_delivery_reports.py` and `scripts/audit_delivery_report_format.py` were updated to enforce the restored section naming.
+- 260629 delivery gates:
+  - Format audit passed with no issues; PDF page count `27`.
+  - Zotero direct-PDF archive completed as item `4387`, title `260629-Spotify播客情报研报`; active storage PDF `/Users/hannah/Zotero/storage/N6W45F60/260629-Spotify播客情报研报.pdf` matched the local PDF hash.
+  - Google Drive DOCX upload verified: `260629-Spotify播客情报研报.docx`.
+  - Discord `#todo` PDF delivery succeeded through the direct proxy fallback; direct Discord message id `1521794446855901364`.
+  - Transcript cleanup: `imported=0 skipped=31 removed=31 english_seen=14 chinese_seen=13`.
+  - Downloads loose transcript JSON count after cleanup: `0`.
+  - Formal archive duplicate audit: English/original `14/14`, Chinese `13/14`, `duplicate_ids=0` for both. The single Chinese gap was the user-approved Alex episode.
+  - Mark seen: `marked_seen=14 manifest=data/runs/20260630-161442-996638-manifest.json`.
+- New hard formatting rule added on 2026-07-01:
+  - Report line breaking must not put punctuation at the beginning of a new line. Punctuation must stay attached to the end of the preceding line in the final PDF. This is a delivery-gate visual check, not a preference.
+- Today's 260701 report start:
+  - Current ready manifest: `data/runs/20260701-164134-157872-manifest.json`.
+  - Episode count: `9`.
+  - Original/English Spotify STD transcripts: `9/9` collected from episode detail pages and imported.
+  - Chinese transcripts: `0/9` at start; Chinese remains an archive/completeness artifact, not a generation source.
+  - Dry-run status: `dry_run_ready_for_gemini`; evidence pack `data/runs/20260701-164134-157872-evidence-pack.json`.
+  - Do not send this 260701 evidence pack to Gemini until the user gives explicit 260701 Gemini authorization.
+- Skill/GitHub status for the 2026-07-01 punctuation rule:
+  - Installed skill and project skill source were updated with the final-PDF punctuation line-break gate.
+  - Temporary GitHub sync clone: `/private/tmp/Spotify_MWF_Report_Skill_sync`.
+  - Local GitHub skill commit prepared: `2a3f2c5` (`Enforce final PDF punctuation line breaks`), but `git push origin main` was blocked by the Codex usage-limit approval reviewer. Push this commit when the limit resets; do not assume GitHub is already updated.
+
+## 2026-07-03 260701 Report Generation And Standing Gemini Authorization
+
+- User explicitly authorized Gemini generation for the 260701 Spotify MWF report and said not to ask again for this in the future.
+- Standing project authorization: for Spotify MWF report generation, sending the local original/English transcript/evidence package to Gemini is user-approved without repeated chat confirmation, unless the scope materially changes. Still obey any Codex/system approval prompt that appears; this standing authorization does not bypass platform approval controls or external upload disclosure gates.
+- Final 260701 artifacts:
+  - Markdown: `reports/markdown/20260701-164134-157872-gemini-report.md`.
+  - DOCX: `reports/word/260701-Spotify播客情报研报.docx`; SHA-256 `fa70f725b4cbedb9e87c677c399850951ef8228780e564d2e11f97c990a55592`.
+  - PDF: `reports/pdf/260701-Spotify播客情报研报.pdf`; SHA-256 `c97529bb1ce53784140c5ac69eed2cd6e5452ce2f352561bd6c4b881f8c6d9c6`.
+- Final title: `让AI红利穿过制度阻力：用基础设施、开放治理与人类判断重建增长 (Turning AI Leverage into Real Growth: Infrastructure, Open Governance, and Human Judgment)`.
+- Gemini report review passed using the Gemini input manifest: `data/gemini_inputs/20260701-164134-157872/episode-manifest.json`.
+- Delivery format audit passed:
+  - `5` main sections.
+  - `9` episode headings.
+  - All required labels counted `9`.
+  - PDF page count `24`.
+  - PDF line-start punctuation scan passed with `bad_count=0`.
+  - Conditional pagination check: 第三部分 page `21` zone `0.304`, 第四部分 page `22` zone `0.453`, 第五部分 page `23` zone `0.418`; none start in the bottom quarter.
+- Updated project and installed `spotify-mwf-report` skill:
+  - Respect standing Gemini authorization recorded in `PROJECT_MEMORY.md` while still obeying Codex/system approval prompts.
+  - Run the Gemini review checker with `data/gemini_inputs/<run_id>/episode-manifest.json` when available, because raw run manifests can lack Spotify episode URLs and cause false link-audit failures.
+- GitHub skill sync:
+  - Public repository `Hannah-arch5/Spotify_MWF_Report_Skill` was updated on `main`.
+  - Remote commit: `f6ab779` (`Clarify Gemini review and PDF line-break gates`).
+- Delivery is not yet completed for 260701 at this checkpoint: Zotero, Google Drive, Discord, transcript cleanup, archive duplicate audit, and mark-seen still remain pending.

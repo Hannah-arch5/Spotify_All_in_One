@@ -39,7 +39,7 @@
 
 - Use the repo's pipeline scripts, usually chunked Gemini mode.
 - If Codex requests approval because transcript/evidence will be sent to Gemini, ask/accept explicit user approval and do not bypass a rejection.
-- After generation, run the Gemini review checker.
+- After generation, run the Gemini review checker with `data/gemini_inputs/<run_id>/episode-manifest.json` as the manifest whenever that file exists; it contains the Spotify episode URLs used in the report. Do not use the raw run manifest for this check when it lacks `spotify_episode_url`.
 - If review says `需修改`, fix concrete findings and rerun review until `通过`.
 - Convert suspicious non-verbatim quote blocks to explicit paraphrased conclusions rather than keeping them in quotation marks.
 - Before rendering, manually inspect the Markdown for the following hard gates:
@@ -62,6 +62,7 @@
   - `关键金句 / 结论` exists for every episode including episode 1, with meaningful source-language original quotes plus italicized unlabeled translation/explanation. `转述结论` is allowed only after transcript-level verification proves no meaningful quote exists.
   - Evidence anchors are substantive and do not contain low-value greetings/thanks/housekeeping as final anchors.
   - Pagination quality: if a heading or subtitle-like bold heading and the following body begin in the bottom quarter of a page, insert `<!-- pagebreak -->` before that heading and rerender. Do not force all major sections onto new pages; apply the break only when the heading position is too low.
+  - Line-breaking quality: punctuation must stay attached to the end of the preceding line in the final PDF. Do not accept punctuation as the first character on a new line; fix and rerender before delivery.
   - PDF page count is plausible.
   - No audit issues.
 - Record final DOCX/PDF paths and hashes.

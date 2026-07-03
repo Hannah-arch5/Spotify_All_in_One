@@ -134,10 +134,10 @@ def report_display_title(run_id: str, markdown_title: str) -> str:
 
 
 PART_TITLE_OVERRIDES = {
-    "第一部分": "第一部分：摘要与核心洞察总结 (Abstract & Executive Summary)",
-    "第二部分": "第二部分：核心情报深度梳理 (Detailed Intelligence Breakdown)",
-    "第三部分": "第三部分：深度专题分析 (Deep Thematic Analysis)",
-    "第四部分": "第四部分：深度洞察与第二层思维 (Deep Insights & Second-Level Thinking)",
+    "第一部分": "第一部分：本期核心判断 (Core Judgment)",
+    "第二部分": "第二部分：逐集情报与证据 (Episode Intelligence & Evidence)",
+    "第三部分": "第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)",
+    "第四部分": "第四部分：第二层思维 (Second-Level Thinking)",
     "第五部分": "第五部分：结论与战略意义 (Conclusion & Strategic Implications)",
 }
 
@@ -282,6 +282,31 @@ def set_doc_columns(section, count: int) -> None:
     cols_el.set(qn("w:space"), "420")
     if not cols:
         sect_pr.append(cols_el)
+
+
+def enable_east_asian_line_break_rules(doc: Document) -> None:
+    settings = doc.settings._element
+    for tag in (
+        "w:kinsoku",
+        "w:noLineBreaksBefore",
+        "w:noLineBreaksAfter",
+        "w:doNotUseEastAsianBreakRules",
+        "w:overflowPunct",
+    ):
+        for element in list(settings.findall(qn(tag))):
+            settings.remove(element)
+
+    settings.append(OxmlElement("w:kinsoku"))
+
+    no_before = OxmlElement("w:noLineBreaksBefore")
+    no_before.set(qn("w:lang"), "zh-CN")
+    no_before.set(qn("w:val"), "，。；：？！、,.!?;:)）]】》”’％%")
+    settings.append(no_before)
+
+    no_after = OxmlElement("w:noLineBreaksAfter")
+    no_after.set(qn("w:lang"), "zh-CN")
+    no_after.set(qn("w:val"), "（([【《“‘")
+    settings.append(no_after)
 
 
 def add_page_number_footer(section) -> None:
@@ -558,6 +583,7 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
     title, _, _, _ = split_report(markdown)
 
     doc = template_document()
+    enable_east_asian_line_break_rules(doc)
     section = doc.sections[0]
     section.orientation = WD_ORIENT.LANDSCAPE
     section.page_width = Cm(27.94)
