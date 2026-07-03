@@ -296,17 +296,19 @@ def enable_east_asian_line_break_rules(doc: Document) -> None:
         for element in list(settings.findall(qn(tag))):
             settings.remove(element)
 
-    settings.append(OxmlElement("w:kinsoku"))
+    kinsoku = OxmlElement("w:kinsoku")
+    kinsoku.set(qn("w:val"), "1")
+    settings.append(kinsoku)
 
     no_before = OxmlElement("w:noLineBreaksBefore")
-    no_before.set(qn("w:lang"), "zh-CN")
     no_before.set(qn("w:val"), "，。；：？！、,.!?;:)）]】》”’％%")
     settings.append(no_before)
 
     no_after = OxmlElement("w:noLineBreaksAfter")
-    no_after.set(qn("w:lang"), "zh-CN")
     no_after.set(qn("w:val"), "（([【《“‘")
     settings.append(no_after)
+
+    settings.append(OxmlElement("w:overflowPunct"))
 
 
 def add_page_number_footer(section) -> None:
@@ -334,6 +336,12 @@ def set_run_font(run, font_name: str = DOCX_FONT) -> None:
         r_pr.append(rfonts)
     for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
         rfonts.set(qn(f"w:{attr}"), font_name)
+    lang = r_pr.find(qn("w:lang"))
+    if lang is None:
+        lang = OxmlElement("w:lang")
+        r_pr.append(lang)
+    lang.set(qn("w:val"), "zh-CN")
+    lang.set(qn("w:eastAsia"), "zh-CN")
 
 
 def force_bold(run) -> None:

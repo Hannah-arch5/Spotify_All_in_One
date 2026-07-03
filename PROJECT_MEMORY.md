@@ -1870,3 +1870,33 @@ Monday batch notes:
 - Mark seen:
   - `marked_seen=9 manifest=data/runs/20260701-164134-157872-manifest.json`.
 - 260701 workflow is now complete end to end.
+
+## 2026-07-04 260703 Latest Report Generated Pending User Review
+
+- Latest manifest discovered by the MWF pipeline: `data/runs/20260704-035535-049340-manifest.json`; original episode count `14`.
+- Spotify/STD transcript collection:
+  - Complete original/English transcripts collected and imported for `12/14` episodes.
+  - Two episodes were excluded from the generated report because no verifiable full transcript was available:
+    - 小Lin说 — `AI巨头们之间的资本混战，到底是个什么情况？`; Spotify search did not return the correct episode, and the Xiaoyuzhou page exposed only show notes/chapters, not a full transcript.
+    - The AI Daily Brief — `Fable is Back: Here's What You Should Try First`; Spotify episode detail page was reloaded and waited for the Description/Transcript/Chapters area, but no native `Transcript` tab appeared; the Spotify Creators/RSS page exposed only description text.
+  - A wrong 小Lin Spotify search hit (`人工智能发展到什么程度了？是不是太快了点？`) was moved out of Downloads to `/private/tmp/spotify_wrong_transcripts/` before import so it could not contaminate the formal archive.
+- Verified 12-episode manifest and evidence:
+  - Filtered manifest: `data/runs/20260704-035535-049340-verified12-manifest.json`.
+  - Evidence pack: `data/runs/20260704-035535-049340-verified12-evidence-pack.json`; matched transcripts `12/12`, missing `0`.
+  - Gemini input package: `data/gemini_inputs/20260704-035535-049340-verified12`.
+- Gemini/report status:
+  - `gemini-2.5-flash-lite` generated the first briefs but hit temporary `503 high demand`; resumed with `gemini-2.5-flash`.
+  - Final Markdown: `reports/markdown/20260704-035535-049340-verified12-gemini-report.md`.
+  - Final title: `把AI浪潮变成真实优势：用技术领导力、能源底座与人类韧性重构增长 (Turning the AI Wave into Real Advantage: Rebuilding Growth with Tech Leadership, Energy Foundations, and Human Resilience)`.
+  - Gemini report review passed using `data/gemini_inputs/20260704-035535-049340-verified12/episode-manifest.json` and `transcript-evidence-full.json`.
+- Final rendered preview artifacts:
+  - DOCX: `reports/word/260703-Spotify播客情报研报.docx`; SHA-256 `7250b8e62540bdc1172fa01fdd786581ba2e65b5334b1c0616f9f676446f65c0`.
+  - PDF: `reports/pdf/260703-Spotify播客情报研报.pdf`; SHA-256 `46462b58866b5d78099a562a876ccf795bb3d3bdb9909738fd01348707747bc3`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `12` episode headings, required labels all `12`, PDF page count `32`.
+  - PDF line-start punctuation scan passed with `bad_count=0` after fixing Word export settings to explicitly enable kinsoku and punctuation hanging.
+  - Conditional pagination check: 第三部分 page `28` zone `0.467`; 第四部分 page `30` zone `0.128`; 第五部分 page `31` zone `0.393`.
+- Current state:
+  - This generated report has not yet been sent to Zotero, Google Drive, or Discord.
+  - Do not mark the full 14-episode manifest seen unless the user approves excluding the two transcript-missing episodes, or those transcripts are later recovered and regenerated.
+  - Downloads still contains temporary STD JSON files for this run; perform final `scripts/import_spotify_transcripts.py --move` cleanup only after required delivery succeeds or the user explicitly asks to clean now.
