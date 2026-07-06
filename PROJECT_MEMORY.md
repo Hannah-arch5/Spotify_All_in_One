@@ -1900,3 +1900,61 @@ Monday batch notes:
   - This generated report has not yet been sent to Zotero, Google Drive, or Discord.
   - Do not mark the full 14-episode manifest seen unless the user approves excluding the two transcript-missing episodes, or those transcripts are later recovered and regenerated.
   - Downloads still contains temporary STD JSON files for this run; perform final `scripts/import_spotify_transcripts.py --move` cleanup only after required delivery succeeds or the user explicitly asks to clean now.
+
+## 2026-07-04 260703 Delivery Completion
+
+- User approved uploading the reviewed 260703 report.
+- Final delivered report remains the user-approved 12-episode version:
+  - Markdown: `reports/markdown/20260704-035535-049340-verified12-gemini-report.md`.
+  - DOCX: `reports/word/260703-Spotify播客情报研报.docx`; SHA-256 `7250b8e62540bdc1172fa01fdd786581ba2e65b5334b1c0616f9f676446f65c0`.
+  - PDF: `reports/pdf/260703-Spotify播客情报研报.pdf`; SHA-256 `46462b58866b5d78099a562a876ccf795bb3d3bdb9909738fd01348707747bc3`.
+  - Two original 14-episode manifest entries remained excluded because no verifiable full transcript was available; no LLM-generated transcript fallback was used.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4389`, title `260703-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1783110984`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/4HLB7TZG/260703-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `46462b58866b5d78099a562a876ccf795bb3d3bdb9909738fd01348707747bc3`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260703-Spotify播客情报研报.docx`; SHA-256 `7250b8e62540bdc1172fa01fdd786581ba2e65b5334b1c0616f9f676446f65c0`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260703-Spotify播客情报研报.pdf`; SHA-256 `46462b58866b5d78099a562a876ccf795bb3d3bdb9909738fd01348707747bc3`.
+  - Google Drive upload verified by Drive listing: `260703-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified via live Discord Studio `notification_sent`: id `1783111020223-88bdd9c5-816b-41ad-ae30-f24a09862019-discord`, sent at `2026-07-03T20:37:05.049Z`.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=16 removed=16 english_seen=12 chinese_seen=4`.
+  - Current-run episode-ID audit after cleanup: English/original `12/12`, Chinese `4/12`, `duplicate_ids=0` for both formal archive directories.
+  - No duplicate Chrome retry copies were retained in the formal archive for current-run episode IDs.
+  - A direct loose-Downloads recount was blocked by the platform approval usage limit after cleanup; rely on the cleanup command's `removed=16` result plus formal archive duplicate audit until the limit resets.
+- Mark seen:
+  - `marked_seen=14 manifest=data/runs/20260704-035535-049340-manifest.json`.
+  - Full original 14-episode manifest was marked seen only after the user approved uploading the 12-episode version with the two no-transcript episodes excluded.
+- 260703 workflow is now complete end to end.
+
+## 2026-07-06 260706 Latest Report Generated Pending User Review
+
+- Latest manifest: `data/runs/20260706-230036-160187-manifest.json`; episode count `9`.
+- Transcript collection:
+  - Initial pipeline status was `blocked_missing_transcripts` with missing original/English transcripts `9/9`.
+  - Episode 1 (`The Diary Of A CEO with Steven Bartlett` / Dustin Poirier) had an RSS `application/json` transcript; converted it into the project transcript archive as `data/transcripts/spotify_en/20260706-doac-dustin-poirier-rss-transcript.json` with `237` segments. This was an official transcript conversion, not an LLM-generated transcript.
+  - The remaining `8` transcripts were collected from Spotify episode detail pages using the STD extension after opening Spotify's native `Transcript` tab.
+  - Complete original/English transcript coverage reached `9/9`; evidence pack missing transcripts `0`.
+  - Chinese transcript audit: `0/9`; Chinese remains an archive/completeness artifact and was not used for report generation.
+- Gemini/report generation:
+  - First Gemini attempt failed before content generation due to network connection setup; retry through local proxy `127.0.0.1:7897` succeeded.
+  - Gemini input package: `data/gemini_inputs/20260706-230036-160187`.
+  - Final Markdown: `reports/markdown/20260706-230036-160187-gemini-report.md`.
+  - Final title: `智能主权、经济重构与人类韧性：AI时代下的全球新秩序 (Intelligence Sovereignty, Economic Restructuring, and Human Resilience: A New Global Order in the Age of AI)`.
+  - Gemini review passed after adding the required five-section structure and fixing unverifiable quote-like wording.
+- Final preview artifacts:
+  - DOCX: `reports/word/260706-Spotify播客情报研报.docx`; SHA-256 `d84fd2abf66b5af3b69ca74c6d38687f634a3958c991345b1e7bd81ecf0bfbc0`.
+  - PDF: `reports/pdf/260706-Spotify播客情报研报.pdf`; SHA-256 `5756ef36d9aa751480acb16cbec54e3681d7480f65c23ecb49895578293961cc`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `9` episode headings, required labels all `9`, PDF page count `28`.
+  - PDF line-start punctuation scan passed with `bad_count=0`.
+  - Conditional pagination check: 第三部分 page `24` zone `0.567`; 第四部分 page `26` zone `0.042`; 第五部分 page `27` zone `0.042`.
+  - Removed a low-value evidence anchor from 情报 1 before final render.
+- Current state:
+  - Report is generated and ready for user review.
+  - It has not yet been sent to Zotero, Google Drive, or Discord.
+  - Do not mark the manifest seen until external delivery succeeds or the user explicitly skips delivery.
+  - Downloads still contains `8` STD JSON files; run `scripts/import_spotify_transcripts.py --move` only after delivery succeeds, then verify Downloads JSON count is `0` and formal archive duplicate IDs are `0`.
