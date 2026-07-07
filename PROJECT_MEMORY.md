@@ -1958,3 +1958,30 @@ Monday batch notes:
   - It has not yet been sent to Zotero, Google Drive, or Discord.
   - Do not mark the manifest seen until external delivery succeeds or the user explicitly skips delivery.
   - Downloads still contains `8` STD JSON files; run `scripts/import_spotify_transcripts.py --move` only after delivery succeeds, then verify Downloads JSON count is `0` and formal archive duplicate IDs are `0`.
+
+## 2026-07-07 260706 Delivery Completion
+
+- User approved sending the reviewed 260706 report to all platforms.
+- Final delivered report:
+  - Markdown: `reports/markdown/20260706-230036-160187-gemini-report.md`.
+  - DOCX: `reports/word/260706-Spotify播客情报研报.docx`; SHA-256 `d84fd2abf66b5af3b69ca74c6d38687f634a3958c991345b1e7bd81ecf0bfbc0`.
+  - PDF: `reports/pdf/260706-Spotify播客情报研报.pdf`; SHA-256 `5756ef36d9aa751480acb16cbec54e3681d7480f65c23ecb49895578293961cc`.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4390`, title `260706-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1783434477`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/SXDYFCF8/260706-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `5756ef36d9aa751480acb16cbec54e3681d7480f65c23ecb49895578293961cc`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260706-Spotify播客情报研报.docx`; SHA-256 `d84fd2abf66b5af3b69ca74c6d38687f634a3958c991345b1e7bd81ecf0bfbc0`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260706-Spotify播客情报研报.pdf`; SHA-256 `5756ef36d9aa751480acb16cbec54e3681d7480f65c23ecb49895578293961cc`.
+  - Google Drive upload verified by Drive listing: `260706-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by direct Discord bot send and `notification_sent`: id `1783434593834-0d639800-7fe8-445f-aa1a-bdceafb7c8e4-discord`, sent at `2026-07-07T14:33:06.909Z`, message id `1524060699163099148`.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=8 removed=8 english_seen=8 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run transcript archive audit after cleanup: English/original `9/9`, Chinese `0/9`, `duplicate_ids=0` for both formal archive directories.
+  - Chinese transcript coverage remains `0/9`; this was recorded as an archive/completeness gap only because Chinese transcripts are not used to generate the report.
+- Mark seen:
+  - `marked_seen=9 manifest=data/runs/20260706-230036-160187-manifest.json`.
+- 260706 workflow is now complete end to end.
