@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import json
 from pathlib import Path
 import shutil
@@ -186,10 +186,34 @@ def _write_transcript_markdown(path: Path, full_evidence: dict[str, Any]) -> Non
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def _write_prompt(path: Path, manifest_name: str, evidence_name: str) -> None:
+def _report_window_from_manifest(manifest: dict[str, Any]) -> dict[str, str | None]:
+    return {
+        "since": manifest.get("since"),
+        "until": manifest.get("until"),
+    }
+
+
+def _report_date_from_window(report_window: dict[str, str | None]) -> str | None:
+    until = report_window.get("until")
+    if not until:
+        return None
+    try:
+        dt = datetime.fromisoformat(until.replace("Z", "+00:00"))
+    except ValueError:
+        return until[:10]
+    return dt.astimezone(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+
+
+def _write_prompt(
+    path: Path,
+    manifest_name: str,
+    evidence_name: str,
+    report_window: dict[str, str | None],
+) -> None:
     prompt_template = DEFAULT_PROMPT_TEMPLATE.read_text(encoding="utf-8")
     protocol = DEFAULT_PROTOCOL.read_text(encoding="utf-8")
     checklist = DEFAULT_REVIEW_CHECKLIST.read_text(encoding="utf-8")
+    report_date = _report_date_from_window(report_window)
     lines = [
         "# Gemini Input Prompt",
         "",
@@ -197,9 +221,13 @@ def _write_prompt(path: Path, manifest_name: str, evidence_name: str) -> None:
         "",
         f"- Episode Manifest: `{manifest_name}`",
         f"- Transcript Evidence Pack: `{evidence_name}`",
+        f"- Report Window Since: `{report_window.get('since') or 'unknown'}`",
+        f"- Report Window Until: `{report_window.get('until') or 'unknown'}`",
+        f"- Report Date: `{report_date or 'unknown'}`",
         "",
         "重要执行约束：",
         "",
+        "- 研报标题、文件日期和内容口径必须按 Report Date / Report Window 判断，不要使用实际生成时间、运行时间或当前日期。",
         "- 第二部分必须严格覆盖 Manifest 中的全部 episode，数量和顺序完全一致。",
         "- 有 Spotify transcript 的 episode，必须从 transcript 的 `segments` 或 `plain_text` 中取证。",
         "- 关键金句/结论只保留有意义的句子和中文解释，不要写时间戳、Speaker 1、发言者 1 或 Timestamp；时间戳只放在证据锚点。",
@@ -267,15 +295,21 @@ def build(evidence_pack_path: Path, output_dir: Path | None = None) -> Path:
         manifest_path = ROOT / manifest_path
 
     manifest = _read_json(manifest_path)
+    report_window = _report_window_from_manifest(manifest)
+    report_date = _report_date_from_window(report_window)
     episode_manifest = {
         "run_id": run_id,
         "created_at": datetime.now().astimezone().isoformat(),
         "source_manifest": str(manifest_path),
+        "report_window": report_window,
+        "report_date": report_date,
         "sort_rule": manifest.get("sort_rule"),
         "summary": manifest.get("summary"),
         "episodes": [_episode_manifest_row(episode) for episode in pack["episodes"]],
     }
     full_evidence = _build_full_evidence(pack, evidence_pack_path)
+    full_evidence["report_window"] = report_window
+    full_evidence["report_date"] = report_date
 
     original_manifest_out = output_dir / "source-manifest-original.json"
     shutil.copyfile(manifest_path, original_manifest_out)
@@ -289,7 +323,7 @@ def build(evidence_pack_path: Path, output_dir: Path | None = None) -> Path:
     _write_json(manifest_out, episode_manifest)
     _write_json(evidence_out, full_evidence)
     _write_transcript_markdown(transcript_md_out, full_evidence)
-    _write_prompt(prompt_out, manifest_out.name, evidence_out.name)
+    _write_prompt(prompt_out, manifest_out.name, evidence_out.name, report_window)
     _write_handoff(
         handoff_out,
         run_id,

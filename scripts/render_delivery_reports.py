@@ -53,12 +53,51 @@ def short_date(run_id: str) -> str:
     return datetime.strptime(run_id[:8], "%Y%m%d").strftime("%y%m%d")
 
 
+def scheduled_report_date(run_id: str) -> str | None:
+    import json
+
+    package_dir = ROOT / "data" / "gemini_inputs" / run_id
+    source_manifest = package_dir / "source-manifest-original.json"
+    manifest_path = package_dir / "episode-manifest.json"
+    candidates = [source_manifest]
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        source_value = manifest.get("source_manifest")
+        if source_value:
+            source_path = Path(str(source_value))
+            candidates.append(source_path if source_path.is_absolute() else ROOT / source_path)
+        report_window = manifest.get("report_window") if isinstance(manifest.get("report_window"), dict) else {}
+        until = report_window.get("until") if isinstance(report_window, dict) else None
+        if until:
+            candidates.insert(0, Path("__inline_until__") / str(until))
+
+    for candidate in candidates:
+        if str(candidate).startswith("__inline_until__/"):
+            until = str(candidate).replace("__inline_until__/", "", 1)
+        elif candidate.exists():
+            manifest = json.loads(candidate.read_text(encoding="utf-8"))
+            until = manifest.get("until")
+        else:
+            continue
+        if not until:
+            continue
+        try:
+            dt = datetime.fromisoformat(str(until).replace("Z", "+00:00"))
+            return dt.astimezone(timezone(timedelta(hours=8))).strftime("%y%m%d")
+        except ValueError:
+            return str(until)[:10].replace("-", "")[2:]
+    return None
+
+
 def episode_count(markdown: str) -> int:
     return len(re.findall(r"^####\s+情报\s+\d+", markdown, flags=re.MULTILINE))
 
 
 def delivery_name(markdown_path: Path) -> str:
     run_id = markdown_path.stem.replace("-gemini-report", "")
+    scheduled_date = scheduled_report_date(run_id)
+    if scheduled_date:
+        return f"{scheduled_date}-Spotify播客情报研报"
     manifest_path = ROOT / "data" / "gemini_inputs" / run_id / "episode-manifest.json"
     if manifest_path.exists():
         import json

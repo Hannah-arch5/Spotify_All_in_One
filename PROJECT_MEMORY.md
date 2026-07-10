@@ -1985,3 +1985,43 @@ Monday batch notes:
 - Mark seen:
   - `marked_seen=9 manifest=data/runs/20260706-230036-160187-manifest.json`.
 - 260706 workflow is now complete end to end.
+
+## 2026-07-10 260708 and 260710 Fixed-Window Delivery Completion
+
+- User identified that the previous `260710` draft was incorrectly based on the generation time / rolling `--since-days=3` window. Root cause: the pipeline defaulted to a rolling window when not given the fixed M/W/F schedule boundary. Hard rule reaffirmed: report title, delivery filename, manifest date, and content context must use the intended report window cutoff date, not the date/time the user asks Codex to generate the report.
+- Fixed-window manifests:
+  - Wednesday report: `data/runs/20260710-154459-381198-manifest.json`, window `2026-07-06 15:00 CST` to `2026-07-08 15:00 CST`, delivery date `260708`, episode count `6`.
+  - Friday report: `data/runs/20260710-154508-415834-manifest.json`, window `2026-07-08 15:00 CST` to `2026-07-10 15:00 CST`, delivery date `260710`, episode count `17`.
+  - Episode order verified as `published_at desc`: first episode is the newest in the fixed window; last episode is the oldest.
+- Code/process fixes:
+  - `scripts/build_evidence_pack.py` and `scripts/build_gemini_input_package.py` now carry `report_window` / `report_date` into the Gemini package and prompt.
+  - `scripts/render_delivery_reports.py` and `scripts/archive_reports_to_zotero.py` now prefer the scheduled window `until` date for `260708` / `260710` naming instead of the first episode date or generation date.
+  - Added `scripts/assemble_gemini_report_from_briefs.py` for large windows: reuse completed per-episode briefs for 第二部分 and ask Gemini only for the integrated first/third/fourth/fifth sections, avoiding final-synthesis disconnects on 17-episode inputs while preserving all episode briefs.
+- Transcript collection:
+  - Original/English transcript coverage reached `6/6` for `260708` and `17/17` for `260710`; no LLM transcript fallback was used.
+  - Chinese transcript audit after delivery: `260708` has `1/6`; `260710` has `10/17`. Chinese is recorded as an archive/completeness artifact, not the generation source.
+  - Final cleanup `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=44 removed=44`; loose JSON count in `/Users/hannah/Downloads/Spotify Transcript Collector/` is `0`.
+- Wednesday final report:
+  - Markdown: `reports/markdown/20260710-154459-381198-gemini-report.md`.
+  - DOCX: `reports/word/260708-Spotify播客情报研报.docx`; SHA-256 `491d3283aabd351aa38273d47b8e860fb2faea08ca580c6451a88552d9632b9b`.
+  - PDF: `reports/pdf/260708-Spotify播客情报研报.pdf`; SHA-256 `6284166a317b366a7806e0a93b2228784ed0576b7558ed55b018b7ab6146c7bf`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `6` episode headings, required labels all `6`, PDF page count `17`.
+- Friday final report:
+  - Markdown: `reports/markdown/20260710-154508-415834-gemini-report.md`.
+  - DOCX: `reports/word/260710-Spotify播客情报研报.docx`; SHA-256 `2b770d5f1a499868b2f6ffb5983756f0c32e5ca866b8b25efcb386ff594457b9`.
+  - PDF: `reports/pdf/260710-Spotify播客情报研报.pdf`; SHA-256 `a880b5f5d784f52606e9e0f9f57c4431bcec91c9bbb258ecbfedc3d4d957f61c`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `17` episode headings, required labels all `17`, PDF page count `41`.
+  - Fixed content issues before final render: removed a low-value evidence anchor, removed timestamp markers from key quote blocks, replaced cross-timestamp quotes with transcript-direct single-sentence quotes, and inserted a controlled page break before 第三部分 because the heading had fallen into the bottom-quarter zone.
+- Zotero:
+  - `260708` archived as direct PDF item/attachment id `4392`; Zotero stored PDF `/Users/hannah/Zotero/storage/O4M0I05C/260708-Spotify播客情报研报.pdf` hash matched local PDF.
+  - `260710` archived as direct PDF item/attachment id `4393`; Zotero stored PDF `/Users/hannah/Zotero/storage/P8KNGZ1L/260710-Spotify播客情报研报.pdf` hash matched local PDF.
+- Google Drive and Discord:
+  - Google Drive upload verified by listing for `260708-Spotify播客情报研报.docx` and `260710-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by `notification_sent` events:
+    - `260708`: id `1783672592551-e9d4afb6-0c1a-402b-a350-abac7a067951-discord`, sent at `2026-07-10T08:38:34.360Z`.
+    - `260710`: id `1783672600991-a081f9c1-525f-4a57-af88-d0ba8fcfd3ed-discord`, sent at `2026-07-10T08:38:35.696Z`.
+  - Note: Discord Studio worker/cron was blocked by a stale port-3000 conflict, so the two Spotify notifications were sent by a targeted Discord bot send and then marked `notification_sent`. Investigate/restart Discord Studio service separately; do not assume queue-only means delivered.
+- Mark seen:
+  - `marked_seen=6 manifest=data/runs/20260710-154459-381198-manifest.json`.
+  - `marked_seen=17 manifest=data/runs/20260710-154508-415834-manifest.json`.
+- 260708 and 260710 workflows are complete end to end.

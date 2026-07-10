@@ -148,9 +148,30 @@ def remove_direct_attachment_titles(connection: sqlite3.Connection, collection_i
 
 def _delivery_stem(markdown_path: Path) -> str:
     run_id = markdown_path.stem.replace("-gemini-report", "")
-    manifest_path = ROOT / "data" / "gemini_inputs" / run_id / "episode-manifest.json"
+    package_dir = ROOT / "data" / "gemini_inputs" / run_id
+    source_manifest = package_dir / "source-manifest-original.json"
+    if source_manifest.exists():
+        manifest = json.loads(source_manifest.read_text(encoding="utf-8"))
+        until = manifest.get("until")
+        if until:
+            try:
+                published_dt = datetime.fromisoformat(str(until).replace("Z", "+00:00"))
+                short = published_dt.astimezone(timezone(timedelta(hours=8))).strftime("%y%m%d")
+            except ValueError:
+                short = str(until)[:10].replace("-", "")[2:]
+            return f"{short}-Spotify播客情报研报"
+    manifest_path = package_dir / "episode-manifest.json"
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        report_window = manifest.get("report_window") if isinstance(manifest.get("report_window"), dict) else {}
+        until = report_window.get("until") if isinstance(report_window, dict) else None
+        if until:
+            try:
+                published_dt = datetime.fromisoformat(str(until).replace("Z", "+00:00"))
+                short = published_dt.astimezone(timezone(timedelta(hours=8))).strftime("%y%m%d")
+            except ValueError:
+                short = str(until)[:10].replace("-", "")[2:]
+            return f"{short}-Spotify播客情报研报"
         episodes = manifest.get("episodes") or []
         if episodes and episodes[0].get("published_at"):
             published_at = episodes[0]["published_at"]

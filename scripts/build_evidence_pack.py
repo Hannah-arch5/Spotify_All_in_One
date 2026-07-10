@@ -156,6 +156,10 @@ def build(manifest_path: Path, transcript_dir: Path) -> tuple[Path, Path]:
         "run_id": manifest["run_id"],
         "created_at": datetime.now().astimezone().isoformat(),
         "manifest_path": str(manifest_path),
+        "report_window": {
+            "since": manifest.get("since"),
+            "until": manifest.get("until"),
+        },
         "transcript_dir": str(transcript_dir),
         "sort_rule": manifest["sort_rule"],
         "summary": {
