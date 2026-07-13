@@ -303,18 +303,15 @@ function triggerDownload(payload, metadata) {
 
   try {
     const jsonStr = JSON.stringify(payload, null, 2);
-    // Create Blob in content script context (which has DOM window support)
-    const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
-    const blobUrl = URL.createObjectURL(blob);
+    // Use a data URL instead of a content-script blob URL so the background
+    // downloads API can resolve it reliably across Chrome-family browsers.
+    const dataUrl = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(jsonStr)));
 
     chrome.runtime.sendMessage({
       type: 'DOWNLOAD_JSON',
-      url: blobUrl,
+      url: dataUrl,
       filename: filename
     }, (response) => {
-      // Revoke Blob URL after 10s to release memory
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-
       if (response && response.success) {
         console.log(`[STD] Successfully downloaded transcript: ${filename}`);
         updatePanelUI();

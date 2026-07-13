@@ -2,7 +2,7 @@
 
 ## 1. Orient
 
-- Read `PROJECT_MEMORY.md`.
+- Read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md`, then `PROJECT_MEMORY.md`.
 - Check `git status --short`, current branch, and whether a GitHub remote exists.
 - Check LaunchAgent:
   - `launchctl print gui/501/com.hannah.spotify-podcast-report`
@@ -19,7 +19,12 @@
 ## 3. Transcript Collection
 
 - First run the project pipeline/evidence step to learn exactly which transcripts are missing.
-- Correct STD workflow:
+- Preferred CDP native transcript workflow:
+  - Use the user's logged-in Comet/Chrome session with a local DevTools port when available.
+  - Run `scripts/capture_spotify_transcripts_cdp.js` with the current manifest and verified Spotify URL candidates.
+  - The script opens each Spotify episode detail page, waits for the tab area, clicks `Transcript`, captures Spotify's native transcript API, and writes STD-compatible original transcript JSON into `/Users/hannah/Downloads/Spotify Transcript Collector/`.
+  - Import with `scripts/import_spotify_transcripts.py`, then rerun the pipeline/evidence audit. This is the first-choice path because it is faster, avoids Gemini token use, and captures the same native transcript source.
+- STD fallback workflow:
   - Use Chrome with the user's logged-in Spotify session and STD extension.
   - Open each Spotify episode detail page, not a search result page.
   - Click the native Spotify `Transcript` tab.
@@ -34,6 +39,11 @@
   - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
 - Chinese transcript gaps can be reported, but English/original transcript coverage is the main generation gate unless the user explicitly requires Chinese. Do not use Chinese transcripts as the report-generation source by default; treat them as archive/completeness artifacts.
+- After English/original coverage is complete, start or record a resumable Chinese backfill:
+  - Use `scripts/translate_spotify_transcripts_to_zh.py --evidence-pack <evidence-pack> --status-json data/background_jobs/<run_id>-zh-translation-status.json`.
+  - Source must be the exact archived original transcript JSON referenced by the evidence pack.
+  - The translator writes `sourceTranscriptSha256`, provider metadata, and complete segment translations; it must skip already complete Chinese files.
+  - If Google Translate is rate-limited, paused, or blocked, record the completed/missing Chinese count in `PROJECT_MEMORY.md` and resume later. Do not delay Gemini/report delivery after original/English coverage is complete.
 
 ## 4. Gemini Report
 

@@ -2025,3 +2025,44 @@ Monday batch notes:
   - `marked_seen=6 manifest=data/runs/20260710-154459-381198-manifest.json`.
   - `marked_seen=17 manifest=data/runs/20260710-154508-415834-manifest.json`.
 - 260708 and 260710 workflows are complete end to end.
+
+## 2026-07-14 260713 Delivery Completion And Transcript Workflow Upgrade
+
+- Important cross-project correction: this status belongs to `/Users/hannah/Documents/Spotify All in One`, not News All in One. News project memory/git must not be used for this Spotify report.
+- User clarified the stable transcript strategy:
+  - Do not spend Gemini tokens on transcript extraction or audio transcription by default.
+  - Primary original/English transcript path is browser CDP capture from the user's logged-in Spotify/Comet session: open the verified Spotify episode detail page, click Spotify's native `Transcript` tab, capture the native `transcript-read-along` API, and save STD-compatible JSON.
+  - STD extension remains useful as a fallback/UI path, but it should not be tried before CDP native capture when CDP is available.
+  - Chinese transcripts are still important for other projects and must be complete/traceable, but they do not block Spotify report generation when original/English coverage is complete.
+  - Chinese backfill should translate from the exact archived original transcript JSON and admit only complete `_zh` JSON where every non-empty source segment has a Chinese `translation`.
+- Code/process changes:
+  - Added `scripts/capture_spotify_transcripts_cdp.js` for Comet/Chrome DevTools native Spotify transcript capture.
+  - Added `scripts/translate_spotify_transcripts_to_zh.py` for resumable Chinese subtitle backfill from archived original transcript JSON.
+  - Updated `chrome-spotify-transcript-downloader/content.js` to use a data URL for JSON downloads instead of a content-script Blob URL, improving Chrome-family download reliability.
+  - `data/background_jobs/` is ignored by Git because it contains local translation logs/status files.
+- 260713 report:
+  - Fixed schedule window: `2026-07-10 15:00 CST` to `2026-07-13 15:00 CST`; delivery date `260713`.
+  - Manifest: `data/runs/20260714-024238-852919-manifest.json`; episode count `13`; order `published_at desc`.
+  - Gemini input package: `data/gemini_inputs/20260714-024238-852919`.
+  - Markdown: `reports/markdown/20260714-024238-852919-gemini-report.md`.
+  - DOCX: `reports/word/260713-Spotify播客情报研报.docx`; SHA-256 `11f62fb0015be336bfbd15c281a1eb96461a13c25875de0cc5266f09943b4754`.
+  - PDF: `reports/pdf/260713-Spotify播客情报研报.pdf`; SHA-256 `3a49612252640880c64910a475bdbcd24bb2d2b74abf9aa486fbdd89ce905172`.
+  - Final title: `AI浪潮下的生存与进化：重塑认知、组织与全球治理的策略洞察 (Survival and Evolution in the AI Wave: Strategic Insights for Reshaping Cognition, Organization, and Global Governance)`.
+- Quality/delivery gates:
+  - Gemini report review passed after section hierarchy and quote-safety fixes.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `13` episode headings, required labels all `13`, PDF page count `33`.
+  - Zotero direct-PDF archive completed: item/attachment id `4395`; active storage PDF `/Users/hannah/Zotero/storage/8NBXHR06/260713-Spotify播客情报研报.pdf`; hash matched local PDF.
+  - Google Drive upload verified by listing: `260713-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified via live Discord Studio `notification_sent`: id `1783972172999-f55662b1-cdfc-474e-88c8-811b6d9f9551-discord`, sent at `2026-07-13T19:49:39.974Z`.
+  - Staged DOCX/PDF hashes matched final rendered artifacts.
+- Transcript cleanup and status:
+  - `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=16 removed=16 english_seen=13 chinese_seen=3`.
+  - Downloads loose transcript JSON count after cleanup: `0`.
+  - Current-run archive audit: English/original `13/13`, Chinese `5/13`, duplicate IDs `0`.
+  - Chinese completed episode indices: `2, 3, 9, 12, 13`.
+  - Chinese missing episode indices: `1, 4, 5, 6, 7, 8, 10, 11`.
+  - Root cause for paused Chinese backfill: public Google Translate endpoints returned `429 Too Many Requests` / CAPTCHA; the Chrome dictionary fallback endpoint worked for tiny tests but hung on batch subtitles. User chose to wait rather than spend Gemini tokens.
+  - Next continuation point: after Google Translate rate limit recovers, resume `scripts/translate_spotify_transcripts_to_zh.py` for the missing indices only. Do not rerun the already complete Chinese files.
+- Mark seen:
+  - `marked_seen=13 manifest=data/runs/20260714-024238-852919-manifest.json`.
+- 260713 report delivery is complete end to end. Chinese subtitle backfill remains paused at `5/13` until the Google Translate limit recovers or the user approves a paid/API/model translation path.

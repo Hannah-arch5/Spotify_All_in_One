@@ -6,6 +6,7 @@ data/feeds/
 data/gemini_chunks/
 data/gemini_inputs/
 data/runs/
+data/background_jobs/
 data/state.sqlite
 data/transcripts/
 reports/markdown/

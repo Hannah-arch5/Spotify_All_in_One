@@ -12,7 +12,7 @@ Use this skill for Hannah's recurring Spotify podcast intelligence report workfl
 ## Start Here
 
 1. Work in `/Users/hannah/Documents/Spotify All in One`.
-2. Read `PROJECT_MEMORY.md` first. Trust the newest dated section over older blocker notes.
+2. Read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md`, then `PROJECT_MEMORY.md`. Trust the newest dated section over older blocker notes.
 3. Check current state before doing heavy work:
    - `git status --short`
    - `git branch --show-current`
@@ -25,6 +25,7 @@ Use this skill for Hannah's recurring Spotify podcast intelligence report workfl
 
 - Do not silently use lower-fidelity transcript/report fallbacks.
 - Scheduled report dating is a delivery gate. Report windows, titles, filenames, Gemini package metadata, and archive names must use the intended M/W/F schedule window cutoff date, not the day/time the user asks Codex to generate the report. If a report is generated late, reconstruct the fixed Monday/Wednesday/Friday window first and verify the manifest uses `published_at desc` order.
+- Primary transcript collection should use browser CDP/Comet native Spotify transcript capture when available: connect to the logged-in browser DevTools port, open each verified Spotify episode detail page, click `Transcript`, capture the native `transcript-read-along` API, and save STD-compatible original transcript JSON. Use STD UI/download flow only as fallback or for debugging.
 - For STD transcripts, open each Spotify episode detail page and click Spotify's native `Transcript` tab. Search/list pages are not enough. Never declare a transcript missing after only the initial partial page render; reload the verified episode detail URL and wait about `6.5` seconds for Spotify's Description/Transcript/Chapters tab list before deciding.
 - The report main title is a delivery gate. It must be constructive, insight-led, and immediately communicate the report's central thesis. It must include an English translation. Do not use generic titles, run IDs, date piles, or vague labels such as only "Spotify 播客情报研报".
 - Every episode, including episode 1, must have `关键金句 / 结论` with meaningful source-language original sentences and translation/explanation lines when useful. Translation/explanation lines must be italicized and must not use prefix labels such as `中文解释：`, `中文翻译：`, `中文翻译/解释：`, `英文解释：`, `英文翻译：`, or `英文翻译/解释：`. Do not satisfy quote safety by downgrading to `转述结论`; first return to transcript JSON and select exact, verifiable source lines. Use `转述结论` only when a real transcript scan confirms no meaningful verifiable original quote exists.
@@ -33,6 +34,7 @@ Use this skill for Hannah's recurring Spotify podcast intelligence report workfl
 - Final PDF line breaking is a delivery gate. Punctuation must stay attached to the end of the preceding line and must not appear as the first character of a new line. Check this during visual/PDF review and fix before delivery.
 - Transcript archive deduplication is a completion gate. Treat `spotifyEpisodeId + language` as the unique identity and retain at most one original transcript plus one complete Chinese transcript per episode. Never archive Chrome retry copies such as ` (1)` as separate files. Never admit `_zh_INCOMPLETE` files or Chinese files with untranslated non-empty segments to the formal archive.
 - Chinese transcripts are an archive/completeness artifact, not the default report-generation source. Generate the report from original/English transcripts unless the user explicitly asks to use Chinese transcripts for analysis.
+- Chinese subtitles still matter for Hannah's other projects. After original/English coverage is complete, start or record a resumable backfill from the exact archived original transcript JSON. The report may proceed without waiting for Chinese, but the missing Chinese count and retry plan must be recorded in memory.
 - After report review passes and delivery succeeds, always run transcript cleanup with `scripts/import_spotify_transcripts.py --move`. Verify Downloads has zero leftover JSON files and audit the current run's episode IDs in both formal archive directories; duplicate IDs must be `0` before mark-seen.
 - For long report windows, do not force a single overlarge Gemini final-synthesis request if the per-episode briefs are already complete. Use `scripts/assemble_gemini_report_from_briefs.py` to preserve every episode brief in 第二部分 and generate only the integrated first/third/fourth/fifth sections from compact brief summaries.
 - Mark episodes seen only after the required delivery gates pass, unless the user explicitly skips a blocked channel.
