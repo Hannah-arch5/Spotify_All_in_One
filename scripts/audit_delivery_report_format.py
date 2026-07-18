@@ -15,10 +15,10 @@ from pypdf import PdfReader
 
 
 REQUIRED_PARTS = [
-    "第一部分：摘要与核心洞察总结 (Abstract & Executive Summary)",
-    "第二部分：核心情报深度梳理 (Detailed Intelligence Breakdown)",
-    "第三部分：深度专题分析 (Deep Thematic Analysis)",
-    "第四部分：深度洞察与第二层思维 (Deep Insights & Second-Level Thinking)",
+    "第一部分：本期核心判断 (Core Judgment)",
+    "第二部分：逐集情报与证据 (Episode Intelligence & Evidence)",
+    "第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)",
+    "第四部分：第二层思维 (Second-Level Thinking)",
     "第五部分：结论与战略意义 (Conclusion & Strategic Implications)",
 ]
 
@@ -382,7 +382,7 @@ def audit_pdf(path: Path) -> dict[str, Any]:
         issues.append("PDF text still contains #### markdown heading residue")
     if "Transcript 来源" in text:
         issues.append("PDF text still contains Transcript 来源")
-    for marker in ("摘要与核心洞察总结", "核心情报深度梳理"):
+    for marker in ("本期核心判断", "逐集情报与证据"):
         if marker not in text:
             issues.append(f"PDF first pages missing expected marker: {marker}")
     return {"path": str(path), "issues": issues, "page_count": len(reader.pages)}

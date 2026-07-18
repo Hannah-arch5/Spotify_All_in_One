@@ -170,7 +170,7 @@ async function batchTranslateSegments(segments) {
       }
       
       // Keep requests slow enough to avoid Google Translate rate limits.
-      await new Promise(r => setTimeout(r, 5000));
+      await new Promise(r => setTimeout(r, 8000));
       return true;
       } catch (err) {
         console.error(`[STD] Translation chunk failed attempt ${attempt}/5:`, err);
@@ -185,8 +185,8 @@ async function batchTranslateSegments(segments) {
     if (!textToTranslate) continue;
     
     // Smaller chunks reduce empty/partial translation responses and rate-limit pressure.
-    // 4500 is safe for POST requests and halves the total number of requests.
-    if (currentChunkText.length + textToTranslate.length > 4500) {
+    // Long episodes are especially sensitive to Google Translate rejecting larger POST bodies.
+    if (currentChunkText.length + textToTranslate.length > 1200) {
       const ok = await flushChunk(currentChunkText, currentChunkIndices);
       if (!ok) return false;
       currentChunkText = "";
