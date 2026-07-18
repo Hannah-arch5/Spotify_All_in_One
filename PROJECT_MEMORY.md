@@ -2257,3 +2257,19 @@ Monday batch notes:
 - Remaining blocker:
   - Two Chinese transcript files still require external translation or STD plugin translation: Minus One `5XYi0DfV1mFXFLPU83yjpi` and All-In `43GBjmb0zU8gehn3A1D8n7`.
   - Attempting `scripts/translate_spotify_transcripts_to_zh.py` was blocked by Codex approval because it would send transcript content to an external translation service and the user previously emphasized not using Gemini/AI to fabricate Chinese transcripts. Do not work around this. Ask for explicit approval that specifically permits sending these two English transcripts to the STD/Google Translate-style external translation path, or wait for a plugin-native/local method.
+
+## 2026-07-18 Chinese Transcript Completion For Late-RSS Backfill
+
+- User clarified that the three older historical late-RSS episodes do not need to be retroactively added to past delivered reports; only their English/original and Chinese subtitle archives must be complete.
+- User explicitly authorized sending the two remaining English transcripts to the STD/Google Translate-style external translation path for Chinese subtitle generation.
+- Completed the two remaining Chinese transcript gaps:
+  - Minus One `5XYi0DfV1mFXFLPU83yjpi`, `736` segments, target `data/transcripts/spotify_zh/2026-07-16 - Minus One - Anthropic Engineer on the Future of Coding with AI _ Thariq Shihipar_zh - 5XYi0DfV1mFXFLPU83yjpi.json`.
+  - All-In `43GBjmb0zU8gehn3A1D8n7`, `532` segments, target `data/transcripts/spotify_zh/2026-06-07 - All-In with Chamath, Jason, Sacks & Friedberg - Inside the Private Stock Market Boom_ SpaceX, Anthropic, OpenAI & the Rise of Secondaries_zh - 43GBjmb0zU8gehn3A1D8n7.json`.
+- Final language audits:
+  - `data/runs/20260717-151435-113430-updated14-transcript-language-audit.json`: English/original `14/14`, Chinese `14/14`, missing Chinese `0`.
+  - `data/runs/20260718-101931-375400-late-unprocessed-transcript-language-audit.json`: English/original `3/3`, Chinese `3/3`, missing Chinese `0`.
+- Downloads cleanup remained clean: `/Users/hannah/Downloads/Spotify Transcript Collector/` JSON count `0`.
+- Current policy after this correction:
+  - The `260717` delivered report includes the one late-RSS episode that belonged to its report window.
+  - The three older historical late-RSS episodes are not being retroactively added to old reports per user instruction; their transcript archives are complete.
+  - Future Spotify M/W/F deliveries must run the late-RSS audit gate so an RSS-delayed episode cannot silently miss its intended report window again.
