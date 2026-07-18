@@ -15,6 +15,11 @@
 - Prefer the project scripts and schedule logic already in the repo.
 - For fixed windows, avoid overlapping reports. If a prior report included post-cutoff episodes, dedupe before generating the next report.
 - Keep the manifest path explicit in all later commands.
+- Run the late-arriving RSS audit against current RSS before accepting a manifest as complete:
+  - `scripts/audit_late_rss_arrivals.py --since <previous-window-since> --until <current-window-until> --require-clean`
+  - Include at least the current report window and the previous closed M/W/F window.
+  - If the audit finds any episode that now appears in RSS but was not manifested or marked seen, treat it as a hard blocker. Create or merge a corrected manifest for the episode's intended M/W/F window, then collect transcripts and regenerate the affected report before delivery.
+  - This check exists because some feeds can publish or refresh late while backdating `published_at`, which can make an episode belong to an already delivered report window even though it was absent from RSS during the original run.
 
 ## 3. Transcript Collection
 
@@ -23,6 +28,7 @@
   - Use the user's logged-in Comet/Chrome session with a local DevTools port when available.
   - Run `scripts/capture_spotify_transcripts_cdp.js` with the current manifest and verified Spotify URL candidates.
   - The script opens each Spotify episode detail page, waits for the tab area, clicks `Transcript`, captures Spotify's native transcript API, and writes STD-compatible original transcript JSON into `/Users/hannah/Downloads/Spotify Transcript Collector/`.
+  - The captured transcript API URL must include the exact target Spotify episode ID before the file is saved. If it does not match, discard the response and retry; stale/cached responses from another episode must never be archived under the current episode filename.
   - Import with `scripts/import_spotify_transcripts.py`, then rerun the pipeline/evidence audit. This is the first-choice path because it is faster, avoids Gemini token use, and captures the same native transcript source.
 - STD fallback workflow:
   - Use Chrome with the user's logged-in Spotify session and STD extension.
@@ -38,12 +44,13 @@
   - Treat Chrome retry suffixes such as ` (1)` as duplicate downloads, not distinct archives.
   - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
-- Chinese transcript gaps can be reported, but English/original transcript coverage is the main generation gate unless the user explicitly requires Chinese. Do not use Chinese transcripts as the report-generation source by default; treat them as archive/completeness artifacts.
+- For late-arriving RSS backfills, transcript coverage must be checked exactly like a normal run: original/English transcript first, then Chinese archive completeness or a recorded blocker.
+- Chinese transcript gaps must be handled promptly. English/original transcript coverage is still the main generation gate unless the user explicitly requires Chinese, and Chinese transcripts must not be used as the report-generation source by default. However, Chinese transcripts are required archive/completeness artifacts: if any are missing, immediately start or queue backfill and keep retrying until complete or explicitly recorded as a temporary external-service/plugin blocker.
 - After English/original coverage is complete, start or record a resumable Chinese backfill:
   - Use `scripts/translate_spotify_transcripts_to_zh.py --evidence-pack <evidence-pack> --status-json data/background_jobs/<run_id>-zh-translation-status.json`.
   - Source must be the exact archived original transcript JSON referenced by the evidence pack.
   - The translator writes `sourceTranscriptSha256`, provider metadata, and complete segment translations; it must skip already complete Chinese files.
-  - If Google Translate is rate-limited, paused, or blocked, record the completed/missing Chinese count in `PROJECT_MEMORY.md` and resume later. Do not delay Gemini/report delivery after original/English coverage is complete.
+  - If Google Translate is rate-limited, paused, or blocked, record the completed/missing Chinese count in `PROJECT_MEMORY.md`, create/retain a resumable status file under `data/background_jobs/`, and resume as soon as the blocker clears. Do not let Chinese gaps silently persist across runs. Do not delay Gemini/report delivery after original/English coverage is complete.
 
 ## 4. Gemini Report
 
@@ -105,6 +112,7 @@
   - `scripts/import_spotify_transcripts.py --move`
   - Verify `/Users/hannah/Downloads/Spotify Transcript Collector/` has zero JSON files.
 - Audit the current evidence pack's episode IDs in `data/transcripts/spotify_en/` and `data/transcripts/spotify_zh/` after cleanup. Confirm each language has at most one file per episode and report `duplicate_ids=0` for both directories. A missing complete Chinese transcript may be reported as a gap; an incomplete or duplicate file must not be retained to make coverage appear complete.
+- Rerun the late-arriving RSS audit after cleanup and before mark-seen. A clean result is required for completion.
 - Mark manifests seen only after delivery gates pass:
   - `scripts/mark_manifest_seen.py <manifest>`
 - If any required external delivery is blocked and not skipped by the user, or transcript archive deduplication fails, do not mark seen.

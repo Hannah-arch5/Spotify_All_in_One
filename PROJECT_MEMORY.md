@@ -29,6 +29,7 @@ Core requirements:
 - Let Gemini write the final long-form report, but force Gemini to work from collected transcripts and source metadata.
 - Codex should collect episodes/transcripts, package evidence, and review Gemini's report for omissions, duplicates, and hallucinations.
 - Keep Google Drive backup, Zotero import, tags, and Telegram delivery as later pipeline stages.
+- **Hard rule added 2026-07-18:** late-arriving/backfilled RSS episodes must be audited every run. Some RSS feeds can refresh late while keeping an older `published_at`; this can make an episode belong to a report window that was already generated. Before final delivery and before mark-seen, run a current-RSS audit covering at least the current fixed M/W/F window plus the previous closed window. If any episode now appears in RSS but was not manifested or marked seen, stop, merge it into the correct scheduled report window, collect original/English and Chinese transcript coverage, regenerate the affected report, and record the incident. The original cached RSS from the report run is not enough proof of completeness.
 
 ## Current Podcast List
 
@@ -2066,3 +2067,193 @@ Monday batch notes:
 - Mark seen:
   - `marked_seen=13 manifest=data/runs/20260714-024238-852919-manifest.json`.
 - 260713 report delivery is complete end to end. Chinese subtitle backfill remains paused at `5/13` until the Google Translate limit recovers or the user approves a paid/API/model translation path.
+
+## 2026-07-16 260715 Delivery Completion
+
+- Fixed scheduled report window: `2026-07-13 15:00 CST` to `2026-07-15 15:00 CST`; delivery date `260715`. This is the Wednesday report even though it was generated on Thursday `2026-07-16`.
+- Manifest: `data/runs/20260716-155747-871379-manifest.json`; episode count `8`; order verified as `published_at desc`.
+- User authorization:
+  - User explicitly said "所有授权都给你" for the remaining 260715 workflow, covering Chinese transcript backfill through an external translation service, Zotero local archive, Google Drive upload, Discord PDF send, cleanup, and mark-seen. Codex/system approval prompts were still respected.
+- Transcript collection:
+  - Used Comet with DevTools port `9223` after the user logged Spotify into the automated Comet session.
+  - Captured Spotify native transcript API for all `8/8` episodes via `scripts/capture_spotify_transcripts_cdp.js`; no Gemini/audio transcript fallback was used.
+  - Imported original/English transcripts: `8/8`; evidence pack missing transcripts `0`.
+  - Chinese transcript audit after authorized backfill and final cleanup: `8/8`; Chinese remains an archive/completeness artifact, not the report-generation source.
+  - Completed Chinese episode indices: `1, 2, 3, 4, 5, 6, 7, 8`.
+  - Missing Chinese episode indices: none.
+  - After the first batch translator stalled on long episodes, the missing indices `3, 6, 7, 8` were completed with a smaller progressive chunk flow that printed progress and wrote only validated complete `_zh` JSON files.
+- Gemini/report generation:
+  - Initial Gemini runs failed during API/network connection. The successful continuation used local proxy `127.0.0.1:7897` and resumed already completed episode briefs rather than regenerating them.
+  - Gemini input package: `data/gemini_inputs/20260716-155747-871379`.
+  - Chunk briefs: `data/gemini_chunks/20260716-155747-871379/01-episode-brief.md` through `08-episode-brief.md`.
+  - Final Markdown: `reports/markdown/20260716-155747-871379-gemini-report.md`; SHA-256 `0f001c014ba1f991dd9b6bcd799a3905c8a795f2b10ac00c84f20fce09e39dda`.
+  - Final title: `AI浪潮下的多维变革：战略、信任与人类未来 (Multi-Dimensional Transformation in the AI Wave: Strategy, Trust, and the Future of Humanity)`.
+- Quality gates passed:
+  - Gemini report review passed after adding the fixed five-part structure and replacing unverifiable/cross-segment quote text with transcript-verifiable source lines.
+  - DOCX: `reports/word/260715-Spotify播客情报研报.docx`; SHA-256 `be38b0d67317a98aa4f30124b974d85081f3fcaf4160fb1370bf198b9965938d`.
+  - PDF: `reports/pdf/260715-Spotify播客情报研报.pdf`; SHA-256 `3ab69ed452fa7107d0a37ded5d4c20a1bc303c94f2a0c41605055d958abe02f5`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `8` episode headings, required labels all `8`, PDF page count `23`.
+  - PDF line-start punctuation scan passed with `bad_count=0`.
+  - Conditional pagination check passed after inserting a single page break before 第四部分: 第三部分 page `19` zone `0.476`; 第四部分 page `21` zone `0.234`; 第五部分 page `22` zone `0.408`.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4396`, title `260715-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1784192240`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/CXZ28O3H/260715-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `3ab69ed452fa7107d0a37ded5d4c20a1bc303c94f2a0c41605055d958abe02f5`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260715-Spotify播客情报研报.docx`; SHA-256 `be38b0d67317a98aa4f30124b974d85081f3fcaf4160fb1370bf198b9965938d`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260715-Spotify播客情报研报.pdf`; SHA-256 `3ab69ed452fa7107d0a37ded5d4c20a1bc303c94f2a0c41605055d958abe02f5`.
+  - Google Drive upload verified by Drive listing: `260715-Spotify播客情报研报.docx`.
+  - Discord Studio queue created notification id `1784192297317-47ac8fc3-088b-4547-93a8-33d3de7a6ca5-discord`, but no live worker `notification_sent` appeared after waiting.
+  - Direct Discord Bot API fallback through `HTTPS_PROXY=http://127.0.0.1:7897` succeeded; Discord message id `1527238342662684744`.
+  - The queued notification was marked `notification_sent` at `2026-07-16T09:00:18.040193Z` with `directDiscordMessageId=1527238342662684744` to prevent duplicate sends.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=8 removed=8 english_seen=8 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run archive audit after cleanup: English/original `8/8`, Chinese `8/8`, `duplicate_ids=0` for both formal archive directories.
+  - No Chrome retry duplicate copies were retained in the formal archive for current-run episode IDs.
+- Mark seen:
+  - `marked_seen=8 manifest=data/runs/20260716-155747-871379-manifest.json`.
+- 260715 workflow is complete end to end, including full Chinese transcript coverage `8/8`.
+
+## 2026-07-17 Historical Chinese Transcript Backfill Completion
+
+- User asked to补齐之前有缺失的中文字幕. This was handled as archive/completeness backfill only; Chinese transcripts were not used as the report-generation source.
+- Hard rule reaffirmed by user after completion: future Spotify reports must not leave Chinese transcripts missing. Chinese may be backfilled after report generation/delivery because it is not the analysis source, but every missing Chinese transcript must be detected by language audit, entered into an immediate backfill/retry queue, and followed through until complete or explicitly recorded as a temporary external-service/plugin blocker. Do not let Chinese gaps silently persist across runs.
+- Synced this hard rule to the public GitHub skill repository `Hannah-arch5/Spotify_MWF_Report_Skill` on `main`; remote commit `6fdec15` (`Require Chinese transcript backfill`). Verified repo visibility `PUBLIC` and remote HEAD `6fdec15e299cfeb1ebff045ec216e9dfe52b738c`.
+- Starting point:
+  - Re-audited historical evidence packs and extracted `75` unique archived original transcript JSON files that were missing complete Chinese coverage into `data/background_jobs/historical-zh-missing-sources.json`.
+  - Before the final backfill pass, `4/75` were already complete; the remaining gaps included long English transcripts and several Chinese-source transcripts.
+- Root cause fixed:
+  - Public Google Translate `translate.googleapis.com` often returned `429 Too Many Requests`.
+  - The fallback Chrome dictionary endpoint `clients5.google.com/translate_a/t?client=dict-chrome-ex` was reachable, but returns payloads shaped like `[["你好世界","en"]]`; the old parser treated the inner list as segment pairs and accidentally appended source-language codes such as `e` into translations, causing bad outputs and excessive retry/splitting.
+  - `scripts/translate_spotify_transcripts_to_zh.py` now correctly handles fallback payloads whose first item is `[translated_text, source_language]`.
+  - The script now treats `http.client.RemoteDisconnected` as a retryable network failure, so one remote disconnect does not crash the whole batch.
+- Backfill result:
+  - Historical unique gap list: `75/75` now has complete `_zh` transcript JSON files in `data/transcripts/spotify_zh/`.
+  - Completeness check result: `total 75 complete 75 remaining 0 incomplete_named 0`.
+  - All output files were written only after validation confirmed no non-empty source segment was missing `translation`.
+  - Five Chinese-source transcripts were completed by copying source text into the `translation` field with provider `source_already_zh`, not by calling an external translator.
+- Historical evidence-pack language audit rerun:
+  - `data/runs/20260603-131000-260601-combined-evidence-pack.json`: `15/15` Chinese, missing `0`.
+  - `data/runs/20260603-235829-112249-dedup-evidence-pack.json`: `7/7` Chinese, missing `0`.
+  - `data/runs/20260606-054802-713197-evidence-pack.json`: `17/17` Chinese, missing `0`.
+  - `data/runs/20260608-172952-597227-transcript-ready-evidence-pack.json`: `15/15` Chinese, missing `0`.
+  - `data/runs/20260613-203919-703967-evidence-pack.json`: `14/14` Chinese, missing `0`.
+  - `data/runs/20260620-002923-520241-evidence-pack.json`: `14/14` Chinese, missing `0`.
+  - `data/runs/20260622-155545-738013-evidence-pack.json`: `14/14` Chinese, missing `0`.
+  - `data/runs/20260627-005250-308727-evidence-pack.json`: `11/11` Chinese, missing `0`.
+  - `data/runs/20260630-161442-996638-evidence-pack.json`: `14/14` Chinese, missing `0`.
+  - `data/runs/20260701-163823-450713-evidence-pack.json`: `9/9` Chinese, missing `0`.
+  - `data/runs/20260701-164134-157872-evidence-pack.json`: `9/9` Chinese, missing `0`.
+  - `data/runs/20260706-230036-160187-evidence-pack.json`: `9/9` Chinese, missing `0`.
+  - `data/runs/20260710-050630-026823-evidence-pack.json`: `17/17` Chinese, missing `0`.
+  - `data/runs/20260710-154459-381198-evidence-pack.json`: `6/6` Chinese, missing `0`.
+  - `data/runs/20260710-154508-415834-evidence-pack.json`: `17/17` Chinese, missing `0`.
+  - `data/runs/20260714-024238-852919-evidence-pack.json`: `13/13` Chinese, missing `0`.
+  - Summary file: `data/background_jobs/historical-zh-language-audit-summary-20260717.json`.
+- Archive cleanup:
+  - Four old `_zh_INCOMPLETE` files were moved out of formal `data/transcripts/spotify_zh/` into `data/background_jobs/quarantine_incomplete_zh/`.
+  - Formal `data/transcripts/spotify_zh/` now has no `*INCOMPLETE*` files.
+  - Formal Chinese archive duplicate audit: `duplicate_ids=0`.
+  - English/original archive duplicate audit initially observed `4` pre-existing duplicate episode IDs. User asked to delete duplicates on 2026-07-17; kept the canonical evidence-pack-referenced files and deleted the unreferenced duplicate copies:
+    - Deleted `data/transcripts/spotify_en/2026-05-26 - The a16z Show - Why AI Isn’t Killing SaaS Yet - 6RqnmZfh7HF6WN6aOcEwi1.json`; kept the `2026-05-25` copy referenced by `20260525-201553`.
+    - Deleted `data/transcripts/spotify_en/2026-06-11 - All-In with Chamath, Jason, Sacks & Friedberg - Senators John Fetterman and Dave McCormick_ Bipartisanship, Money in DC, Datacenters, Graham Platner - 4DJA14LMtyvOrZMueHymm6.json`; kept the `2026-06-10` copy referenced by `20260613-203919-703967`.
+    - Deleted `data/transcripts/spotify_en/2026-06-12 - The AI Daily Brief_ Artificial Intelligence News and Analysis - Why Fable 5 Is the Most Controversial AI Release Ever - 4QyDc09y66jDRQpM8Tb41Q.json`; kept the `2026-06-11` copy referenced by `20260613-203919-703967`.
+    - Deleted `data/transcripts/spotify_en/2026-06-12 - The Joe Rogan Experience - _2513 - Dean Radin - 2c50dZKpJcLjAfGXhOMRxD.json`; kept the `2026-06-11` copy referenced by `20260613-203919-703967`.
+  - Final formal archive duplicate audit after deletion: `data/transcripts/spotify_en duplicate_ids=0`, `data/transcripts/spotify_zh duplicate_ids=0`.
+
+## 2026-07-17 260717 Delivery Completion
+
+- Fixed scheduled report window: `2026-07-15 15:00 CST` to `2026-07-17 15:00 CST`; delivery date `260717`.
+- Manifest: `data/runs/20260717-151435-113430-manifest.json`; episode count `13`; order verified as `published_at desc`.
+- Transcript collection:
+  - Used Comet/Chrome DevTools port `9223` to capture Spotify native transcript API for all `13/13` episodes.
+  - Imported original/English transcripts: `13/13`; evidence pack missing transcripts `0`.
+  - Completed Chinese transcript backfill for current run: `13/13`; Chinese remains an archive/completeness artifact and was not used as the report-generation source.
+  - Language audit: `reports/markdown/20260717-151435-113430-transcript-language-audit.md`; English/original `13/13`, Chinese `13/13`, missing Chinese `0`.
+  - Formal archive duplicate audit after current-run backfill: `data/transcripts/spotify_en duplicate_ids=0`, `data/transcripts/spotify_zh duplicate_ids=0`; no `_zh_INCOMPLETE` files in formal Chinese archive.
+- Gemini/report generation:
+  - User explicitly authorized sending local Spotify transcript/evidence to external Gemini API for `260717`.
+  - Gemini direct connection was unstable; repeated direct retries completed all `13/13` episode briefs.
+  - Final synthesis used `scripts/assemble_gemini_report_from_briefs.py` from completed briefs after `gemini-2.5-flash` hit request limits during the full final synthesis.
+  - Fixed `scripts/generate_chunked_gemini_report.py` to set `thinkingConfig.thinkingBudget=0`, after Gemini returned an empty response that consumed thought tokens but produced no report text.
+  - Final Markdown: `reports/markdown/20260717-151435-113430-gemini-report.md`; SHA-256 `2682aae18ba8d63ad44c3bf937f3a85c542a3e22c51bb4702f3a003bdcf9a59b`.
+  - Final title: `在分化中重建控制权：AI基础设施、市场风险与制度信任的再定价 (Rebuilding Control Amid Divergence: Repricing AI Infrastructure, Market Risk, and Institutional Trust)`.
+  - Gemini report review passed after fixing two Spotify URL case errors and replacing cross-timestamp/weak quote strings with transcript-verifiable single-segment quotes or explicit paraphrased conclusions.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260717-Spotify播客情报研报.docx`; SHA-256 `30cb3b7e6203181818f5e0d67e763f34ce6039f2447e7e6ab7a6ada7b25b3f30`.
+  - PDF: `reports/pdf/260717-Spotify播客情报研报.pdf`; SHA-256 `ad47df2414e43b1fd5dbaebe32bed4e1c92c50e5aeee02e6766735f197f3580d`.
+- Quality gates passed:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `13` episode headings, required labels all `13`, PDF page count `36`.
+  - PDF line-start punctuation scan passed with `bad_count=0`.
+  - Conditional pagination check: 第三部分 page `30` zone `0.524`; 第四部分 page `33` zone `0.128`; 第五部分 page `34` zone `0.627`.
+  - Visual spot-check pages `1`, `30`, `33`, and `34` looked normal; main title is constructive and bilingual, and cross-synthesis headings have body text on the same page when needed.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4397`, title `260717-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1784276743`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/MHRLOK5H/260717-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `ad47df2414e43b1fd5dbaebe32bed4e1c92c50e5aeee02e6766735f197f3580d`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260717-Spotify播客情报研报.docx`; SHA-256 `30cb3b7e6203181818f5e0d67e763f34ce6039f2447e7e6ab7a6ada7b25b3f30`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260717-Spotify播客情报研报.pdf`; SHA-256 `ad47df2414e43b1fd5dbaebe32bed4e1c92c50e5aeee02e6766735f197f3580d`.
+  - Google Drive upload verified by Drive listing: `260717-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1784276930834-4fbdb778-4b55-49c9-a1d4-85f041e842e7-discord`, sent at `2026-07-17T08:28:55.257Z`.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=13 removed=13 english_seen=13 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run archive audit after cleanup: English/original `13/13`, Chinese `13/13`, missing Chinese `0`.
+  - Formal archive duplicate audit after cleanup: `data/transcripts/spotify_en duplicate_ids=0`, `data/transcripts/spotify_zh duplicate_ids=0`.
+- Mark seen:
+  - `marked_seen=13 manifest=data/runs/20260717-151435-113430-manifest.json`.
+- 260717 workflow is complete end to end, including full Chinese transcript coverage and final cleanup.
+
+## 2026-07-18 260717 Late-RSS Incident And Updated Delivery
+
+- Root cause:
+  - User randomly checked Spotify episode `https://open.spotify.com/episode/5XYi0DfV1mFXFLPU83yjpi` and found it was absent from the delivered `260717` report.
+  - Live Spotify detail-page test confirmed this episode has native Spotify transcript. It was not a transcript detection failure.
+  - The original `260717` run at `2026-07-17 15:14 CST` cached the Minus One RSS feed before the episode appeared there; the cached feed still showed `2026-07-10` as Minus One's latest item. Current RSS later showed `Anthropic Engineer on the Future of Coding with AI | Thariq Shihipar`, published `2026-07-16 11:00 CST`, which belongs to the original `260717` fixed window.
+  - This was therefore a late-arriving/backfilled RSS problem: an episode can appear in RSS after a report is delivered while keeping a `published_at` inside the already-delivered M/W/F window.
+- Hard fixes:
+  - Added `scripts/audit_late_rss_arrivals.py` to fetch current RSS and detect episodes inside historical M/W/F windows that are not marked seen.
+  - Updated Spotify MWF skill source and installed skill with a hard gate: before final delivery/mark-seen, rerun late-RSS audit for at least the current window plus the previous closed window; any found episode blocks delivery and must be merged into the correct report window.
+  - Fixed `scripts/capture_spotify_transcripts_cdp.js` to require the captured transcript API URL to contain the exact target Spotify episode ID before saving. This prevents stale/cached transcript responses from being saved under the wrong episode filename.
+- 260717 correction:
+  - Re-scanned `2026-07-15 15:00 CST` to `2026-07-17 15:00 CST`; found exactly one new late-arriving episode: Minus One / Thariq Shihipar.
+  - Captured and archived its original Spotify transcript: `data/transcripts/spotify_en/2026-07-16 - Minus One - Anthropic Engineer on the Future of Coding with AI _ Thariq Shihipar - 5XYi0DfV1mFXFLPU83yjpi.json` (`736` segments).
+  - Built corrected manifest `data/runs/20260717-151435-113430-updated14-manifest.json`; episode count `14`, still sorted by `published_at desc`.
+  - Reused the existing 13 Gemini episode briefs by title, generated only the new episode 8 brief with `gemini-2.5-flash-lite`, then assembled a corrected 14-episode report from completed briefs.
+  - Final corrected Markdown: `reports/markdown/20260717-151435-113430-updated14-gemini-report.md`.
+  - Final corrected title: `当 AI 进入执行层，竞争优势转向会设计系统的人 (When AI Moves Into Execution, Advantage Shifts To System Designers)`.
+  - Gemini review passed after fixing URL identity and quote verification issues.
+  - Rendered corrected DOCX/PDF:
+    - `reports/word/260717-Spotify播客情报研报.docx`; SHA-256 `44c99911d624961c13384178608401a65a9ec5e2c648687341f17abc722f42d5`.
+    - `reports/pdf/260717-Spotify播客情报研报.pdf`; SHA-256 `3c98930e7819d2b6e8474b179b0d91ad43e078cf2584c4466acab2bfd6fdbe5c`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `14` episode headings, required labels all `14`, PDF page count `37`.
+  - Zotero direct-PDF archive replaced/updated: item `4399`, title `260717-Spotify播客情报研报`; active storage PDF `/Users/hannah/Zotero/storage/4GXI8LRY/260717-Spotify播客情报研报.pdf`; Zotero hash matched local PDF SHA-256 `3c98930e7819d2b6e8474b179b0d91ad43e078cf2584c4466acab2bfd6fdbe5c`.
+  - Google Drive upload verified by Drive listing: `260717-Spotify播客情报研报.docx`.
+  - Discord `#todo` corrected PDF sent by targeted one-shot Discord bot send after queue worker did not immediately consume the event; notification id `1784340951970-d0f04d37-59a5-4e78-9fc1-639c6ddb3fb8-discord`, Discord message id `1527862151732269177`.
+  - Cleanup: `scripts/import_spotify_transcripts.py --move` removed the temporary Minus One transcript download; Downloads loose JSON count returned to `0`.
+  - Mark-seen: `marked_seen=14 manifest=data/runs/20260717-151435-113430-updated14-manifest.json`.
+- Historical late-RSS audit:
+  - Initial strict audit from `2026-05-19T00:00:00Z` to `2026-07-17T07:00:00Z` found `4` un-seen historical items: the `260717` Minus One episode plus three older items.
+  - After correcting `260717`, remaining historical items were:
+    - `2026-06-07` 厚雪长波 / `能分析数据不等于真的理解宏观经济，但AI快做到了`.
+    - `2026-06-07` All-In / `Inside the Private Stock Market Boom: SpaceX, Anthropic, OpenAI & the Rise of Secondaries`.
+    - `2026-05-19` The a16z Show / `Rebuilding The American Shipyard`.
+  - Captured real Spotify transcripts for the three historical items after fixing CDP episode-ID validation:
+    - 厚雪长波 `1uGqcMQNuDcyePZiSnjqbz`, `746` segments, `zh-cn`.
+    - All-In `43GBjmb0zU8gehn3A1D8n7`, `532` segments, `en-us`.
+    - a16z `7wbZz0WNH7SLTyYvHJQQOD`, `115` segments, `en-us`.
+  - A bad first capture attempt produced three wrong temporary files containing the Minus One transcript under other filenames. These were detected by content spot-check before import, deleted from Downloads, and never admitted to formal archive.
+  - Historical three-item evidence pack: `data/runs/20260718-101931-375400-late-unprocessed-evidence-pack.json`; original/English coverage `3/3`, missing original `0`.
+  - Thick Snow/厚雪长波 source transcript was already Chinese; created formal `_zh` copy locally by copying source text into `translation`, without any external translation call.
+  - Historical three-item language audit after local Chinese-source copy: Chinese `2/3`, missing `1` (All-In).
+  - Mark-seen for the three historical backfilled items: `marked_seen=3 manifest=data/runs/20260718-101931-375400-late-unprocessed-manifest.json`.
+  - Final late-RSS audit with `--require-clean` passed: `data/runs/20260718-102525-170963-late-rss-arrivals-audit.json`; no unprocessed historical RSS episodes remained for the audited range.
+- Remaining blocker:
+  - Two Chinese transcript files still require external translation or STD plugin translation: Minus One `5XYi0DfV1mFXFLPU83yjpi` and All-In `43GBjmb0zU8gehn3A1D8n7`.
+  - Attempting `scripts/translate_spotify_transcripts_to_zh.py` was blocked by Codex approval because it would send transcript content to an external translation service and the user previously emphasized not using Gemini/AI to fabricate Chinese transcripts. Do not work around this. Ask for explicit approval that specifically permits sending these two English transcripts to the STD/Google Translate-style external translation path, or wait for a plugin-native/local method.

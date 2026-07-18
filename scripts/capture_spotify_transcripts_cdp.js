@@ -86,6 +86,11 @@ function parseSpotifyTranscript(data) {
   return segments;
 }
 
+function extractSpotifyEpisodeId(url) {
+  const match = String(url || "").match(/\/episode\/([A-Za-z0-9]+)/);
+  return match ? match[1] : null;
+}
+
 function canonicalPodcastName(name) {
   const overrides = {
     "The AI Daily Brief": "The AI Daily Brief: Artificial Intelligence News and Analysis",
@@ -121,9 +126,19 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
     const episode = manifest.new_episodes[row.index - 1];
     const page = await context.newPage();
     let captured = null;
+    const spotifyEpisodeId = extractSpotifyEpisodeId(row.best.href);
+    if (!spotifyEpisodeId) {
+      results.push({ index: row.index, status: "invalid_spotify_url", url: row.best.href });
+      await page.close();
+      continue;
+    }
     page.on("response", async (response) => {
       const url = response.url();
-      if (/transcript-read-along|episode-transcripts|transcript/i.test(url) && url.includes("/episode/")) {
+      if (
+        /transcript-read-along|episode-transcripts|transcript/i.test(url) &&
+        url.includes("/episode/") &&
+        url.includes(`/episode/${spotifyEpisodeId}`)
+      ) {
         try {
           captured = { url, data: await response.json() };
         } catch (_) {
@@ -151,7 +166,6 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
     }
 
     const segments = parseSpotifyTranscript(captured.data);
-    const spotifyEpisodeId = row.best.href.split("/episode/")[1].split("?")[0];
     const payload = {
       source: "spotify_api_cdp",
       capturedAt: new Date().toISOString(),

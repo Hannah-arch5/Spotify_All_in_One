@@ -52,6 +52,7 @@ def _generate_text(
         "generationConfig": {
             "temperature": temperature,
             "maxOutputTokens": max_output_tokens,
+            "thinkingConfig": {"thinkingBudget": 0},
         },
     }
     request = urllib.request.Request(

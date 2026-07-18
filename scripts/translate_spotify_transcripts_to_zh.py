@@ -5,6 +5,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import hashlib
+import http.client
 import json
 from pathlib import Path
 import re
@@ -88,13 +89,21 @@ def _translate_text_block(text: str, timeout: int) -> str:
                 payload = json.loads(response.read().decode("utf-8"))
             if isinstance(payload, list) and payload and isinstance(payload[0], str):
                 return "".join(str(item) for item in payload)
+            if (
+                isinstance(payload, list)
+                and payload
+                and isinstance(payload[0], list)
+                and payload[0]
+                and isinstance(payload[0][0], str)
+            ):
+                return str(payload[0][0])
             translated = ""
             if payload and payload[0]:
                 for item in payload[0]:
                     if item and item[0]:
                         translated += str(item[0])
             return translated
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, http.client.RemoteDisconnected, json.JSONDecodeError) as exc:
             last_error = exc
             continue
     if last_error:
@@ -141,7 +150,7 @@ def _translate_indices(
                 )
                 return left and right
             raise RuntimeError(f"Translate returned {len([line for line in translations if line])}/{len(indices)} lines")
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, RuntimeError) as exc:
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, http.client.RemoteDisconnected, RuntimeError) as exc:
             if attempt == max_retries:
                 return False
             time.sleep(min(60, 6 * attempt))
