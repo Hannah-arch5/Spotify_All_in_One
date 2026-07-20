@@ -367,7 +367,11 @@ def main() -> None:
     payload = {
         "created_at": datetime.now().astimezone().isoformat(),
         "source_count": len(source_paths),
-        "complete_count": sum(1 for item in results if item["status"] in {"translated_complete", "skipped_complete"}),
+        "complete_count": sum(
+            1
+            for item in results
+            if item["status"] in {"translated_complete", "skipped_complete", "copied_source_chinese"}
+        ),
         "blocked_count": sum(1 for item in results if item["status"].startswith("blocked")),
         "results": sorted(results, key=lambda item: item["source"]),
     }

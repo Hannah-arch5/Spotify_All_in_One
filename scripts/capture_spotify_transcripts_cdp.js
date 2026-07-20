@@ -114,12 +114,16 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
   const candidatesPath = path.resolve(ROOT, argValue("--candidates"));
   const outDir = path.resolve(argValue("--out-dir", DEFAULT_OUT_DIR));
   const port = Number(argValue("--port", DEFAULT_PORT));
+  const executablePath = argValue("--executable");
+  const launched = hasArg("--launch");
   fs.mkdirSync(outDir, { recursive: true });
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const candidates = JSON.parse(fs.readFileSync(candidatesPath, "utf8"));
-  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
-  const context = browser.contexts()[0];
+  const browser = launched
+    ? await chromium.launch({ headless: true, executablePath: executablePath || undefined })
+    : await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
+  const context = launched ? await browser.newContext() : browser.contexts()[0];
   const results = [];
 
   for (const row of candidates.filter((item) => item.best && item.best.href && item.best.score >= 0.9)) {
@@ -148,8 +152,14 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
     });
 
     process.stderr.write(`OPEN ${row.index} ${row.best.href}\n`);
-    await page.goto(row.best.href, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await page.waitForTimeout(6500);
+    try {
+      await page.goto(row.best.href, { waitUntil: "domcontentloaded", timeout: 60000 });
+      await page.waitForTimeout(6500);
+    } catch (error) {
+      results.push({ index: row.index, status: "open_failed", url: row.best.href, error: error.message });
+      await page.close();
+      continue;
+    }
     try {
       await page.getByText("Transcript", { exact: true }).first().click({ timeout: 10000 });
     } catch (error) {

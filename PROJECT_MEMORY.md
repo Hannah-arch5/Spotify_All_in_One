@@ -2273,3 +2273,40 @@ Monday batch notes:
   - The `260717` delivered report includes the one late-RSS episode that belonged to its report window.
   - The three older historical late-RSS episodes are not being retroactively added to old reports per user instruction; their transcript archives are complete.
   - Future Spotify M/W/F deliveries must run the late-RSS audit gate so an RSS-delayed episode cannot silently miss its intended report window again.
+
+## 2026-07-20 260720 Report Draft State
+
+- User invoked `spotify-mwf-report` to generate the latest report.
+- Intended fixed report window: `2026-07-17T07:00:00+00:00` to `2026-07-20T07:00:00+00:00`; delivery date/filename `260720`.
+- Previous closed-window late-RSS audit passed clean:
+  - `data/runs/20260720-183337-109485-late-rss-arrivals-audit.json`
+  - Feed failures `0`; late/unprocessed episodes `0`.
+- Manifest: `data/runs/20260720-183219-818034-manifest.json`; episode count `11`; order verified as `published_at desc`.
+- Original transcript collection:
+  - Added reusable helper `scripts/find_spotify_episode_candidates_cdp.js` to discover Spotify episode URL candidates from official Spotify search/show pages.
+  - Updated `scripts/capture_spotify_transcripts_cdp.js` so it can launch a browser when needed and so one episode open failure does not abort the full batch.
+  - Used a temporary Chrome DevTools session on port `9223` to identify and capture all `11/11` Spotify native transcripts.
+  - Original/English evidence audit: `11/11`, missing original transcripts `0`.
+  - Key resolved episode IDs included DOAC Alex Hormozi `3nbxuZ7DpiO62RSvsL40jL` and 厚雪长波 `4CroWGqPieod8UwnWuVY9v`.
+- Chinese transcript state:
+  - Current language audit: `data/runs/20260720-183219-818034-transcript-language-audit.json`.
+  - Original/English `11/11`; Chinese `1/11`; missing Chinese `10`.
+  - Episode 3 厚雪长波 is source-Chinese and was copied locally into complete `_zh` archive without external translation.
+  - External Google Translate-style backfill for the 10 English transcripts was attempted directly and via `HTTPS_PROXY=http://127.0.0.1:7897`, but requests hung with no completed episode output. Treat this as a current external translation-service blocker, not as completion.
+  - Do not mark this report seen or run final transcript cleanup until Chinese backfill is resumed/completed or the user explicitly instructs delivery despite the Chinese archive gap.
+- Gemini/report generation:
+  - Generated from original/English transcripts only; Chinese transcripts were not used as report source.
+  - Initial `scripts/run_report_pipeline.py` Gemini generation completed episode 1 then hit a network interruption; resumed with `scripts/generate_chunked_gemini_report.py`.
+  - Final Markdown: `reports/markdown/20260720-183219-818034-gemini-report.md`.
+  - Constructive bilingual title: `AI时代的企业家生存与组织进化：从长期主义到自驱动公司 (Entrepreneurial Survival and Organizational Evolution in the AI Era: From Long-Termism to Self-Driving Companies)`.
+  - Gemini review passed: `reports/markdown/20260720-183219-818034-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260720-Spotify播客情报研报.docx`; SHA-256 `c1f07955dbb582894e1baf78c8108fb07f07e5ca47223fdcfdce1a912ce70330`.
+  - PDF: `reports/pdf/260720-Spotify播客情报研报.pdf`; SHA-256 `864132e79755d320e8d11d432a3a5340ea70ab31c2e6f32a6dc37aa9b5f6ebad`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `11` episode headings, required labels all `11`, PDF page count `33`.
+  - PDF line-start punctuation/forbidden translation-label scan found no hits.
+  - Conditional pagination check passed: 第三部分 page `28` zone `0.512`; 第四部分 page `30` zone `0.280`; 第五部分 page `32` zone `0.116`.
+- Not yet done:
+  - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), duplicate archive audit, late-RSS final audit, and mark-seen were intentionally not run because the user has not yet approved final delivery for this PDF and Chinese archive coverage is still incomplete.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` currently contains `11` JSON backup downloads from this run; do not delete them until final delivery/cleanup gate or explicit user instruction.
