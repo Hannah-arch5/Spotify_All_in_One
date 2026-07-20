@@ -2310,3 +2310,46 @@ Monday batch notes:
 - Not yet done:
   - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), duplicate archive audit, late-RSS final audit, and mark-seen were intentionally not run because the user has not yet approved final delivery for this PDF and Chinese archive coverage is still incomplete.
   - `/Users/hannah/Downloads/Spotify Transcript Collector/` currently contains `11` JSON backup downloads from this run; do not delete them until final delivery/cleanup gate or explicit user instruction.
+
+## 2026-07-20 260720 Report Completed
+
+- User clarified not to spend Gemini tokens on Chinese subtitle backfill. Gemini remains approved only for report generation from original/English evidence; Chinese subtitle completion should use non-Gemini routes whenever available.
+- Root cause for the Chinese backfill stall:
+  - The old proxy endpoint `127.0.0.1:7897` was no longer listening.
+  - Direct shell access to Google Translate-style endpoints failed due DNS/network restrictions.
+  - The visible Clash process exposed a control endpoint, not a working mixed HTTP proxy.
+  - Comet on DevTools port `9223` could access the Chrome dictionary translate endpoint successfully.
+- Added a reusable non-Gemini Comet backfill helper:
+  - `scripts/translate_spotify_transcripts_to_zh_cdp.js`
+  - It connects to the existing Comet DevTools session, sends archived original transcript text to the Google Translate-style `clients5.google.com/translate_a/t?client=dict-chrome-ex` endpoint from the browser context, preserves segment alignment, writes only complete `_zh` JSON files, and skips already complete Chinese files.
+  - This helper is for subtitle archive completion only; Chinese transcripts remain not used as the default report-generation source.
+- Chinese transcript completion:
+  - Backfill status: `data/runs/20260720-183219-818034-zh-cdp-backfill-status.json`; `source_count=11`, `complete_count=11`, `blocked_count=0`.
+  - Final language audit: `data/runs/20260720-183219-818034-transcript-language-audit.json`; English/original `11/11`, Chinese `11/11`, missing Chinese `0`.
+- Final report artifacts:
+  - Markdown: `reports/markdown/20260720-183219-818034-gemini-report.md`.
+  - DOCX: `reports/word/260720-Spotify播客情报研报.docx`; SHA-256 `c1f07955dbb582894e1baf78c8108fb07f07e5ca47223fdcfdce1a912ce70330`.
+  - PDF: `reports/pdf/260720-Spotify播客情报研报.pdf`; SHA-256 `864132e79755d320e8d11d432a3a5340ea70ab31c2e6f32a6dc37aa9b5f6ebad`.
+  - Final constructive bilingual title: `AI时代的企业家生存与组织进化：从长期主义到自驱动公司 (Entrepreneurial Survival and Organizational Evolution in the AI Era: From Long-Termism to Self-Driving Companies)`.
+  - Gemini review passed and delivery-format audit passed before delivery; title, episode 1 quote quality, evidence-anchor quality, conditional pagination, italic translation formatting, and line-start punctuation gates passed.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4400`, title `260720-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1784549855`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/OCSFYEJ7/260720-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched local final PDF hash: `864132e79755d320e8d11d432a3a5340ea70ab31c2e6f32a6dc37aa9b5f6ebad`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260720-Spotify播客情报研报.docx`; SHA-256 `c1f07955dbb582894e1baf78c8108fb07f07e5ca47223fdcfdce1a912ce70330`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260720-Spotify播客情报研报.pdf`; SHA-256 `864132e79755d320e8d11d432a3a5340ea70ab31c2e6f32a6dc37aa9b5f6ebad`.
+  - Google Drive upload verified by Drive listing: `260720-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1784549999587-2f9ddbad-8a04-41be-9660-556f9612ee95-discord`, sent at `2026-07-20T12:20:03.488Z`.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=11 removed=11 english_seen=11 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run archive audit after cleanup: English/original `11/11`, Chinese `11/11`, missing Chinese `0`.
+  - Formal archive duplicate audit after cleanup: `data/transcripts/spotify_en duplicate_ids=0`, `data/transcripts/spotify_zh duplicate_ids=0`.
+- Late-RSS and mark-seen:
+  - Final valid networked late-RSS audit: `data/runs/20260720-202200-851610-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `25`, feed failures `0`, late/unprocessed `0`.
+  - A sandboxed audit immediately before that had `feed_failures=26` and must not be treated as a valid gate; the networked audit supersedes it.
+  - Mark-seen completed: `marked_seen=11 manifest=data/runs/20260720-183219-818034-manifest.json`.
+- 260720 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.

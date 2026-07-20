@@ -7,8 +7,10 @@ from datetime import datetime, timezone
 import hashlib
 import http.client
 import json
+import os
 from pathlib import Path
 import re
+import subprocess
 import time
 import urllib.error
 import urllib.parse
@@ -19,7 +21,6 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ZH_DIR = ROOT / "data" / "transcripts" / "spotify_zh"
 TRANSLATE_URLS = [
-    "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t",
     "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=zh-CN&dt=t",
 ]
 
@@ -71,39 +72,86 @@ def _is_complete_zh(path: Path, source_hash: str | None = None) -> bool:
     )
 
 
-def _translate_text_block(text: str, timeout: int) -> str:
-    body = f"q={urllib.parse.quote(text)}".encode("utf-8")
+def _payload_to_text(payload: Any) -> str:
+    if isinstance(payload, list) and payload and isinstance(payload[0], str):
+        return "".join(str(item) for item in payload)
+    if (
+        isinstance(payload, list)
+        and payload
+        and isinstance(payload[0], list)
+        and payload[0]
+        and isinstance(payload[0][0], str)
+    ):
+        return str(payload[0][0])
+    translated = ""
+    if payload and payload[0]:
+        for item in payload[0]:
+            if item and item[0]:
+                translated += str(item[0])
+    return translated
+
+
+def _translate_text_block_with_curl(text: str, url: str, timeout: int) -> str:
+    # curl's --max-time gives us a hard wall-clock cap; urllib can hang behind proxies.
+    command = [
+        "curl",
+        "--max-time",
+        str(timeout),
+        "-sS",
+        "-X",
+        "POST",
+        url,
+        "--data-urlencode",
+        f"q={text}",
+    ]
+    env = os.environ.copy()
+    env.setdefault("NO_PROXY", "localhost,127.0.0.1")
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=timeout + 5,
+        env=env,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or f"curl exited {result.returncode}")
+    return _payload_to_text(json.loads(result.stdout))
+
+
+def _translate_text_block_with_urllib(text: str, url: str, timeout: int) -> str:
+    body = urllib.parse.urlencode({"q": text}).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=body,
+        method="POST",
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    return _payload_to_text(payload)
+
+
+def _translate_text_block(text: str, timeout: int, transport: str) -> str:
     last_error: Exception | None = None
     for url in TRANSLATE_URLS:
-        request = urllib.request.Request(
-            url,
-            data=body,
-            method="POST",
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-                "User-Agent": "Mozilla/5.0",
-            },
-        )
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-            if isinstance(payload, list) and payload and isinstance(payload[0], str):
-                return "".join(str(item) for item in payload)
-            if (
-                isinstance(payload, list)
-                and payload
-                and isinstance(payload[0], list)
-                and payload[0]
-                and isinstance(payload[0][0], str)
-            ):
-                return str(payload[0][0])
-            translated = ""
-            if payload and payload[0]:
-                for item in payload[0]:
-                    if item and item[0]:
-                        translated += str(item[0])
-            return translated
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, http.client.RemoteDisconnected, json.JSONDecodeError) as exc:
+            if transport == "curl":
+                return _translate_text_block_with_curl(text, url, timeout)
+            return _translate_text_block_with_urllib(text, url, timeout)
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            TimeoutError,
+            subprocess.TimeoutExpired,
+            RuntimeError,
+            http.client.RemoteDisconnected,
+            json.JSONDecodeError,
+        ) as exc:
             last_error = exc
             continue
     if last_error:
@@ -118,13 +166,14 @@ def _translate_indices(
     timeout: int,
     delay_seconds: float,
     max_retries: int,
+    transport: str,
 ) -> bool:
     if not indices:
         return True
     text = "\n".join(str(segments[index].get("text") or "").strip().replace("\n", " ") for index in indices)
     for attempt in range(1, max_retries + 1):
         try:
-            translated = _translate_text_block(text, timeout)
+            translated = _translate_text_block(text, timeout, transport)
             translations = [line.strip() for line in translated.split("\n")]
             if len(translations) >= len(indices) and all(translations[i] for i in range(len(indices))):
                 for offset, index in enumerate(indices):
@@ -140,6 +189,7 @@ def _translate_indices(
                     timeout=timeout,
                     delay_seconds=delay_seconds,
                     max_retries=max_retries,
+                    transport=transport,
                 )
                 right = _translate_indices(
                     segments,
@@ -147,6 +197,7 @@ def _translate_indices(
                     timeout=timeout,
                     delay_seconds=delay_seconds,
                     max_retries=max_retries,
+                    transport=transport,
                 )
                 return left and right
             raise RuntimeError(f"Translate returned {len([line for line in translations if line])}/{len(indices)} lines")
@@ -205,6 +256,7 @@ def translate_file(
     timeout: int,
     delay_seconds: float,
     max_retries: int,
+    transport: str,
     force: bool,
 ) -> dict[str, Any]:
     source_data = _read_json(source_path)
@@ -252,6 +304,7 @@ def translate_file(
             timeout=timeout,
             delay_seconds=delay_seconds,
             max_retries=max_retries,
+            transport=transport,
         )
         if not ok:
             missing = [
@@ -281,12 +334,12 @@ def translate_file(
 
     output = dict(source_data)
     output["sourceTranscriptSha256"] = source_hash
-    output["translationProvider"] = "google_translate_gtx"
+    output["translationProvider"] = f"google_translate_clients5_{transport}"
     output["translationTargetLanguage"] = "zh-CN"
     output["translatedAt"] = datetime.now(timezone.utc).isoformat()
     output["segments"] = translated_segments
     output["debugLogs"] = list(output.get("debugLogs") or []) + [
-        f"Translated from {source_path.name} with google_translate_gtx; complete={len(translated_segments)} segments."
+        f"Translated from {source_path.name} with google_translate_clients5_{transport}; complete={len(translated_segments)} segments."
     ]
     tmp_path = target_path.with_suffix(".json.tmp")
     _write_json(tmp_path, output)
@@ -331,6 +384,7 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=60)
     parser.add_argument("--delay-seconds", type=float, default=1.5)
     parser.add_argument("--max-retries", type=int, default=5)
+    parser.add_argument("--transport", choices=["curl", "urllib"], default="curl")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
@@ -345,24 +399,41 @@ def main() -> None:
         raise SystemExit("No source transcripts provided.")
 
     results: list[dict[str, Any]] = []
-    with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
-        futures = {
-            pool.submit(
-                translate_file,
+    max_workers = max(1, args.workers)
+    if max_workers == 1:
+        for source_path in source_paths:
+            result = translate_file(
                 source_path,
                 chinese_dir=args.chinese_dir,
                 max_chars=args.max_chars,
                 timeout=args.timeout,
                 delay_seconds=args.delay_seconds,
                 max_retries=args.max_retries,
+                transport=args.transport,
                 force=args.force,
-            ): source_path
-            for source_path in source_paths
-        }
-        for future in as_completed(futures):
-            result = future.result()
+            )
             results.append(result)
             print(json.dumps(result, ensure_ascii=False))
+    else:
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {
+                pool.submit(
+                    translate_file,
+                    source_path,
+                    chinese_dir=args.chinese_dir,
+                    max_chars=args.max_chars,
+                    timeout=args.timeout,
+                    delay_seconds=args.delay_seconds,
+                    max_retries=args.max_retries,
+                    transport=args.transport,
+                    force=args.force,
+                ): source_path
+                for source_path in source_paths
+            }
+            for future in as_completed(futures):
+                result = future.result()
+                results.append(result)
+                print(json.dumps(result, ensure_ascii=False))
 
     payload = {
         "created_at": datetime.now().astimezone().isoformat(),
