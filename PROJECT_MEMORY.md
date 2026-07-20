@@ -2352,4 +2352,8 @@ Monday batch notes:
   - Final valid networked late-RSS audit: `data/runs/20260720-202200-851610-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `25`, feed failures `0`, late/unprocessed `0`.
   - A sandboxed audit immediately before that had `feed_failures=26` and must not be treated as a valid gate; the networked audit supersedes it.
   - Mark-seen completed: `marked_seen=11 manifest=data/runs/20260720-183219-818034-manifest.json`.
+- Skill/GitHub:
+  - Installed local `spotify-mwf-report` skill workflow updated to document the non-Gemini Comet CDP Chinese backfill route.
+  - Public GitHub skill repo `Hannah-arch5/Spotify_MWF_Report_Skill` synced on `main`; remote commit `3788ccb` (`Document Comet Chinese backfill route`).
+  - Project repo has no configured remote, so project code changes were committed locally only.
 - 260720 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
