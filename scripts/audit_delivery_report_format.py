@@ -342,19 +342,21 @@ def audit_episode_one_quote_gate(paragraphs: list[Any], episode_headings: list[t
     if quote_index is None:
         return "episode 1 missing 关键金句 / 结论 block"
     quote_block = "\n".join(section[quote_index:evidence_index])
-    if not re.search(r'"[A-Za-z][^"]{12,}"', quote_block):
+    has_english_quote = re.search(r'"[A-Za-z][^"]{12,}"', quote_block)
+    has_chinese_quote = re.search(r"[`“\"]?[\u4e00-\u9fff][^`“”\"]{12,}[\u4e00-\u9fff][`”\"]?", quote_block)
+    if not has_english_quote and not has_chinese_quote:
         return "episode 1 关键金句 must include at least one source-language original quote"
-    chinese_italic_lines = []
+    italic_translation_lines = []
     for p in paragraphs[start:end]:
         text = p.text.strip()
-        if not text or re.search(r"[\u4e00-\u9fff]", text) is None:
+        if not text:
             continue
         if any(pattern in text for pattern in TRANSLATION_LABEL_PATTERNS):
-            return "episode 1 Chinese translation/explanation must not include prefix labels"
+            return "episode 1 translation/explanation must not include prefix labels"
         if any(run.text.strip() and run.italic for run in p.runs):
-            chinese_italic_lines.append(text)
-    if not chinese_italic_lines:
-        return "episode 1 关键金句 must include an italicized Chinese translation/explanation line"
+            italic_translation_lines.append(text)
+    if not italic_translation_lines:
+        return "episode 1 关键金句 must include an italicized translation/explanation line"
     return None
 
 

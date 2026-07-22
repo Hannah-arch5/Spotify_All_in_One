@@ -2357,3 +2357,41 @@ Monday batch notes:
   - Public GitHub skill repo `Hannah-arch5/Spotify_MWF_Report_Skill` synced on `main`; remote commit `3788ccb` (`Document Comet Chinese backfill route`).
   - Project repo has no configured remote, so project code changes were committed locally only.
 - 260720 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
+
+## 2026-07-22 260722 Report Draft For Review
+
+- User invoked `spotify-mwf-report` to generate the Wednesday report.
+- Intended fixed report window: `2026-07-20T07:00:00+00:00` to `2026-07-22T07:00:00+00:00`; delivery date/filename `260722`.
+- Valid networked manifest: `data/runs/20260722-154309-709931-manifest.json`; episode count `10`; feed failures `0`; sorted by `published_at desc`.
+- Initial sandbox manifest `data/runs/20260722-154223-498386-manifest.json` had `feed_failures=26` and must not be used as evidence.
+- Pre-generation late-RSS audit passed: `data/runs/20260722-154452-399663-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `21`, feed failures `0`, late/unprocessed `0`.
+- Transcript collection:
+  - Used Comet DevTools port `9223` to find all `10/10` Spotify episode URLs with score `1.0`.
+  - Captured Spotify native transcript API for all `10/10` episodes.
+  - Index 7 initially appeared missing but succeeded on single-episode retry; this was a page/load timing issue, not a true missing transcript.
+  - Evidence pack: `data/runs/20260722-154309-709931-evidence-pack.json`; missing original transcripts `0`.
+- Chinese transcript completion:
+  - Used non-Gemini Comet CDP backfill: `scripts/translate_spotify_transcripts_to_zh_cdp.js`.
+  - Backfill status: `data/runs/20260722-154309-709931-zh-cdp-backfill-status.json`.
+  - Final language audit: `data/runs/20260722-154309-709931-transcript-language-audit.json`; English/original `10/10`, Chinese `10/10`, missing Chinese `0`.
+  - Removed one stale duplicate Chinese archive for episode `3jwOlviDkzb9AtLtP8pZYO` that had the wrong date and no provider/source hash; formal archive duplicate audit now reports `data/transcripts/spotify_en duplicate_ids=0`, `data/transcripts/spotify_zh duplicate_ids=0`.
+- Gemini/report generation:
+  - Generated from original/English evidence only; Chinese transcripts were archive/completeness artifacts, not report source.
+  - Gemini generation initially completed 5/10 episode briefs, then failed on network; resumed to 8/10, failed once more on remote disconnect, then resumed and completed final Markdown.
+  - Final Markdown: `reports/markdown/20260722-154309-709931-gemini-report.md`.
+  - Gemini review initially failed because Gemini used `###` instead of required `##` part headings and included one unverifiable quote in episode 9. Fixed the headings, strengthened the main title, normalized malformed evidence-anchor timestamps, and converted the episode 9 unverifiable quote to an explicit paraphrased conclusion.
+  - Gemini review now passed: `reports/markdown/20260722-154309-709931-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260722-Spotify播客情报研报.docx`; SHA-256 `424163a58fc3e0c04899582da720d7fbb8c19ad6b7a0a5bb51f553b704c050fa`.
+  - PDF: `reports/pdf/260722-Spotify播客情报研报.pdf`; SHA-256 `103615bbe54fb87ab5eaf0c36ac994db1a7a35a4a97170fb5660a9616800ccfb`.
+  - Final constructive bilingual title: `AI竞争正在离开模型榜单：物理世界、因果数据、能源与制度成为真正瓶颈 (AI Competition Is Moving Beyond Model Rankings: Physical Systems, Causal Data, Energy, and Institutions Become the Real Bottlenecks)`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `10` episode headings, required labels all `10`, PDF page count `29`.
+  - Conditional pagination check passed: 第三部分 page `26` zone `0.116`; 第四部分 page `27` zone `0.558`; 第五部分 page `29` zone `0.116`.
+  - PDF line-start punctuation scan `0`; forbidden translation labels `0`.
+  - Quick Look first-page visual preview looked normal.
+  - Fixed `scripts/audit_delivery_report_format.py` so episode 1 quote gate supports Chinese-source episodes with Chinese original quotes plus italicized translation/explanation, instead of assuming episode 1 must always have an English original quote.
+- Not yet done:
+  - User review/approval of the PDF.
+  - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), final late-RSS audit, and mark-seen.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` currently contains `11` temporary JSON backup files from transcript capture/retry; do not delete until delivery succeeds or the user explicitly asks.
