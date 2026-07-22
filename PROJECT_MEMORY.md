@@ -2395,3 +2395,41 @@ Monday batch notes:
   - User review/approval of the PDF.
   - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), final late-RSS audit, and mark-seen.
   - `/Users/hannah/Downloads/Spotify Transcript Collector/` currently contains `11` temporary JSON backup files from transcript capture/retry; do not delete until delivery succeeds or the user explicitly asks.
+
+## 2026-07-22 260722 Report Completed
+
+- User reviewed the PDF and approved continuing final delivery.
+- Final artifacts:
+  - Markdown: `reports/markdown/20260722-154309-709931-gemini-report.md`.
+  - DOCX: `reports/word/260722-Spotify播客情报研报.docx`; SHA-256 `424163a58fc3e0c04899582da720d7fbb8c19ad6b7a0a5bb51f553b704c050fa`.
+  - PDF: `reports/pdf/260722-Spotify播客情报研报.pdf`; SHA-256 `103615bbe54fb87ab5eaf0c36ac994db1a7a35a4a97170fb5660a9616800ccfb`.
+  - Final constructive bilingual title: `AI竞争正在离开模型榜单：物理世界、因果数据、能源与制度成为真正瓶颈 (AI Competition Is Moving Beyond Model Rankings: Physical Systems, Causal Data, Energy, and Institutions Become the Real Bottlenecks)`.
+- Quality gates:
+  - Gemini review passed: `reports/markdown/20260722-154309-709931-gemini-review.md`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `10` episode headings, required labels all `10`, PDF page count `29`.
+  - Conditional pagination passed: 第三部分 page `26` zone `0.116`; 第四部分 page `27` zone `0.558`; 第五部分 page `29` zone `0.116`.
+  - PDF line-start punctuation scan `0`; forbidden translation labels `0`.
+  - Title, episode 1 quote quality, meaningful evidence anchors, italicized unlabeled translation/explanation lines, and integrated synthesis gates passed before delivery.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4401`, title `260722-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1784709542`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/V8TMEF67/260722-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `103615bbe54fb87ab5eaf0c36ac994db1a7a35a4a97170fb5660a9616800ccfb`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260722-Spotify播客情报研报.docx`; SHA-256 `424163a58fc3e0c04899582da720d7fbb8c19ad6b7a0a5bb51f553b704c050fa`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260722-Spotify播客情报研报.pdf`; SHA-256 `103615bbe54fb87ab5eaf0c36ac994db1a7a35a4a97170fb5660a9616800ccfb`.
+  - Google Drive upload verified by Drive listing: `260722-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1784709723415-9afe8171-2fc4-4a72-a712-2f635b10a460-discord`, sent at `2026-07-22T08:46:03.873Z`.
+  - Discord delivery debugging note: `send:discord` queued correctly, but the queue worker was not consuming because an old `/usr/local/bin/node src/server.js` process in `/Users/hannah/.discord-studio/Discord_Studio` held port `127.0.0.1:3000` while LaunchAgent kept respawning and failing with `EADDRINUSE`. Stopped stale PID `459`, then kicked `gui/501/com.hannah.codex.telegrambot`; the queued 260722 notification was sent successfully.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=1 skipped=10 removed=11 english_seen=10 chinese_seen=1`.
+  - The `imported=1` was the correct retained Chinese archive for episode `3jwOlviDkzb9AtLtP8pZYO`; the stale duplicate `2026-07-21 ... _zh - 3jwOlviDkzb9AtLtP8pZYO.json` had no `sourceTranscriptSha256` and was deleted after audit. The retained `2026-07-20 ... _zh - 3jwOlviDkzb9AtLtP8pZYO.json` has `sourceTranscriptSha256=631ff566a2cca725736dc4f4052f7defce375996268c18199ea30a15e7ac4a35`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Final language audit: `data/runs/20260722-154309-709931-transcript-language-audit.json`; English/original `10/10`, Chinese `10/10`, missing Chinese `0`.
+  - Formal archive duplicate audit after cleanup: `data/transcripts/spotify_en duplicate_ids=0`, `data/transcripts/spotify_zh duplicate_ids=0`.
+- Late-RSS and mark-seen:
+  - First final late-RSS retry `data/runs/20260722-164917-847947-late-rss-arrivals-audit.json` found no late unprocessed episodes but had `2` transient feed failures, so it was not accepted as the final gate.
+  - Final valid networked late-RSS audit: `data/runs/20260722-165010-213221-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `21`, feed failures `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=10 manifest=data/runs/20260722-154309-709931-manifest.json`.
+- 260722 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
