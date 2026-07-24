@@ -2434,7 +2434,7 @@ Monday batch notes:
   - Mark-seen completed: `marked_seen=10 manifest=data/runs/20260722-154309-709931-manifest.json`.
 - 260722 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
 
-## 2026-07-24 260724 Report Draft For Review
+## 2026-07-24 260724 Report Completed
 
 - User invoked `spotify-mwf-report` to generate the Friday report.
 - Intended fixed report window: `2026-07-22T07:00:00+00:00` to `2026-07-24T07:00:00+00:00`; delivery date/filename `260724`.
@@ -2463,7 +2463,25 @@ Monday batch notes:
   - Conditional pagination check passed: 第三部分 page `35` zone `0.419`; 第四部分 page `36` zone `0.707`; 第五部分 page `37` zone `0.686`.
   - PDF line-start punctuation scan `0`; forbidden translation labels `0`; no low-value final evidence-anchor warning from the content checker.
   - Visual spot-check pages `1`, `35`, `36`, `37`, `38` looked normal; section headings and bodies are on the same page and no unnecessary forced page breaks were introduced.
-- Not yet done:
-  - User review/approval of the PDF.
-  - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), duplicate archive audit, final late-RSS audit, and mark-seen.
-  - `/Users/hannah/Downloads/Spotify Transcript Collector/` still has temporary transcript JSON backups from this run; do not delete until delivery succeeds or the user explicitly asks.
+- Zotero:
+  - User reviewed/approved the PDF and delivery continued.
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4402`, title `260724-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1784888469`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/MEBPT67R/260724-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `27ada489458476c29390655799c78389edbc4820d1a7e98be29073fae3ca74de`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260724-Spotify播客情报研报.docx`; SHA-256 `6250f74a7f805cc16e6397906684930029a927b3fa648277a53a87e5fecfeb5a`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260724-Spotify播客情报研报.pdf`; SHA-256 `27ada489458476c29390655799c78389edbc4820d1a7e98be29073fae3ca74de`.
+  - Google Drive upload verified by Drive listing: `260724-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1784888522725-865d1b76-9f0c-412b-9347-a6635a918b24-discord`, sent at `2026-07-24T10:22:04.314Z`.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=12 removed=12 english_seen=12 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Final language audit: `data/runs/20260724-160251-429099-transcript-language-audit.json`; English/original `14/14`, Chinese `14/14`, missing Chinese `0`.
+  - Exact current-run episode-ID audit after cleanup: `data/transcripts/spotify_en found=14 expected=14 duplicate_ids=0 missing=0`; `data/transcripts/spotify_zh found=14 expected=14 duplicate_ids=0 missing=0`.
+- Late-RSS and mark-seen:
+  - A pre-mark-seen late-RSS audit reported the current 260724 episodes as late/unprocessed because they had not been marked seen yet; after delivery gates passed, `mark_manifest_seen.py` marked the `14` manifest episodes seen.
+  - Final valid networked late-RSS audit: `data/runs/20260724-182702-285261-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `24`, feed failures `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=14 manifest=data/runs/20260724-160251-429099-manifest.json`.
+- 260724 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
