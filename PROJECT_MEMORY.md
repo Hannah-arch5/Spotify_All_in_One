@@ -2433,3 +2433,37 @@ Monday batch notes:
   - Final valid networked late-RSS audit: `data/runs/20260722-165010-213221-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `21`, feed failures `0`, late/unprocessed `0`.
   - Mark-seen completed: `marked_seen=10 manifest=data/runs/20260722-154309-709931-manifest.json`.
 - 260722 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
+
+## 2026-07-24 260724 Report Draft For Review
+
+- User invoked `spotify-mwf-report` to generate the Friday report.
+- Intended fixed report window: `2026-07-22T07:00:00+00:00` to `2026-07-24T07:00:00+00:00`; delivery date/filename `260724`.
+- Valid networked manifest: `data/runs/20260724-160251-429099-manifest.json`; episode count `14`; feed failures `0`; sorted by `published_at desc`.
+- Pre-generation late-RSS audit passed after retry: `data/runs/20260724-160529-316324-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `24`, feed failures `0`, late/unprocessed `0`.
+- Transcript collection:
+  - Captured Spotify native transcripts via Comet/CDP for `12` verified Spotify episode IDs.
+  - Converted Robert Pape's official RSS `podcast:transcript` JSON into `data/transcripts/spotify_en/`.
+  - Rejected the low-score/wrong Spotify candidate for 小Lin说, then matched the official Bilibili video `BV1N6gD65EMz` and captured its logged-in Bilibili AI subtitle endpoint as the Chinese original transcript.
+  - Evidence pack: `data/runs/20260724-160251-429099-evidence-pack.json`; original transcript coverage `14/14`, missing `0`.
+- Chinese transcript completion:
+  - Used non-Gemini Comet CDP Google Translate-style backfill from exact archived original transcripts.
+  - Backfill status: `data/runs/20260724-160251-429099-zh-cdp-backfill-status.json`; source count `14`, complete `14`, blocked `0`; `12` translated, `2` copied because source was already Chinese.
+  - Final language audit: `data/runs/20260724-160251-429099-transcript-language-audit.json`; English/original `14/14`, Chinese `14/14`, missing Chinese `0`.
+- Gemini/report generation:
+  - Generated `14/14` per-episode Gemini briefs under `data/gemini_chunks/20260724-160251-429099/`.
+  - Gemini final synthesis hit daily free-tier quota (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, limit `20`) after all episode briefs completed; compact assembly retry first hit remote disconnect, then 429 quota. To avoid more token use and keep delivery moving, Codex locally wrote the integrated first/third/fourth/fifth sections from the completed Gemini briefs while preserving all episode briefs in 第二部分.
+  - Final Markdown: `reports/markdown/20260724-160251-429099-gemini-report.md`.
+  - Gemini/content review passed: `reports/markdown/20260724-160251-429099-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260724-Spotify播客情报研报.docx`; SHA-256 `6250f74a7f805cc16e6397906684930029a927b3fa648277a53a87e5fecfeb5a`.
+  - PDF: `reports/pdf/260724-Spotify播客情报研报.pdf`; SHA-256 `27ada489458476c29390655799c78389edbc4820d1a7e98be29073fae3ca74de`.
+  - Final constructive bilingual title: `AI进入落地压力测试：模型、权力与身体都必须回到现实系统 (AI Enters the Reality Stress Test: Models, Power, and Bodies Must Prove Themselves in Real Systems)`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `14` episode headings, required labels all `14`, PDF page count `38`.
+  - Conditional pagination check passed: 第三部分 page `35` zone `0.419`; 第四部分 page `36` zone `0.707`; 第五部分 page `37` zone `0.686`.
+  - PDF line-start punctuation scan `0`; forbidden translation labels `0`; no low-value final evidence-anchor warning from the content checker.
+  - Visual spot-check pages `1`, `35`, `36`, `37`, `38` looked normal; section headings and bodies are on the same page and no unnecessary forced page breaks were introduced.
+- Not yet done:
+  - User review/approval of the PDF.
+  - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), duplicate archive audit, final late-RSS audit, and mark-seen.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` still has temporary transcript JSON backups from this run; do not delete until delivery succeeds or the user explicitly asks.
