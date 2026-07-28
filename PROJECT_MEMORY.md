@@ -2485,3 +2485,36 @@ Monday batch notes:
   - Final valid networked late-RSS audit: `data/runs/20260724-182702-285261-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `24`, feed failures `0`, late/unprocessed `0`.
   - Mark-seen completed: `marked_seen=14 manifest=data/runs/20260724-160251-429099-manifest.json`.
 - 260724 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
+
+## 2026-07-28 260727 Report Draft For Review
+
+- User invoked `spotify-mwf-report` to generate the Monday report.
+- Intended fixed report window: `2026-07-24T07:00:00+00:00` to `2026-07-27T07:00:00+00:00`; delivery date/filename `260727`.
+- Valid networked manifest: `data/runs/20260728-181352-020066-manifest.json`; episode count `12`; feed failures `0`; sorted by `published_at desc`.
+- Pre-generation late-RSS audit passed: `data/runs/20260728-181512-264653-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `26`, feed failures `0`, late/unprocessed `0`.
+- Transcript collection:
+  - Used Comet DevTools port `9223` and Spotify native transcript API capture for all `12/12` episodes.
+  - Manually verified the low-score 厚雪长波 Spotify candidate `6Oej2rEhz4bKT8T6veSXgh`; RSS title used `零负债、个人信贷`, Spotify title used `ABS、信贷`, but the episode/podcast matched.
+  - Evidence pack: `data/runs/20260728-181352-020066-evidence-pack.json`; original transcript coverage `12/12`, missing `0`.
+- Chinese transcript completion:
+  - Used non-Gemini Comet CDP Google Translate-style backfill from exact archived original transcripts.
+  - Backfill status: `data/runs/20260728-181352-020066-zh-cdp-backfill-status.json`; source count `12`, complete `12`, blocked `0`; `11` translated, `1` copied because source was already Chinese.
+  - Final language audit: `data/runs/20260728-181352-020066-transcript-language-audit.json`; English/original `12/12`, Chinese `12/12`, missing Chinese `0`.
+- Gemini/report generation:
+  - Generated from original/English evidence only; Chinese transcripts were archive/completeness artifacts, not report source.
+  - Gemini generated `12/12` per-episode briefs and final Markdown: `reports/markdown/20260728-181352-020066-gemini-report.md`.
+  - Initial Gemini structure omitted standard section headings and had two mistyped Spotify URLs plus four weak quote matches; fixed structure, links, and quote lines against source transcripts.
+  - Gemini/content review passed: `reports/markdown/20260728-181352-020066-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260727-Spotify播客情报研报.docx`; SHA-256 `b0894ea643434acfedf0b6c2b3720f15b33899af8c19e85a1d8a6e51037faa98`.
+  - PDF: `reports/pdf/260727-Spotify播客情报研报.pdf`; SHA-256 `14f56deec72979f9aac272ddefd765fd2c8c44cd30801efc90ecc0983f43d11f`.
+  - Final constructive bilingual title: `AI竞争转向可执行系统：代理工作流、开源模型与人类适应力重排价值链 (AI Competition Shifts to Executable Systems: Agent Workflows, Open Models, and Human Adaptation Reorder the Value Chain)`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `12` episode headings, required labels all `12`, PDF page count `34`.
+  - Conditional pagination check passed: 第三部分 page `30` zone `0.280`; 第四部分 page `32` zone `0.116`; 第五部分 page `33` zone `0.522`.
+  - PDF line-start punctuation scan `0`; forbidden translation labels `0`.
+  - Visual spot-check pages `1`, `30`, `32`, `33`, `34` looked normal.
+- Not yet done:
+  - User review/approval of the PDF.
+  - Zotero archive, Google Drive upload, Discord delivery, final cleanup (`scripts/import_spotify_transcripts.py --move`), final duplicate archive audit, final late-RSS audit, and mark-seen.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` currently contains `12` temporary original transcript JSON backup files; do not remove until delivery succeeds or the user explicitly asks.
