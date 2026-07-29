@@ -2537,7 +2537,7 @@ Monday batch notes:
   - Final valid networked late-RSS audit after mark-seen: `data/runs/20260728-185137-139352-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `26`, feed failures `0`, late/unprocessed `0`.
 - 260727 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
 
-## 2026-07-29 260729 Report Preview Ready
+## 2026-07-29 260729 Report Completed
 
 - User invoked `spotify-mwf-report` to generate the Wednesday report.
 - Intended fixed report window: `2026-07-27T07:00:00+00:00` to `2026-07-29T07:00:00+00:00`; delivery date/filename `260729`.
@@ -2572,4 +2572,27 @@ Monday batch notes:
   - `scripts/translate_spotify_transcripts_to_zh_cdp.js`: added `--cdp-timeout-ms` for long Comet/CDP reconnects.
   - `scripts/check_gemini_report.py`: optimized quote-support fuzzy matching to avoid repeatedly splitting long transcripts.
   - `scripts/render_delivery_reports.py`: Word PDF export now uses a POSIX PDF output path, waits after opening the DOCX, captures the target active document, and prints stderr details on failure.
-- Current status: preview ready only. External delivery, Zotero import, Drive/Discord upload, transcript cleanup/archive audit, final late-RSS audit, and mark-seen have not run yet because user has not approved this 260729 preview for delivery.
+- Zotero:
+  - User reviewed/approved the PDF and delivery continued.
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: attachment/item id `4405`, title `260729-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1785327691`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/GCUF63VT/260729-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `98c9bcf108334649f942474a0bd9b2ca5fb016af2765942984cfcae519808ad3`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2607/google-drive/260729-Spotify播客情报研报.docx`; SHA-256 `cdeaf1da28d6e1c37374269b779600c0d0e6b69ed34f2b18e1979fa446221f74`.
+  - Staged PDF: `reports/archive/pending/2607/discord-todo/260729-Spotify播客情报研报.pdf`; SHA-256 `98c9bcf108334649f942474a0bd9b2ca5fb016af2765942984cfcae519808ad3`.
+  - Google Drive upload verified by Drive listing: `260729-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1785327798892-7c23e4cd-211f-454e-ac85-c86792ddb1c8-discord`, sent at `2026-07-29T12:24:37.650Z`.
+  - Discord delivery debugging note: notification first queued but did not immediately send because Discord Studio needed a LaunchAgent restart; `launchctl kickstart -k gui/501/com.hannah.codex.telegrambot` resumed queue consumption and the existing 260729 notification was sent without re-queuing a duplicate.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=10 removed=10 english_seen=10 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Final language audit: `data/runs/20260729-150451-506077-transcript-language-audit.json`; English/original `10/10`, Chinese `10/10`, missing Chinese `0`.
+  - Exact current-run episode-ID audit after cleanup: `data/transcripts/spotify_en found=10 expected=10 duplicate_ids=0 missing=0`; `data/transcripts/spotify_zh found=10 expected=10 duplicate_ids=0 missing=0`.
+- Late-RSS and mark-seen:
+  - Final valid networked late-RSS audit after cleanup and before mark-seen: `data/runs/20260729-202714-663611-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `22`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=10 manifest=data/runs/20260729-150451-506077-manifest.json`.
+- Automation note:
+  - Spotify report LaunchAgent `com.hannah.spotify-podcast-report` remains not running with last exit code `78: EX_CONFIG`; manual 260729 delivery is complete, but scheduled automation still needs a separate config/debug pass.
+- 260729 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
