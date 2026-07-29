@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -883,14 +884,27 @@ def export_docx_to_pdf_with_word(docx_path: Path, pdf_path: Path) -> bool:
         pdf_path.unlink()
     script = f'''
 set inputPath to POSIX file "{docx_path}"
-set outputPath to "{pdf_path}"
+set outputPath to POSIX file "{pdf_path}"
 tell application "Microsoft Word"
     open inputPath
-    save as active document file name outputPath file format format PDF
-    close active document saving no
+    delay 1
+    set reportDocument to active document
+    save as reportDocument file name outputPath file format format PDF
+    close reportDocument saving no
 end tell
 '''
     completed = subprocess.run(["osascript"], input=script, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if completed.returncode != 0 or not pdf_path.exists():
+        details = "\n".join(
+            part
+            for part in (
+                f"returncode={completed.returncode}",
+                f"stdout={completed.stdout.strip()}",
+                f"stderr={completed.stderr.strip()}",
+            )
+            if part and not part.endswith("=")
+        )
+        print(f"Word PDF export failed: {details}", file=sys.stderr)
     return completed.returncode == 0 and pdf_path.exists()
 
 

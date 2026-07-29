@@ -270,6 +270,7 @@ async function main() {
   const port = Number(argValue("--port", "9223"));
   const maxChars = Number(argValue("--max-chars", "700"));
   const timeoutMs = Number(argValue("--timeout-ms", "25000"));
+  const cdpTimeoutMs = Number(argValue("--cdp-timeout-ms", "120000"));
   const delayMs = Number(argValue("--delay-ms", "500"));
   const maxRetries = Number(argValue("--max-retries", "3"));
   const force = hasArg("--force");
@@ -280,7 +281,7 @@ async function main() {
   sourcePaths = Array.from(new Set(sourcePaths));
   if (!sourcePaths.length) throw new Error("No source transcripts provided.");
 
-  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
+  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: cdpTimeoutMs });
   const context = browser.contexts()[0];
   const page = await context.newPage();
   await page.goto("https://open.spotify.com/", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});

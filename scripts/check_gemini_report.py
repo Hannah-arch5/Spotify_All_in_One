@@ -129,10 +129,11 @@ def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> li
         if normalized_quote in normalized_transcript:
             continue
 
+        transcript_words = normalized_transcript.split()
         quote_words = normalized_quote.split()
         windows = (
-            " ".join(normalized_transcript.split()[start : start + len(quote_words) + 12])
-            for start in range(0, max(len(normalized_transcript.split()) - len(quote_words), 0), 20)
+            " ".join(transcript_words[start : start + len(quote_words) + 12])
+            for start in range(0, max(len(transcript_words) - len(quote_words), 0), 20)
         )
         best_ratio = max((SequenceMatcher(None, normalized_quote, window).ratio() for window in windows), default=0.0)
         if best_ratio < 0.82:

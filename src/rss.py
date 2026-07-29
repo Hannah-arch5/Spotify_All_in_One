@@ -7,7 +7,10 @@ from html import unescape
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import Request, urlopen
+from http.client import IncompleteRead
 import re
+import signal
+import socket
 import xml.etree.ElementTree as ET
 
 
@@ -31,13 +34,30 @@ class Episode:
     transcript_type: str | None
 
 
-def fetch_feed(url: str, timeout: int = 30) -> bytes:
+def fetch_feed(url: str, timeout: int = 300) -> bytes:
     request = Request(url, headers={"User-Agent": "Spotify-All-in-One/0.1"})
+    previous_timeout = socket.getdefaulttimeout()
+
+    def _timeout_handler(signum: int, frame: object) -> None:
+        raise TimeoutError(f"Timed out reading feed after {timeout}s")
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
     try:
+        socket.setdefaulttimeout(timeout)
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(timeout)
         with urlopen(request, timeout=timeout) as response:
             return response.read()
-    except URLError as exc:
+    except IncompleteRead as exc:
+        if exc.partial:
+            return exc.partial
         raise RuntimeError(f"Cannot fetch feed: {exc}") from exc
+    except (TimeoutError, socket.timeout, URLError) as exc:
+        raise RuntimeError(f"Cannot fetch feed: {exc}") from exc
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        socket.setdefaulttimeout(previous_timeout)
 
 
 def _text(element: ET.Element, tag: str) -> str | None:

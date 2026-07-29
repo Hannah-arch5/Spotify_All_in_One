@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import socket
 import time
 import urllib.error
 import urllib.parse
@@ -74,6 +75,11 @@ def _generate_text(
                 time.sleep(45 * (attempt + 1))
                 continue
             raise RuntimeError(f"Gemini API error {exc.code}: {body}") from exc
+        except (TimeoutError, socket.timeout, urllib.error.URLError, ConnectionError) as exc:
+            if attempt < max_retries:
+                time.sleep(30 * (attempt + 1))
+                continue
+            raise RuntimeError(f"Gemini API network error after retries: {exc}") from exc
     else:
         raise RuntimeError("Gemini API request failed after retries.")
 

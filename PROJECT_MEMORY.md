@@ -2536,3 +2536,40 @@ Monday batch notes:
   - Mark-seen completed: `marked_seen=12 manifest=data/runs/20260728-181352-020066-manifest.json`.
   - Final valid networked late-RSS audit after mark-seen: `data/runs/20260728-185137-139352-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `26`, feed failures `0`, late/unprocessed `0`.
 - 260727 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
+
+## 2026-07-29 260729 Report Preview Ready
+
+- User invoked `spotify-mwf-report` to generate the Wednesday report.
+- Intended fixed report window: `2026-07-27T07:00:00+00:00` to `2026-07-29T07:00:00+00:00`; delivery date/filename `260729`.
+- Valid networked manifest: `data/runs/20260729-150451-506077-manifest.json`; episode count `10`; feed failures `0`; sorted by `published_at desc`.
+- Pre-generation late-RSS audit accepted: `data/runs/20260729-154501-087384-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `22`, feed failures `0`, late/unprocessed `0`.
+  - Lex Fridman live RSS read timed out after the new 300-second hard timeout, but the fresh local feed cache `/Users/hannah/Documents/Spotify All in One/data/feeds/1a75ece134.xml` was 2370 seconds old and parsed successfully; this was recorded as `feed_cached_fallbacks=1`, not a silent failure.
+- Transcript collection:
+  - Used Comet DevTools port `9223` and Spotify native transcript API capture for all `10/10` episodes.
+  - Evidence pack: `data/runs/20260729-150451-506077-evidence-pack.json`; original transcript coverage `10/10`, missing `0`.
+- Chinese transcript completion:
+  - Used non-Gemini Comet CDP Google Translate-style backfill from exact archived original transcripts.
+  - Initial backfill completed 7 and blocked 3 incomplete translations; after increasing CDP connect timeout and retrying with smaller chunks, all 3 blocked episodes completed.
+  - Final language audit: `data/runs/20260729-150451-506077-transcript-language-audit.json`; English/original `10/10`, Chinese `10/10`, missing Chinese `0`.
+- Gemini/report generation:
+  - Generated from original/English evidence only; Chinese transcripts were archive/completeness artifacts, not report source.
+  - Gemini generated `10/10` per-episode briefs and final Markdown: `reports/markdown/20260729-150451-506077-gemini-report.md`.
+  - Fixed Gemini output structure, one mistyped Spotify URL, and quote lines so key quotes are exact original transcript snippets with italic Chinese translations.
+  - Gemini/content review passed: `reports/markdown/20260729-150451-506077-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260729-Spotify播客情报研报.docx`; SHA-256 `cdeaf1da28d6e1c37374269b779600c0d0e6b69ed34f2b18e1979fa446221f74`.
+  - PDF: `reports/pdf/260729-Spotify播客情报研报.pdf`; SHA-256 `98c9bcf108334649f942474a0bd9b2ca5fb016af2765942984cfcae519808ad3`.
+  - Final constructive bilingual title: `AI 开放生态与监管博弈：巨头站队、创新驱动与国家战略 (AI Open Ecosystem and Regulatory Games: Tech Giants' Alignment, Innovation Drive, and National Strategy)`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `10` episode headings, required labels all `10`, PDF page count `28`.
+  - Conditional pagination check passed: 第三部分 page `25` zone `0.524`; 第四部分 page `27` zone `0.280`; 第五部分 page `28` zone `0.280`.
+  - PDF line-start punctuation scan `0`; forbidden translation labels `0`.
+  - Visual spot-check pages `1`, `25`, `27`, `28` looked normal; section headings and bodies are on the same page and no unnecessary forced page breaks were introduced.
+- Flow reliability fixes made during this run:
+  - `src/rss.py`: RSS fetch has a 300-second hard read timeout, socket default timeout restoration, SIGALRM guard, and partial `IncompleteRead` handling.
+  - `scripts/audit_late_rss_arrivals.py`: late-RSS audit may use a fresh cached feed fallback within 3600 seconds and records `feed_cached_fallbacks` explicitly.
+  - `scripts/generate_chunked_gemini_report.py`: Gemini network timeouts/URL errors now retry before failing.
+  - `scripts/translate_spotify_transcripts_to_zh_cdp.js`: added `--cdp-timeout-ms` for long Comet/CDP reconnects.
+  - `scripts/check_gemini_report.py`: optimized quote-support fuzzy matching to avoid repeatedly splitting long transcripts.
+  - `scripts/render_delivery_reports.py`: Word PDF export now uses a POSIX PDF output path, waits after opening the DOCX, captures the target active document, and prints stderr details on failure.
+- Current status: preview ready only. External delivery, Zotero import, Drive/Discord upload, transcript cleanup/archive audit, final late-RSS audit, and mark-seen have not run yet because user has not approved this 260729 preview for delivery.

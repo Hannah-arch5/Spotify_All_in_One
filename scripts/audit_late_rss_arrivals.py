@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import asdict
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -15,6 +16,10 @@ from src.config import load_podcasts
 from src.rss import Episode, fetch_feed, parse_feed
 from src.schedule import previous_report_cutoff
 from src.state import connect, seen_guids
+
+
+def _safe_name(value: str) -> str:
+    return f"{hashlib.sha1(value.encode('utf-8')).hexdigest()[:10]}.xml"
 
 
 def _parse_datetime(value: str) -> datetime:
@@ -93,6 +98,7 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
     podcasts = load_podcasts(ROOT / "config" / "podcasts.yaml")
 
     failures: list[dict[str, str]] = []
+    cached_fallbacks: list[dict[str, str]] = []
     late_unprocessed: list[dict[str, object]] = []
     all_windowed = 0
 
@@ -103,8 +109,31 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
             xml_bytes = fetch_feed(podcast.rss_url)
             episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
         except Exception as exc:
-            failures.append({"podcast": podcast.title, "rss_url": podcast.rss_url, "error": str(exc)})
-            continue
+            cache_path = ROOT / "data" / "feeds" / _safe_name(podcast.rss_url)
+            try:
+                age_seconds = datetime.now(timezone.utc).timestamp() - cache_path.stat().st_mtime
+                if age_seconds > 3600:
+                    raise RuntimeError(f"cached feed is stale: age_seconds={age_seconds:.0f}")
+                episodes = parse_feed(cache_path.read_bytes(), podcast.title, podcast.publisher)
+                cached_fallbacks.append(
+                    {
+                        "podcast": podcast.title,
+                        "rss_url": podcast.rss_url,
+                        "cache_path": str(cache_path),
+                        "live_error": str(exc),
+                        "cache_age_seconds": f"{age_seconds:.0f}",
+                    }
+                )
+            except Exception as cache_exc:
+                failures.append(
+                    {
+                        "podcast": podcast.title,
+                        "rss_url": podcast.rss_url,
+                        "error": str(exc),
+                        "cache_error": str(cache_exc),
+                    }
+                )
+                continue
 
         for episode in episodes:
             if episode.published_at is None:
@@ -135,9 +164,11 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
             "configured_podcasts": len(podcasts),
             "windowed_current_rss_episode_count": all_windowed,
             "feed_failures": len(failures),
+            "feed_cached_fallbacks": len(cached_fallbacks),
             "late_unprocessed_count": len(late_unprocessed),
         },
         "feed_failures": failures,
+        "feed_cached_fallbacks": cached_fallbacks,
         "late_unprocessed": late_unprocessed,
     }
 
