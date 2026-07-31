@@ -18,7 +18,7 @@
 - Run the late-arriving RSS audit against current RSS before accepting a manifest as complete:
   - `scripts/audit_late_rss_arrivals.py --since <previous-window-since> --until <current-window-until> --require-clean`
   - Include at least the current report window and the previous closed M/W/F window.
-  - If the audit finds any episode that now appears in RSS but was not manifested or marked seen, treat it as a hard blocker. Create or merge a corrected manifest for the episode's intended M/W/F window, then collect transcripts and regenerate the affected report before delivery.
+  - If the audit finds any episode that now appears in RSS but was not manifested or marked seen, treat it as a hard blocker. Collect transcripts and add the episode to the latest/current report as the final episode, with a clear note that identifies its original intended M/W/F window, such as `迟到补入，原属 <YYMMDD> 窗口`. Do not create a separate supplement PDF by default. Only regenerate a past-window report instead when Hannah explicitly asks for that.
   - This check exists because some feeds can publish or refresh late while backdating `published_at`, which can make an episode belong to an already delivered report window even though it was absent from RSS during the original run.
 
 ## 3. Transcript Collection
@@ -44,7 +44,7 @@
   - Treat Chrome retry suffixes such as ` (1)` as duplicate downloads, not distinct archives.
   - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
-- For late-arriving RSS backfills, transcript coverage must be checked exactly like a normal run: original/English transcript first, then Chinese archive completeness or a recorded blocker.
+- For late-arriving RSS backfills, transcript coverage must be checked exactly like a normal run: original/English transcript first, then Chinese archive completeness or a recorded blocker. The final report should include the backfilled item at the end of 第二部分 unless Hannah explicitly asks to rebuild the older report.
 - Chinese transcript gaps must be handled promptly. English/original transcript coverage is still the main generation gate unless the user explicitly requires Chinese, and Chinese transcripts must not be used as the report-generation source by default. However, Chinese transcripts are required archive/completeness artifacts: if any are missing, immediately start or queue backfill and keep retrying until complete or explicitly recorded as a temporary external-service/plugin blocker.
 - After English/original coverage is complete, start or record a resumable Chinese backfill:
   - Use `scripts/translate_spotify_transcripts_to_zh.py --evidence-pack <evidence-pack> --status-json data/background_jobs/<run_id>-zh-translation-status.json`.

@@ -29,7 +29,7 @@ Core requirements:
 - Let Gemini write the final long-form report, but force Gemini to work from collected transcripts and source metadata.
 - Codex should collect episodes/transcripts, package evidence, and review Gemini's report for omissions, duplicates, and hallucinations.
 - Keep Google Drive backup, Zotero import, tags, and Telegram delivery as later pipeline stages.
-- **Hard rule added 2026-07-18:** late-arriving/backfilled RSS episodes must be audited every run. Some RSS feeds can refresh late while keeping an older `published_at`; this can make an episode belong to a report window that was already generated. Before final delivery and before mark-seen, run a current-RSS audit covering at least the current fixed M/W/F window plus the previous closed window. If any episode now appears in RSS but was not manifested or marked seen, stop, merge it into the correct scheduled report window, collect original/English and Chinese transcript coverage, regenerate the affected report, and record the incident. The original cached RSS from the report run is not enough proof of completeness.
+- **Hard rule added 2026-07-18, revised 2026-07-31:** late-arriving/backfilled RSS episodes must be audited every run. Some RSS feeds can refresh late while keeping an older `published_at`; this can make an episode belong to a report window that was already generated. Before final delivery and before mark-seen, run a current-RSS audit covering at least the current fixed M/W/F window plus the previous closed window. If any episode now appears in RSS but was not manifested or marked seen, stop, collect original/English and Chinese transcript coverage, then add it to the latest/current report as the final episode with a clear note like `迟到补入，原属 <YYMMDD> 窗口`. Do not create a separate supplement PDF by default, and do not silently hide the original intended window/date. Only rebuild an older report when Hannah explicitly asks for that. The original cached RSS from the report run is not enough proof of completeness.
 
 ## Current Podcast List
 
@@ -2219,7 +2219,7 @@ Monday batch notes:
   - This was therefore a late-arriving/backfilled RSS problem: an episode can appear in RSS after a report is delivered while keeping a `published_at` inside the already-delivered M/W/F window.
 - Hard fixes:
   - Added `scripts/audit_late_rss_arrivals.py` to fetch current RSS and detect episodes inside historical M/W/F windows that are not marked seen.
-  - Updated Spotify MWF skill source and installed skill with a hard gate: before final delivery/mark-seen, rerun late-RSS audit for at least the current window plus the previous closed window; any found episode blocks delivery and must be merged into the correct report window.
+  - Updated Spotify MWF skill source and installed skill with a hard gate: before final delivery/mark-seen, rerun late-RSS audit for at least the current window plus the previous closed window; any found episode blocks delivery. This 2026-07-18 handling originally merged the item into its historical report window; Hannah revised the default on 2026-07-31 so future omissions are added to the latest/current report as the final episode with original-window labeling unless she explicitly asks to rebuild the old report.
   - Fixed `scripts/capture_spotify_transcripts_cdp.js` to require the captured transcript API URL to contain the exact target Spotify episode ID before saving. This prevents stale/cached transcript responses from being saved under the wrong episode filename.
 - 260717 correction:
   - Re-scanned `2026-07-15 15:00 CST` to `2026-07-17 15:00 CST`; found exactly one new late-arriving episode: Minus One / Thariq Shihipar.
@@ -2601,13 +2601,13 @@ Monday batch notes:
 
 - User invoked `spotify-mwf-report` to generate the Friday report.
 - Intended fixed report window: `2026-07-29T07:00:00+00:00` to `2026-07-31T07:00:00+00:00`; delivery date/filename `260731`.
-- Current manifest: `data/runs/20260731-171338-721259-manifest.json`; episode count `9`; sorted by `published_at desc`.
+- Current manifest: `data/runs/20260731-171338-721259-manifest.json`; original latest-window episode count `9`; sorted by `published_at desc`.
 - Pre-generation late-RSS audit found one late-arriving episode that belonged to the already delivered 260729 window:
   - All-In with Chamath, Jason, Sacks & Friedberg, `The $1/Hour Worker: Four Robotics CEOs on Humanoids at Home, China's Threat, and the End of Dangerous Jobs`, published `2026-07-28T20:21:00+00:00`.
   - Corrected late supplement manifest: `data/runs/20260731-171715-766999-manifest.json`.
   - Spotify audio page lacked a Transcript tab; an official Spotify video page with the same episode/content (`https://open.spotify.com/episode/2mrzBrrkhlERdBER3GvdnB`) had the native transcript and was used as an explicit, non-silent equivalent transcript source.
   - Late supplement original and Chinese transcripts completed; Gemini review passed after structure/quote fixes.
-  - Late supplement preview artifacts rendered without overwriting the original 260729 report by using `scripts/render_delivery_reports.py --output-stem`: `reports/word/260729-Spotify播客情报研报-迟到补充.docx`, `reports/pdf/260729-Spotify播客情报研报-迟到补充.pdf`.
+  - Initial separate supplement artifacts were rendered during debugging with `scripts/render_delivery_reports.py --output-stem`, but Hannah corrected the rule on 2026-07-31: omissions should be added to the latest report as the final episode. The separate supplement is superseded by the merged 260731 report and should not be delivered by default.
 - 260731 transcript collection:
   - Used Comet DevTools port `9223` and Spotify native transcript API capture for 8 episodes.
   - Ray Dalio episode had no Spotify Transcript tab but supplied an official RSS transcript URL; archived converted original transcript at `data/transcripts/spotify_en/2026-07-30 - The Diary Of A CEO with Steven Bartlett - Ray Dalio_ I Predicted The 2008 Crash, I Know What Comes Next - flightcast_01KYMPGERGG1X4WK6BC5ZR26HG.json`.
@@ -2622,16 +2622,21 @@ Monday batch notes:
   - Reassembled via `scripts/assemble_gemini_report_from_briefs.py` so 第二部分 preserves all `9/9` per-episode briefs while 第一/三/四/五部分 are integrated synthesis.
   - Fixed one Ray Dalio key-quote timestamp leak and split one AI Daily Brief quote into exact transcript sentences.
   - Gemini/content review passed: `reports/markdown/20260731-171338-721259-gemini-review.md`.
-- Preview artifacts:
+- Final merged preview artifacts:
   - Markdown: `reports/markdown/20260731-171338-721259-gemini-report.md`.
   - DOCX: `reports/word/260731-Spotify播客情报研报.docx`.
   - PDF: `reports/pdf/260731-Spotify播客情报研报.pdf`.
-  - Final constructive bilingual title: `AI范式重构：从物理学洞察到企业级代理，重塑经济、社会与个人未来 (AI Paradigm Shift: From Physics Insights to Enterprise Agents, Reshaping Economy, Society, and Personal Futures)`.
+  - Final constructive bilingual title after merging the late episode: `AI范式重构：从模型自研、代理系统到具身劳动力的下一轮竞争 (AI Paradigm Shift: From Self-Designing Models and Agentic Systems to Embodied Labor)`.
+  - Merged report structure: the 9 latest-window episodes remain in publish-time order, and the All-In late-RSS item is inserted as `情报 10` at the end of 第二部分 with the label `迟到补入，原属 260729 窗口`.
+  - Merged review package used for validation: `data/gemini_inputs/20260731-171338-721259-plus-late`; review passed: `reports/markdown/20260731-171338-721259-plus-late-gemini-review.md`.
 - Quality gates passed for preview:
-  - Delivery-format audit passed with no issues: `5` H2 sections, `9` episode headings, required labels all `9`, PDF page count `31`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `10` episode headings, required labels all `10`, PDF page count `34`.
   - PDF line-start punctuation scan `0`.
   - Conditional pagination fixed by inserting page breaks only before 第三、第四、第五部分 after visual inspection showed those headings would otherwise sit too low with body split across pages.
-  - Visual spot-check confirmed 第三/四/五部分 now start with adequate following body and no low-value evidence anchor/format issue was introduced during edits.
+  - Visual spot-check confirmed 情报 10 and 第三/四/五部分 now start with adequate following body and no low-value evidence anchor/format issue was introduced during edits.
+- Skill rule update:
+  - Installed skill `/Users/hannah/.codex/skills/spotify-mwf-report/` and project source copy `.codex-skills/spotify-mwf-report/` were updated so future late-RSS/omitted episodes are added to the latest report as the final episode by default, with original-window labeling.
+  - No project GitHub remote is configured, and no separate `Spotify_MWF_Report_Skill` local GitHub source repo was found under `/Users/hannah/Documents`, so GitHub sync is currently blocked until a target repo/path is configured.
 - Pending before completion:
   - User preview/approval.
   - Zotero import, Google Drive DOCX upload, Discord PDF delivery, transcript Downloads cleanup with `scripts/import_spotify_transcripts.py --move`, duplicate archive audit, final late-RSS audit, mark-seen, final memory/Git update.
