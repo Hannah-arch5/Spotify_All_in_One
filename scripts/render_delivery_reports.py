@@ -908,9 +908,15 @@ end tell
     return completed.returncode == 0 and pdf_path.exists()
 
 
-def render(markdown_path: Path, font_path: str, *, allow_reportlab_fallback: bool = False) -> tuple[Path, Path]:
+def render(
+    markdown_path: Path,
+    font_path: str,
+    *,
+    allow_reportlab_fallback: bool = False,
+    output_stem: str | None = None,
+) -> tuple[Path, Path]:
     run_id = markdown_path.stem.replace("-gemini-report", "")
-    stem = delivery_name(markdown_path)
+    stem = output_stem or delivery_name(markdown_path)
     docx_path = ROOT / "reports" / "word" / f"{stem}.docx"
     pdf_path = ROOT / "reports" / "pdf" / f"{stem}.pdf"
     build_docx(markdown_path, docx_path)
@@ -934,9 +940,17 @@ def main() -> None:
         action="store_true",
         help="Allow the simpler ReportLab PDF fallback if Microsoft Word export is unavailable.",
     )
+    parser.add_argument("--output-stem", help="Override the default delivery filename stem. Only valid for one report.")
     args = parser.parse_args()
+    if args.output_stem and len(args.reports) != 1:
+        raise SystemExit("--output-stem can only be used with exactly one report.")
     for report in args.reports:
-        docx_path, pdf_path = render(report, args.font, allow_reportlab_fallback=args.allow_reportlab_fallback)
+        docx_path, pdf_path = render(
+            report,
+            args.font,
+            allow_reportlab_fallback=args.allow_reportlab_fallback,
+            output_stem=args.output_stem,
+        )
         print(f"docx={docx_path}")
         print(f"pdf={pdf_path}")
 

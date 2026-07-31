@@ -2596,3 +2596,44 @@ Monday batch notes:
 - Automation note:
   - Spotify report LaunchAgent `com.hannah.spotify-podcast-report` remains not running with last exit code `78: EX_CONFIG`; manual 260729 delivery is complete, but scheduled automation still needs a separate config/debug pass.
 - 260729 workflow is complete end to end, including full Chinese transcript coverage, Zotero, Google Drive, Discord, final cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
+
+## 2026-07-31 260731 Report Preview Ready
+
+- User invoked `spotify-mwf-report` to generate the Friday report.
+- Intended fixed report window: `2026-07-29T07:00:00+00:00` to `2026-07-31T07:00:00+00:00`; delivery date/filename `260731`.
+- Current manifest: `data/runs/20260731-171338-721259-manifest.json`; episode count `9`; sorted by `published_at desc`.
+- Pre-generation late-RSS audit found one late-arriving episode that belonged to the already delivered 260729 window:
+  - All-In with Chamath, Jason, Sacks & Friedberg, `The $1/Hour Worker: Four Robotics CEOs on Humanoids at Home, China's Threat, and the End of Dangerous Jobs`, published `2026-07-28T20:21:00+00:00`.
+  - Corrected late supplement manifest: `data/runs/20260731-171715-766999-manifest.json`.
+  - Spotify audio page lacked a Transcript tab; an official Spotify video page with the same episode/content (`https://open.spotify.com/episode/2mrzBrrkhlERdBER3GvdnB`) had the native transcript and was used as an explicit, non-silent equivalent transcript source.
+  - Late supplement original and Chinese transcripts completed; Gemini review passed after structure/quote fixes.
+  - Late supplement preview artifacts rendered without overwriting the original 260729 report by using `scripts/render_delivery_reports.py --output-stem`: `reports/word/260729-Spotify播客情报研报-迟到补充.docx`, `reports/pdf/260729-Spotify播客情报研报-迟到补充.pdf`.
+- 260731 transcript collection:
+  - Used Comet DevTools port `9223` and Spotify native transcript API capture for 8 episodes.
+  - Ray Dalio episode had no Spotify Transcript tab but supplied an official RSS transcript URL; archived converted original transcript at `data/transcripts/spotify_en/2026-07-30 - The Diary Of A CEO with Steven Bartlett - Ray Dalio_ I Predicted The 2008 Crash, I Know What Comes Next - flightcast_01KYMPGERGG1X4WK6BC5ZR26HG.json`.
+  - Original transcript coverage reached `9/9`.
+- Chinese transcript completion:
+  - Comet CDP Google Translate-style backfill completed 7/9, but Tim Robbins and a16z AI Micro Dramas remained incomplete.
+  - Retried the non-Gemini command-line translator with external network access; completed a16z (`425` segments) and Tim Robbins (`2287` segments).
+  - Final language audit passed: `data/runs/20260731-171338-721259-transcript-language-audit.json`; English/original `9/9`, Chinese `9/9`, missing Chinese `0`.
+- Gemini/report generation:
+  - Generated from original/English evidence only; Chinese transcripts were archive/completeness artifacts, not report-generation source.
+  - Initial chunked final report was too condensed and failed review with `0` recognized episodes.
+  - Reassembled via `scripts/assemble_gemini_report_from_briefs.py` so 第二部分 preserves all `9/9` per-episode briefs while 第一/三/四/五部分 are integrated synthesis.
+  - Fixed one Ray Dalio key-quote timestamp leak and split one AI Daily Brief quote into exact transcript sentences.
+  - Gemini/content review passed: `reports/markdown/20260731-171338-721259-gemini-review.md`.
+- Preview artifacts:
+  - Markdown: `reports/markdown/20260731-171338-721259-gemini-report.md`.
+  - DOCX: `reports/word/260731-Spotify播客情报研报.docx`.
+  - PDF: `reports/pdf/260731-Spotify播客情报研报.pdf`.
+  - Final constructive bilingual title: `AI范式重构：从物理学洞察到企业级代理，重塑经济、社会与个人未来 (AI Paradigm Shift: From Physics Insights to Enterprise Agents, Reshaping Economy, Society, and Personal Futures)`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `9` episode headings, required labels all `9`, PDF page count `31`.
+  - PDF line-start punctuation scan `0`.
+  - Conditional pagination fixed by inserting page breaks only before 第三、第四、第五部分 after visual inspection showed those headings would otherwise sit too low with body split across pages.
+  - Visual spot-check confirmed 第三/四/五部分 now start with adequate following body and no low-value evidence anchor/format issue was introduced during edits.
+- Pending before completion:
+  - User preview/approval.
+  - Zotero import, Google Drive DOCX upload, Discord PDF delivery, transcript Downloads cleanup with `scripts/import_spotify_transcripts.py --move`, duplicate archive audit, final late-RSS audit, mark-seen, final memory/Git update.
+- Code change made during this run:
+  - `scripts/render_delivery_reports.py` gained a guarded `--output-stem` option for one-off late supplements so regenerated supplements cannot overwrite the main scheduled report artifact.
