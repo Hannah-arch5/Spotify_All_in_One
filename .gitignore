@@ -8,6 +8,7 @@ data/gemini_inputs/
 data/runs/
 data/background_jobs/
 data/state.sqlite
+data/service_logs/
 data/transcripts/
 reports/markdown/
 reports/html/
