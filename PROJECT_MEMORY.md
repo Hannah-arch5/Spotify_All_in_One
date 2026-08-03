@@ -2642,3 +2642,38 @@ Monday batch notes:
   - Zotero import, Google Drive DOCX upload, Discord PDF delivery, transcript Downloads cleanup with `scripts/import_spotify_transcripts.py --move`, duplicate archive audit, final late-RSS audit, mark-seen, final memory/Git update.
 - Code change made during this run:
   - `scripts/render_delivery_reports.py` gained a guarded `--output-stem` option for one-off late supplements so regenerated supplements cannot overwrite the main scheduled report artifact.
+
+## 2026-08-03 260803 Report Preview Ready
+
+- User invoked `spotify-mwf-report` to generate the Monday report.
+- Intended fixed report window: `2026-07-31T07:00:00+00:00` to `2026-08-03T07:00:00+00:00`; delivery date/filename `260803`.
+- Current merged manifest: `data/runs/20260803-152323-614947-plus-late-manifest.json`; episode count `13`; the 12 current-window episodes remain sorted by `published_at desc`.
+- Pre-generation late-RSS audit found one late-arriving episode belonging to the already covered 260731 window:
+  - The Diary Of A CEO with Steven Bartlett, `Most Replayed Moment: Ex-CIA Reveals What Spies Know About Human Nature`, published `2026-07-31T05:00:00+00:00`, GUID `flightcast:01KY8EX4JD9B45H9EB9MR6QGQ9`.
+  - It was appended as `情报 13` with `迟到补入，原属 260731 窗口`, following the hard rule to add omissions to the latest report rather than creating a separate supplement by default.
+  - The initial late-RSS audit used fresh feed cache fallbacks because sandbox DNS failed for many RSS domains and one a16z cached XML was malformed; a final networked late-RSS audit is still required before delivery/mark-seen.
+- Transcript collection:
+  - Official RSS transcript URLs were converted and archived for the DOAC Pete Buttigieg episode and the late DOAC John Kiriakou episode.
+  - Used Comet DevTools port `9223` and Spotify native transcript API capture for the other 11 episodes; one No Priors capture failed once because the browser context closed, then succeeded on a single-episode retry.
+  - Evidence pack: `data/runs/20260803-152323-614947-plus-late-evidence-pack.json`; original transcript coverage `13/13`, missing `0`.
+- Chinese transcript completion:
+  - Used non-Gemini Comet CDP Google Translate-style backfill from exact archived original transcripts.
+  - Final language audit passed: `data/runs/20260803-152323-614947-plus-late-transcript-language-audit.json`; English/original `13/13`, Chinese `13/13`, missing Chinese `0`.
+  - Chinese transcripts were treated as archive/completeness artifacts only; report generation used original/English evidence.
+- Gemini/report generation:
+  - Gemini package: `data/gemini_inputs/20260803-152323-614947-plus-late`.
+  - Markdown: `reports/markdown/20260803-152323-614947-plus-late-gemini-report.md`.
+  - Initial Gemini output used nonstandard section names and had three quote-support warnings; fixed the five-part headings, exact quotes for 情报 2/11/12, the late-arrival label, and stray double-italic markers.
+  - Gemini/content review passed: `reports/markdown/20260803-152323-614947-plus-late-gemini-review.md`; errors `0`, warnings `0`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260803-Spotify播客情报研报.docx`; SHA-256 `87bf73c29a11dfdba8ac9a8b3773bb22376389228f864f428f84eec6af514bc8`.
+  - PDF: `reports/pdf/260803-Spotify播客情报研报.pdf`; SHA-256 `39af89a811b8eaadeab57c8d0f210a2237bc9ca93151eaa1b571c101e0cd516b`.
+  - Final constructive bilingual title: `AI重塑权力与财富：从民主危机到自主企业 (AI Reshaping Power and Wealth: From Democratic Crisis to Autonomous Enterprise)`.
+- Quality gates passed for preview:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `13` episode headings, required labels all `13`, PDF page count `38`.
+  - Conditional pagination check passed: 第三部分 page `34` zone `0.222`; 第四部分 page `35` zone `0.662`; 第五部分 page `37` zone `0.361`.
+  - PDF line-start punctuation scan `0`; forbidden translation labels `0`.
+  - Visual spot-check pages `1`, `34`, `35`, `37`, `38` looked normal; main title is constructive with English translation, section headings have adequate following body, and no unnecessary forced page breaks were observed.
+- Pending before completion:
+  - User preview/approval.
+  - Zotero import, Google Drive DOCX upload, Discord PDF delivery, transcript Downloads cleanup with `scripts/import_spotify_transcripts.py --move`, duplicate archive audit, final networked late-RSS audit, mark-seen, final memory/Git update.
