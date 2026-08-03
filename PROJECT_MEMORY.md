@@ -2696,3 +2696,26 @@ Monday batch notes:
 - Automation note:
   - Spotify report LaunchAgent `com.hannah.spotify-podcast-report` remains not running with prior last exit code `78: EX_CONFIG`; manual 260803 delivery is complete, but scheduled automation still needs a separate config/debug pass.
 - 260803 workflow is complete end to end, including full English/original and Chinese transcript coverage, final merged report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
+
+## 2026-08-04 260803 Local Revision: Episodes 13-16 Expanded
+
+- User reviewed the delivered 260803 report and felt the late-added episodes `13` to `16` were thinner than the rest of the report.
+- Revised the local Markdown directly from archived original/English transcripts, without sending another full request to Gemini:
+  - Markdown: `reports/markdown/20260803-152323-614947-plus-late-a16z-gemini-report.md`.
+  - Expanded 情报 13 Ruby Thelot from a short cultural note into a fuller analysis of pluri culture, algorithmic sample bias, machinic/agentic taste, and AI adoption language.
+  - Expanded 情报 14 Marc Andreessen/Chris Dixon from CLARITY Act summary into a fuller governance analysis of regulatory perimeter, stablecoin scale, developer downstream liability, open source risk, and US technology leadership.
+  - Expanded 情报 15 Decagon from open-source workflow summary into a fuller enterprise AI deployment playbook: frontier-model prototyping, open-source/small-model productionization, latency/control/evaluation, model factory, workflow moat, and AGI-era application-layer value.
+  - Rewrote 情报 16 John Kiriakou to avoid generic transcript-summary tone and frame the episode around human motivation, trust-based intelligence recruiting, metadata surveillance, gray-area institutions, and digital privacy power asymmetry.
+  - Fixed the cross-episode analysis reference that incorrectly pointed John Kiriakou to 情报 13; it now correctly points to 情报 16.
+  - Strengthened 第三部分 and 第四部分 so late-added episodes are integrated into the main synthesis rather than appearing as detached supplements.
+- Quality gates after revision:
+  - `scripts/check_gemini_report.py` passed: `通过`.
+  - Re-rendered Word/PDF through Microsoft Word after one transient AppleScript failure; no ReportLab fallback used.
+  - DOCX: `reports/word/260803-Spotify播客情报研报.docx`; SHA-256 `c0d2b8ff10a77ae2e98d617942ecd41ad7b6269f73442e043077004297fdbc25`.
+  - PDF: `reports/pdf/260803-Spotify播客情报研报.pdf`; SHA-256 `9e64f810183049c6710a5f69b1accf7bb2518737818e9ddcea4129163c31e891`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `16` episode headings, required labels all `16`, PDF page count `44`.
+  - Heading position check passed: 第三部分 page `40` zone `0.151`; 第四部分 page `41` zone `0.684`; 第五部分 page `43` zone `0.522`.
+  - PDF line-start punctuation scan `0`.
+  - Visual spot-check pages `32`, `34`, `36`, `38`, `40`, `41`, `43` looked normal; episodes `13` to `16` now have comparable density to earlier episode briefs, translations remain italicized, and no orphan heading/large blank-page problem was observed.
+- External delivery note:
+  - This revision updated local final DOCX/PDF only. Previously delivered Zotero/Google Drive/Discord copies still correspond to the earlier 16-episode version unless Hannah explicitly asks to replace/resend the revised files.
