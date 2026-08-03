@@ -2643,37 +2643,56 @@ Monday batch notes:
 - Code change made during this run:
   - `scripts/render_delivery_reports.py` gained a guarded `--output-stem` option for one-off late supplements so regenerated supplements cannot overwrite the main scheduled report artifact.
 
-## 2026-08-03 260803 Report Preview Ready
+## 2026-08-03 260803 Report Delivered
 
-- User invoked `spotify-mwf-report` to generate the Monday report.
+- User invoked `spotify-mwf-report` to generate and deliver the Monday report.
 - Intended fixed report window: `2026-07-31T07:00:00+00:00` to `2026-08-03T07:00:00+00:00`; delivery date/filename `260803`.
-- Current merged manifest: `data/runs/20260803-152323-614947-plus-late-manifest.json`; episode count `13`; the 12 current-window episodes remain sorted by `published_at desc`.
-- Pre-generation late-RSS audit found one late-arriving episode belonging to the already covered 260731 window:
-  - The Diary Of A CEO with Steven Bartlett, `Most Replayed Moment: Ex-CIA Reveals What Spies Know About Human Nature`, published `2026-07-31T05:00:00+00:00`, GUID `flightcast:01KY8EX4JD9B45H9EB9MR6QGQ9`.
-  - It was appended as `情报 13` with `迟到补入，原属 260731 窗口`, following the hard rule to add omissions to the latest report rather than creating a separate supplement by default.
-  - The initial late-RSS audit used fresh feed cache fallbacks because sandbox DNS failed for many RSS domains and one a16z cached XML was malformed; a final networked late-RSS audit is still required before delivery/mark-seen.
+- Final merged manifest: `data/runs/20260803-152323-614947-plus-late-a16z-manifest.json`; episode count `16`.
+  - The original `12` current-window episodes remain in `published_at desc` order.
+  - Final pre-delivery late-RSS audits found and resolved all missing items before delivery.
+  - Three a16z episodes were appended as `情报 13` to `情报 15` with `补入，原属 260803 窗口` after a stale/malformed cached a16z feed hid them during the first pass: Ruby Thelot on internet culture/AI/taste; Marc Andreessen and Chris Dixon on crypto regulation; and enterprise AI deployment.
+  - One DOAC episode was appended as `情报 16` with `迟到补入，原属 260731 窗口`: `Most Replayed Moment: Ex-CIA Reveals What Spies Know About Human Nature`, published `2026-07-31T05:00:00+00:00`, GUID `flightcast:01KY8EX4JD9B45H9EB9MR6QGQ9`.
 - Transcript collection:
   - Official RSS transcript URLs were converted and archived for the DOAC Pete Buttigieg episode and the late DOAC John Kiriakou episode.
-  - Used Comet DevTools port `9223` and Spotify native transcript API capture for the other 11 episodes; one No Priors capture failed once because the browser context closed, then succeeded on a single-episode retry.
-  - Evidence pack: `data/runs/20260803-152323-614947-plus-late-evidence-pack.json`; original transcript coverage `13/13`, missing `0`.
+  - Used Comet DevTools port `9223` and Spotify native transcript API capture for the other current-window episodes, including the three late-found a16z episodes.
+  - Final evidence pack: `data/runs/20260803-152323-614947-plus-late-a16z-evidence-pack.json`; original transcript coverage `16/16`, missing `0`.
 - Chinese transcript completion:
-  - Used non-Gemini Comet CDP Google Translate-style backfill from exact archived original transcripts.
-  - Final language audit passed: `data/runs/20260803-152323-614947-plus-late-transcript-language-audit.json`; English/original `13/13`, Chinese `13/13`, missing Chinese `0`.
-  - Chinese transcripts were treated as archive/completeness artifacts only; report generation used original/English evidence.
-- Gemini/report generation:
-  - Gemini package: `data/gemini_inputs/20260803-152323-614947-plus-late`.
-  - Markdown: `reports/markdown/20260803-152323-614947-plus-late-gemini-report.md`.
-  - Initial Gemini output used nonstandard section names and had three quote-support warnings; fixed the five-part headings, exact quotes for 情报 2/11/12, the late-arrival label, and stray double-italic markers.
-  - Gemini/content review passed: `reports/markdown/20260803-152323-614947-plus-late-gemini-review.md`; errors `0`, warnings `0`.
-- Rendered preview artifacts:
-  - DOCX: `reports/word/260803-Spotify播客情报研报.docx`; SHA-256 `87bf73c29a11dfdba8ac9a8b3773bb22376389228f864f428f84eec6af514bc8`.
-  - PDF: `reports/pdf/260803-Spotify播客情报研报.pdf`; SHA-256 `39af89a811b8eaadeab57c8d0f210a2237bc9ca93151eaa1b571c101e0cd516b`.
-  - Final constructive bilingual title: `AI重塑权力与财富：从民主危机到自主企业 (AI Reshaping Power and Wealth: From Democratic Crisis to Autonomous Enterprise)`.
-- Quality gates passed for preview:
-  - Delivery-format audit passed with no issues: `5` H2 sections, `13` episode headings, required labels all `13`, PDF page count `38`.
-  - Conditional pagination check passed: 第三部分 page `34` zone `0.222`; 第四部分 page `35` zone `0.662`; 第五部分 page `37` zone `0.361`.
+  - Used non-Gemini Comet/CDP Google Translate-style backfill from exact archived original transcripts.
+  - Final language audit passed: `data/runs/20260803-152323-614947-plus-late-a16z-transcript-language-audit.json`; English/original `16/16`, Chinese `16/16`, missing Chinese `0`.
+  - Chinese transcripts remained archive/completeness artifacts only; report generation used original/English evidence.
+- Report generation:
+  - Gemini input package: `data/gemini_inputs/20260803-152323-614947-plus-late-a16z`.
+  - Gemini quota was exhausted after `7` completed episode briefs (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, limit `20`), so the final report was explicitly assembled by reusing the reviewed 13-episode draft and manually adding the three a16z sections from original transcripts. This was not a silent low-fidelity fallback.
+  - Final Markdown: `reports/markdown/20260803-152323-614947-plus-late-a16z-gemini-report.md`.
+  - Final constructive bilingual title: `AI重塑权力、财富与信任：从民主危机、算法文化到自主企业 (AI Reshaping Power, Wealth, and Trust: From Democratic Crisis and Algorithmic Culture to Autonomous Enterprise)`.
+  - Final review passed: `reports/markdown/20260803-152323-614947-plus-late-a16z-gemini-review.md`; errors `0`, warnings `0`.
+- Final artifacts:
+  - DOCX: `reports/word/260803-Spotify播客情报研报.docx`; SHA-256 `133bb17b138337a45f6d9ee9092bd03c1f33de8bbf2ee7f9fb2b26ab429a3caa`.
+  - PDF: `reports/pdf/260803-Spotify播客情报研报.pdf`; SHA-256 `9e6ea46fb1eabcc684fcab350748576c9f589085acb348c15b76af6360b06085`.
+- Quality gates passed:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `16` episode headings, required labels all `16`, PDF page count `43`.
+  - Conditional pagination check passed: 第三部分 page `38` zone `0.651`; 第四部分 page `40` zone `0.500`; 第五部分 page `42` zone `0.361`.
   - PDF line-start punctuation scan `0`; forbidden translation labels `0`.
-  - Visual spot-check pages `1`, `34`, `35`, `37`, `38` looked normal; main title is constructive with English translation, section headings have adequate following body, and no unnecessary forced page breaks were observed.
-- Pending before completion:
-  - User preview/approval.
-  - Zotero import, Google Drive DOCX upload, Discord PDF delivery, transcript Downloads cleanup with `scripts/import_spotify_transcripts.py --move`, duplicate archive audit, final networked late-RSS audit, mark-seen, final memory/Git update.
+  - Visual spot-check pages `1`, `38`, `40`, `42` looked normal; the main title is constructive with English translation, section headings have adequate following body, and no unnecessary forced page breaks were observed.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Direct-PDF archive completed: Zotero attachment/item id `4410`, title `260803-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1785768222`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/1FD35NTN/260803-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash: `9e6ea46fb1eabcc684fcab350748576c9f589085acb348c15b76af6360b06085`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2608/google-drive/260803-Spotify播客情报研报.docx`; SHA-256 `133bb17b138337a45f6d9ee9092bd03c1f33de8bbf2ee7f9fb2b26ab429a3caa`.
+  - Staged PDF: `reports/archive/pending/2608/discord-todo/260803-Spotify播客情报研报.pdf`; SHA-256 `9e6ea46fb1eabcc684fcab350748576c9f589085acb348c15b76af6360b06085`.
+  - Google Drive upload verified by Drive listing: `260803-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by Discord Studio `notification_sent`: id `1785768468349-052a4f6d-63ef-4944-b88a-d4324bd43788-discord`, sent at `2026-08-03T14:53:05.321Z`.
+  - Discord delivery debugging note: a stale local node process caused `EADDRINUSE` on port `3000`; killing that stale process and restarting the `com.hannah.codex.telegrambot` LaunchAgent resumed queue consumption and sent the existing queued notification without re-queuing a duplicate.
+- Transcript cleanup and archive audit:
+  - Cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=23 removed=23 english_seen=23 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Exact current-run episode-ID audit after cleanup: `data/transcripts/spotify_en expected=16 found=16 duplicate_ids=0 missing=0`; `data/transcripts/spotify_zh expected=16 found=16 duplicate_ids=0 missing=0`.
+- Late-RSS and mark-seen:
+  - Final valid networked late-RSS audit after cleanup and before mark-seen: `data/runs/20260803-225833-808946-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `25`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=16 manifest=data/runs/20260803-152323-614947-plus-late-a16z-manifest.json`.
+- Automation note:
+  - Spotify report LaunchAgent `com.hannah.spotify-podcast-report` remains not running with prior last exit code `78: EX_CONFIG`; manual 260803 delivery is complete, but scheduled automation still needs a separate config/debug pass.
+- 260803 workflow is complete end to end, including full English/original and Chinese transcript coverage, final merged report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
