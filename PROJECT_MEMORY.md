@@ -2719,3 +2719,26 @@ Monday batch notes:
   - Visual spot-check pages `32`, `34`, `36`, `38`, `40`, `41`, `43` looked normal; episodes `13` to `16` now have comparable density to earlier episode briefs, translations remain italicized, and no orphan heading/large blank-page problem was observed.
 - External delivery note:
   - This revision updated local final DOCX/PDF only. Previously delivered Zotero/Google Drive/Discord copies still correspond to the earlier 16-episode version unless Hannah explicitly asks to replace/resend the revised files.
+
+## 2026-08-08 260803 Revision External Replacement Delivered
+
+- User said "继续" after the 260803 local revision, interpreted as continuing the remaining delivery flow for the revised version.
+- Re-verified local revised artifacts before replacement:
+  - DOCX: `reports/word/260803-Spotify播客情报研报.docx`; SHA-256 `c0d2b8ff10a77ae2e98d617942ecd41ad7b6269f73442e043077004297fdbc25`.
+  - PDF: `reports/pdf/260803-Spotify播客情报研报.pdf`; SHA-256 `9e64f810183049c6710a5f69b1accf7bb2518737818e9ddcea4129163c31e891`.
+  - Delivery-format audit still passed with no issues: `5` H2 sections, `16` episode headings, required labels all `16`, PDF page count `44`.
+- Zotero replacement:
+  - Quit Zotero before DB write.
+  - Replacement completed on the existing direct-PDF item/attachment id `4410`, title `260803-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1786185429`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/YBGD6O9C/260803-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the revised local PDF hash: `9e64f810183049c6710a5f69b1accf7bb2518737818e9ddcea4129163c31e891`.
+- Google Drive and Discord replacement:
+  - Restaged revised DOCX to `reports/archive/pending/2608/google-drive/260803-Spotify播客情报研报.docx`; SHA-256 `c0d2b8ff10a77ae2e98d617942ecd41ad7b6269f73442e043077004297fdbc25`.
+  - Restaged revised PDF to `reports/archive/pending/2608/discord-todo/260803-Spotify播客情报研报.pdf`; SHA-256 `9e64f810183049c6710a5f69b1accf7bb2518737818e9ddcea4129163c31e891`.
+  - Google Drive upload verified by Drive listing containing `260803-Spotify播客情报研报.docx`.
+  - Discord `#todo` resend verified by live Discord Studio `notification_sent`: id `1786185538628-8bfc9404-2964-4c3d-ad26-18d4a0734062-discord`, sent at `2026-08-08T10:39:01.870Z`.
+  - Discord Studio LaunchAgent `com.hannah.codex.telegrambot` was running normally during send.
+- Cleanup/status:
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` had zero JSON files after replacement.
+  - No Spotify skill/source files changed during this replacement; GitHub skill sync was not required.
