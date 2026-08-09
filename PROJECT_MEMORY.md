@@ -2742,3 +2742,11 @@ Monday batch notes:
 - Cleanup/status:
   - `/Users/hannah/Downloads/Spotify Transcript Collector/` had zero JSON files after replacement.
   - No Spotify skill/source files changed during this replacement; GitHub skill sync was not required.
+
+## 2026-08-09 260805 / 260807 Split-Window Report Rule and Draft Status
+
+- Workflow correction recorded as a hard rule: if the pipeline discovers two or more complete missing scheduled windows, generate each scheduled report separately. Do not merge a full missing Wednesday report into a Friday report. Only a genuinely small number of late-discovered isolated episodes may be appended to the latest report.
+- Current split-window drafts created separately:
+  - `260805`: Markdown `reports/markdown/20260809-092139-445033-gemini-report.md`; DOCX `reports/word/260805-Spotify播客情报研报.docx`; PDF `reports/pdf/260805-Spotify播客情报研报.pdf`.
+  - `260807`: Markdown `reports/markdown/20260809-092148-407703-gemini-report.md`; DOCX `reports/word/260807-Spotify播客情报研报.docx`; PDF `reports/pdf/260807-Spotify播客情报研报.pdf`.
+- Both split reports passed the report review and delivery-format audits locally. They have not yet been delivered to Zotero, Google Drive, or Discord, and the current Downloads transcript backups should be cleaned only after external delivery succeeds.
