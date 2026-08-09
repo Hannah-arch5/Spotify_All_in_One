@@ -2750,3 +2750,48 @@ Monday batch notes:
   - `260805`: Markdown `reports/markdown/20260809-092139-445033-gemini-report.md`; DOCX `reports/word/260805-Spotify播客情报研报.docx`; PDF `reports/pdf/260805-Spotify播客情报研报.pdf`.
   - `260807`: Markdown `reports/markdown/20260809-092148-407703-gemini-report.md`; DOCX `reports/word/260807-Spotify播客情报研报.docx`; PDF `reports/pdf/260807-Spotify播客情报研报.pdf`.
 - Both split reports passed the report review and delivery-format audits locally. They have not yet been delivered to Zotero, Google Drive, or Discord, and the current Downloads transcript backups should be cleaned only after external delivery succeeds.
+
+## 2026-08-09 260805 / 260807 Split-Window Reports Delivered
+
+- User approved the split reports after preview; completed both scheduled reports separately end to end.
+- 260805 report:
+  - Manifest: `data/runs/20260809-092139-445033-manifest.json`; fixed report window `2026-08-03T07:00:00+00:00` to `2026-08-05T07:00:00+00:00`; episode count `8`; sort rule `episode.published_at desc`.
+  - Final constructive bilingual title: `AI智能涌现与基础设施重塑：从表面化到深度化的产业变革 (AI Intelligence Emergence and Infrastructure Reshaping: From "Superficial" to "Profound" Industrial Transformation)`.
+  - Markdown: `reports/markdown/20260809-092139-445033-gemini-report.md`.
+  - DOCX: `reports/word/260805-Spotify播客情报研报.docx`; SHA-256 `dd5e6419b97dd7cca1716152a29a49b7279f3aed34f3147b778008f3fe650d61`.
+  - PDF: `reports/pdf/260805-Spotify播客情报研报.pdf`; SHA-256 `945a31944939d82b2dc3b363fe2db3e6ddd65934e0ac0008442c9e78ca5d5203`.
+  - Gemini review passed: `reports/markdown/20260809-092139-445033-gemini-review.md`.
+  - Delivery-format audit passed: `5` H2 sections, `8` episode headings, all required labels present, PDF page count `28`.
+- 260807 report:
+  - Manifest: `data/runs/20260809-092148-407703-manifest.json`; fixed report window `2026-08-05T07:00:00+00:00` to `2026-08-07T07:00:00+00:00`; episode count `14`; sort rule `episode.published_at desc`.
+  - Final constructive bilingual title: `AI基础设施进入硬约束时代：算力资本、自治系统与社会信任共同决定扩张速度 (AI Infrastructure Enters the Hard-Constraint Era: Compute Capital, Autonomous Systems, and Social Trust Now Set the Pace)`.
+  - Markdown: `reports/markdown/20260809-092148-407703-gemini-report.md`.
+  - DOCX: `reports/word/260807-Spotify播客情报研报.docx`; SHA-256 `46a69ed9c3b67f80efedc931e5e4c4910d1d2325951c527d0e73ef1196d2b374`.
+  - PDF: `reports/pdf/260807-Spotify播客情报研报.pdf`; SHA-256 `506b3e5a99cf6bbeca15a63a0a4e7b80476492d2f608ae430eccbcad627ef194`.
+  - Gemini review passed: `reports/markdown/20260809-092148-407703-gemini-review.md`.
+  - Delivery-format audit passed: `5` H2 sections, `14` episode headings, all required labels present, PDF page count `24`.
+  - Gemini quota was exhausted after episode briefs `1-4`; remaining episode briefs `5-14` were completed locally from original transcripts and explicitly recorded in the report header as `local transcript-grounded completion`, not silently downgraded.
+- Quality gates:
+  - Both reports passed title, episode-1 quote, meaningful evidence-anchor, pagination, and line-start punctuation checks during local review.
+  - Final late-RSS audit before mark-seen: `data/runs/20260809-115954-142804-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `22`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - A prior late-RSS audit had transient Anchor SSL EOF failures; refreshed the affected feed caches with `curl`, then reran the audit to a clean result before mark-seen.
+- Zotero:
+  - Quit Zotero before direct local DB writes.
+  - 260805 archived as direct PDF item id `4412`, title `260805-Spotify播客情报研报`; backup `/Users/hannah/Zotero/zotero.sqlite.backup-1786247472`; active PDF `/Users/hannah/Zotero/storage/E3ZRPDQG/260805-Spotify播客情报研报.pdf`; Zotero hash matched local PDF.
+  - 260807 archived as direct PDF item id `4413`, title `260807-Spotify播客情报研报`; backup `/Users/hannah/Zotero/zotero.sqlite.backup-1786247481`; active PDF `/Users/hannah/Zotero/storage/1R3CBFJ8/260807-Spotify播客情报研报.pdf`; Zotero hash matched local PDF.
+- Google Drive and Discord:
+  - Google Drive upload verified by Drive listing containing both `260805-Spotify播客情报研报.docx` and `260807-Spotify播客情报研报.docx`.
+  - Discord `#todo` sent two separate messages:
+    - 260805 notification id `1786247566893-369cb0d9-43be-4607-b98f-853005bf5356-discord`; `notification_sent` at `2026-08-09T03:54:04.765Z`.
+    - 260807 notification id `1786247580311-4874b01b-e33a-4d78-b5f8-3047de39a21b-discord`; `notification_sent` at `2026-08-09T03:54:06.052Z`.
+  - Discord Studio debugging note: the queue initially stalled because a stale local `node` process was holding `127.0.0.1:3000`, causing LaunchAgent `com.hannah.codex.telegrambot` to exit with `EADDRINUSE`. Killed PID `39095`, restarted the LaunchAgent, and the already queued notifications were sent without duplicate queueing.
+- Transcript cleanup and archive audit:
+  - Post-delivery cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=22 removed=22 english_seen=22 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit: expected `22` unique episode IDs; English found `22`, duplicate IDs `0`, missing `0`; Chinese found `22`, duplicate IDs `0`, missing `0`.
+  - Language coverage audits passed: 260805 English/original `8/8`, Chinese `8/8`, missing Chinese `0`; 260807 English/original `14/14`, Chinese `14/14`, missing Chinese `0`.
+- Mark-seen:
+  - `scripts/mark_manifest_seen.py data/runs/20260809-092139-445033-manifest.json` returned `marked_seen=8`.
+  - `scripts/mark_manifest_seen.py data/runs/20260809-092148-407703-manifest.json` returned `marked_seen=14`.
+- GitHub note:
+  - The main Spotify project currently has no configured Git remote, so project memory can be committed locally but cannot be pushed to GitHub until a remote is configured.
