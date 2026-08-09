@@ -1,0 +1,167 @@
+# Spotify All in One
+
+自动检查关注播客的 RSS 更新，生成可核对的新增 episode 清单。研报正文排序规则固定为：
+
+> 按 episode 发布时间倒序排列，最新发布时间放第一个。
+
+## 当前阶段
+
+已完成第一步主链：
+
+- 维护关注播客配置：`config/podcasts.yaml`
+- 读取公开 RSS feed
+- 按最近更新时间筛选新增 episode
+- 用本地 SQLite 记录已处理 episode，避免重复
+- 输出 JSON manifest 和 Markdown 清单
+
+## 目录结构
+
+- `config/`：播客关注清单和流程配置
+- `scripts/`：可直接运行的自动化脚本
+- `src/`：RSS、配置、去重等底层代码
+- `chrome-spotify-transcript-downloader/`：Chrome unpacked extension，暂时不要移动
+- `docs/gemini/`：给 Gemini 的生成协议、复查清单和最终 prompt
+- `docs/research/`：字幕来源、YouTube/Language Reactor 可行性记录
+- `docs/workflow/`：整体流程方案
+- `docs/plugin/`：Antigravity 修改插件时要看的注意事项
+- `data/`：运行数据和缓存，默认不入 git
+- `reports/`：生成的 Markdown/PDF 报告，默认不入 git
+
+## 运行
+
+检查最近 3 天的更新：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/check_new_episodes.py
+```
+
+生成好读的 Markdown 清单：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/render_episode_list.py
+```
+
+检查本次 episode 的 transcript 可用性：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/audit_transcripts.py
+```
+
+根据 Spotify Transcript Downloader 的下载结果生成 Gemini 证据包：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_evidence_pack.py data/runs/20260523-222300-manifest.json
+```
+
+如果已经确认字幕归档成功，可以把 Downloads 里的临时副本一起清掉：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py --move
+```
+
+清理项目内超过 90 天的旧 transcript，默认先预览不删除：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py
+```
+
+确认预览无误后真正删除：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py --delete
+```
+
+生成剩余 Spotify transcript 采集队列：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_spotify_collection_queue.py data/runs/20260523-222300-evidence-pack.json
+```
+
+从 evidence pack 生成 Gemini 输入包：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_gemini_input_package.py data/runs/20260523-222300-evidence-pack.json
+```
+
+Gemini 生成研报后，复查 episode 覆盖、顺序、链接、时间戳和引号证据：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/check_gemini_report.py reports/markdown/20260523-222300-gemini-report.md --manifest data/gemini_inputs/20260523-222300/episode-manifest.json --evidence data/gemini_inputs/20260523-222300/transcript-evidence-full.json
+```
+
+使用 Gemini API 自动生成研报：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/generate_gemini_report.py --package-dir data/gemini_inputs/20260523-222300
+```
+
+如果免费层额度不足以整包生成，使用逐集分段模式，可中断续跑：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/generate_chunked_gemini_report.py --package-dir data/gemini_inputs/20260523-222300 --model gemini-2.5-flash --sleep-seconds 70
+```
+
+端到端运行整条流水线。常规 Monday / Wednesday / Friday 自动化必须使用固定 15:00 Asia/Shanghai 窗口，避免延迟运行时因 `--since-days` 产生漏抓：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --schedule-window current --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70
+```
+
+如果希望研报复查通过后自动标记本批 episode 已处理：
+
+```bash
+GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_report_pipeline.py --schedule-window current --gemini-mode chunked --model gemini-2.5-flash --sleep-seconds 70 --mark-seen-on-pass
+```
+
+生产自动化请优先使用服务入口。它会按固定窗口运行 pipeline、渲染 Word/PDF、审计格式、归档 Zotero、上传 Google Drive、发送 Discord，最后才把 manifest 中的 episode 标记为已处理：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/run_scheduled_report_service.py
+```
+
+配置从 `.env` 读取，模板见 `.env.example`。外部投递不要依赖 Codex 交互授权；应在本机服务环境中预先配置：
+
+- Google Drive：配置 `SPOTIFY_GOOGLE_DRIVE_UPLOAD_CMD`，命令必须直接上传到 `1.Spotify情报汇总` 文件夹。
+- Discord：配置 `SPOTIFY_DISCORD_SEND_CMD`、`SPOTIFY_DISCORD_CWD` 和 `SPOTIFY_DISCORD_CHANNEL_ID`。
+- Zotero：如果继续写本地数据库，设置 `SPOTIFY_ZOTERO_QUIT_BEFORE_WRITE=1`，避免 Zotero 打开时锁住 sqlite。
+- 中文 transcript：如需缺中文即阻塞，设置 `SPOTIFY_REQUIRE_ZH_TRANSCRIPTS=1` 或运行时加 `--require-zh-transcripts`。
+
+生成 ASR 转写队列：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/build_transcription_queue.py
+```
+
+如果一次研报已经确认完成，再把本次发现的 episode 标记为已处理：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/check_new_episodes.py --mark-seen
+```
+
+## 输出位置
+
+- JSON 运行清单：`data/runs/*-manifest.json`
+- Markdown 更新清单：`reports/markdown/*-episode-list.md`
+- Transcript 检查报告：`reports/markdown/*-transcript-audit.md`
+- Gemini 证据包：`data/runs/*-evidence-pack.json`
+- Spotify 字幕采集队列：`data/runs/*-spotify-collection-queue.json`
+- Spotify 英文字幕归档：`data/transcripts/spotify_en/`
+- Spotify 中文字幕归档：`data/transcripts/spotify_zh/`
+- ASR 转写队列：`data/runs/*-transcription-queue.json`
+- Gemini 输入包：`data/gemini_inputs/<run_id>/`
+- Gemini 分段 episode briefs：`data/gemini_chunks/<run_id>/`
+- Gemini 自动生成研报：`reports/markdown/*-gemini-report.md`
+- Gemini 研报复查结果：`data/runs/*-gemini-review.json` 和 `reports/markdown/*-gemini-review.md`
+- Transcript 语言覆盖审计：`data/runs/*-transcript-language-audit.json` 和 `reports/markdown/*-transcript-language-audit.md`
+- 生产自动化日志：`data/service_logs/*-scheduled-report.json`
+- RSS 原始缓存：`data/feeds/`
+- 去重数据库：`data/state.sqlite`
+
+## 下一步
+
+1. 设置 `GEMINI_API_KEY`。
+2. 运行 `scripts/generate_gemini_report.py` 自动生成第一份 Gemini Markdown 研报。
+3. 运行 `scripts/check_gemini_report.py` 复查 Gemini 研报是否覆盖全部 episode 且无虚构引用。
+4. 渲染横向 PDF 研报。
+5. 接入 Telegram、Google Drive、Zotero。

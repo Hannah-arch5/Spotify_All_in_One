@@ -1,0 +1,249 @@
+# 播客关注清单
+# display_order 来自用户 2026-05-23 提供的 Spotify 截图。
+# 研报最终展示顺序：只按 episode 发布时间倒序，最新播客放第一个。
+# 播客本身的截图顺序仅用于维护关注列表，不参与研报排序。
+# rss_url / spotify_url 会在下一步逐个补全和验证。
+
+podcasts:
+  - display_order: 1
+    title: "硅谷101"
+    publisher: "硅谷101"
+    language: "zh"
+    priority: "high"
+    rss_url: "https://feeds.fireside.fm/sv101/rss"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 2
+    title: "All-In with Chamath, Jason, Sacks & Friedberg"
+    publisher: "All-In Podcast, LLC"
+    language: "en"
+    priority: "high"
+    rss_url: "https://rss.libsyn.com/shows/254861/destinations/1928300.xml"
+    spotify_url: null
+    notes: "截图显示为 All-In with Chamath, ..."
+
+  - display_order: 3
+    title: "Dwarkesh Podcast"
+    publisher: "Dwarkesh Patel"
+    language: "en"
+    priority: "high"
+    rss_url: "https://apple.dwarkesh-podcast.workers.dev/feed.rss"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 4
+    title: "Exchanges"
+    publisher: "Goldman Sachs"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://feeds.megaphone.fm/GLD9218176758"
+    spotify_url: null
+    notes: "Goldman Sachs Exchanges"
+
+  - display_order: 5
+    title: "Google DeepMind: The Podcast"
+    publisher: "Hannah Fry"
+    language: "en"
+    priority: "high"
+    rss_url: "https://feeds.simplecast.com/JT6pbPkg"
+    spotify_url: null
+    notes: "截图显示为 Google DeepMind: T..."
+
+  - display_order: 6
+    title: "Invest Like the Best"
+    publisher: "Colossus | Investing & Business Podcasts"
+    language: "en"
+    priority: "high"
+    rss_url: "https://feeds.megaphone.fm/CLS2859450455"
+    spotify_url: null
+    notes: "截图显示为 Invest Like the Best ..."
+
+  - display_order: 7
+    title: "Acquired"
+    publisher: "Ben Gilbert and David Rosenthal"
+    language: "en"
+    priority: "high"
+    rss_url: "https://feeds.transistor.fm/acquired"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 8
+    title: "BG2Pod with Brad Gerstner and Bill Gurley"
+    publisher: "BG2Pod"
+    language: "en"
+    priority: "high"
+    rss_url: "https://anchor.fm/s/f06c2370/podcast/rss"
+    spotify_url: null
+    notes: "截图显示为 BG2Pod with Brad G..."
+
+  - display_order: 9
+    title: "The Markets"
+    publisher: "Goldman Sachs"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://feeds.megaphone.fm/GLD9322922848"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 10
+    title: "No Priors: Artificial Intelligence | Technology | Startups"
+    publisher: "Conviction"
+    language: "en"
+    priority: "high"
+    rss_url: "https://feeds.megaphone.fm/nopriors"
+    spotify_url: null
+    notes: "截图显示为 No Priors: Artificial In..."
+
+  - display_order: 11
+    title: "Minus One"
+    publisher: "South Park Commons"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://anchor.fm/s/f91eac68/podcast/rss"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 12
+    title: "Long Strange Trip"
+    publisher: "Sequoia Capital"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://feeds.megaphone.fm/CPUAI1584649469"
+    spotify_url: null
+    notes: "截图显示为 Long Strange Trip: C..."
+
+  - display_order: 13
+    title: "Lenny's Podcast: Product | Growth | Career"
+    publisher: "Lenny Rachitsky"
+    language: "en"
+    priority: "high"
+    rss_url: "https://api.substack.com/feed/podcast/10845.rss"
+    spotify_url: null
+    notes: "截图显示为 Lenny's Podcast: Pro..."
+
+  - display_order: 14
+    title: "Cheeky Pint"
+    publisher: "Stripe"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://feeds.transistor.fm/cheeky-pint-with-john-collison"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 15
+    title: "Behind the Craft"
+    publisher: "Peter Yang"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://anchor.fm/s/f38497cc/podcast/rss"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 16
+    title: "Lightcone Podcast"
+    publisher: "Y Combinator"
+    language: "en"
+    priority: "high"
+    rss_url: "https://anchor.fm/s/f58d3330/podcast/rss"
+    spotify_url: null
+    notes: "来自截图 1"
+
+  - display_order: 17
+    title: "Your Episodes"
+    publisher: "Spotify"
+    language: "mixed"
+    priority: "exclude"
+    rss_url: null
+    spotify_url: null
+    notes: "Spotify 保存列表，不是独立播客源；默认排除。"
+
+  - display_order: 18
+    title: "Latent Space: The AI Engineer Podcast"
+    publisher: "Latent.Space"
+    language: "en"
+    priority: "high"
+    rss_url: "https://api.substack.com/feed/podcast/1084089.rss"
+    spotify_url: null
+    notes: "截图显示为 Latent Space: The AI ..."
+
+  - display_order: 19
+    title: "The AI Daily Brief"
+    publisher: "Nathaniel Whittemore"
+    language: "en"
+    priority: "high"
+    rss_url: "https://anchor.fm/s/f7cac464/podcast/rss"
+    spotify_url: null
+    notes: "截图显示为 The AI Daily Brief: Art..."
+
+  - display_order: 20
+    title: "The a16z Show"
+    publisher: "Andreessen Horowitz"
+    language: "en"
+    priority: "high"
+    rss_url: "https://feeds.simplecast.com/JGE3yC0V"
+    spotify_url: null
+    notes: "来自截图 2"
+
+  - display_order: 22
+    title: "The Diary Of A CEO with Steven Bartlett"
+    publisher: "FlightStory"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://rss2.flightcast.com/xmsftuzjjykcmqwolaqn6mdn"
+    spotify_url: null
+    notes: "截图显示为 The Diary Of A CEO ..."
+
+  - display_order: 23
+    title: "厚雪长波"
+    publisher: "厚雪长波"
+    language: "zh"
+    priority: "medium"
+    rss_url: "https://proxy.wavpub.com/snowball.xml"
+    spotify_url: null
+    notes: "来自截图 2"
+
+  - display_order: 24
+    title: "The Joe Rogan Experience"
+    publisher: "Joe Rogan"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://feeds.megaphone.fm/GLT1412515089"
+    spotify_url: null
+    notes: "截图显示为 The Joe Rogan Exper..."
+
+  - display_order: 25
+    title: "张小珺Jùn | 商业访谈录"
+    publisher: "张小珺"
+    language: "zh"
+    priority: "medium"
+    rss_url: "https://feed.xyzfm.space/dk4yh3pkpjp3"
+    spotify_url: null
+    notes: "截图显示为 张小珺Jùn | 商业访..."
+
+  - display_order: 26
+    title: "Modern Wisdom"
+    publisher: "Chris Williamson"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://feeds.megaphone.fm/SIXMSB5088139739"
+    spotify_url: null
+    notes: "来自截图 2"
+
+  - display_order: 27
+    title: "Lex Fridman Podcast"
+    publisher: "Lex Fridman"
+    language: "en"
+    priority: "medium"
+    rss_url: "https://lexfridman.com/feed/podcast/"
+    spotify_url: null
+    notes: "来自截图 2"
+
+  - display_order: 28
+    title: "小Lin说"
+    publisher: "小Lin说"
+    language: "zh"
+    priority: "medium"
+    rss_url: "https://feed.xyzfm.space/mkkxu98dm89e"
+    spotify_url: null
+    notes: "来自截图 2"
