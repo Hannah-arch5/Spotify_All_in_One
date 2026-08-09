@@ -2795,3 +2795,22 @@ Monday batch notes:
   - `scripts/mark_manifest_seen.py data/runs/20260809-092148-407703-manifest.json` returned `marked_seen=14`.
 - GitHub note:
   - The main Spotify project currently has no configured Git remote, so project memory can be committed locally but cannot be pushed to GitHub until a remote is configured.
+
+## 2026-08-09 GitHub Remote Restored With Public Sanitized Snapshot
+
+- Root cause for "no GitHub remote": the main Spotify project had never been bound to a GitHub repository; only the separate skill archive repo `Hannah-arch5/Spotify_MWF_Report_Skill` existed.
+- Re-authenticated GitHub CLI for account `Hannah-arch5` after the local token was invalid.
+- Created public GitHub repository: `https://github.com/Hannah-arch5/Spotify_All_in_One`.
+  - Visibility: `PUBLIC`.
+  - Default branch: `main`.
+  - Description: `Automation workflow for Hannah's M/W/F Spotify podcast intelligence reports, transcript collection, review, and delivery.`
+  - Topics: `automation`, `discord`, `gemini`, `google-drive`, `podcast`, `spotify`, `transcripts`, `zotero`.
+- Bound the local project remote:
+  - `origin https://github.com/Hannah-arch5/Spotify_All_in_One.git`.
+- Important safety decision:
+  - Did not push the full existing local Git history because it contains previously tracked `data/quarantine/...` transcript JSON samples and extensive local project memory.
+  - Instead pushed a clean public source snapshot from `/private/tmp/Spotify_All_in_One_public_sync` to GitHub `main`, commit `7666b2b Initial public source snapshot`.
+  - The public snapshot includes source code, scripts, docs, config templates, LaunchAgent plist, Chrome transcript extension, and the local Codex skill source copy. It excludes `.env`, `PROJECT_MEMORY.md`, `data/`, `reports/`, generated files, transcript archives, and runtime artifacts.
+- Future GitHub sync rule for this main project:
+  - Do not push the local `feature/transpod-auto-translate` history directly to the public repo unless the history is explicitly sanitized first.
+  - For public GitHub updates, use a clean snapshot/sync branch or a sanitized history that excludes transcript data, generated reports, `.env`, and private memory.
