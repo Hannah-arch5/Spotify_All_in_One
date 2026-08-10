@@ -2814,3 +2814,49 @@ Monday batch notes:
 - Future GitHub sync rule for this main project:
   - Do not push the local `feature/transpod-auto-translate` history directly to the public repo unless the history is explicitly sanitized first.
   - For public GitHub updates, use a clean snapshot/sync branch or a sanitized history that excludes transcript data, generated reports, `.env`, and private memory.
+
+## 2026-08-10 260810 Spotify MWF Report Delivered
+
+- Fixed schedule window:
+  - Manifest: `data/runs/20260810-174230-312727-manifest.json`.
+  - Window: `2026-08-07T07:00:00+00:00` to `2026-08-10T07:00:00+00:00`.
+  - Episode count: `13`; sort rule `published_at desc`.
+- Transcript collection and completeness:
+  - Primary transcript source used Spotify native transcript capture through Comet/CDP.
+  - DOAC Seth Godin initially also had an RSS/Flightcast transcript, but the final evidence pack used the Spotify native transcript. The duplicate Flightcast copy generated during this run was removed so the formal archive retained only one original transcript for that episode.
+  - Evidence pack: `data/runs/20260810-174230-312727-evidence-pack.json`; original transcript coverage `13/13`, missing `0`.
+  - Chinese transcript backfill used non-Gemini Google Translate lightweight endpoint from exact archived original transcript JSON files.
+  - Chinese translation status: `data/background_jobs/20260810-174230-312727-zh-translation-status.json`; source `13`, complete `13`, blocked `0`.
+  - Language audit passed with `english_found_count=13`, `chinese_found_count=13`, `chinese_missing_count=0`: `data/runs/20260810-174230-312727-transcript-language-audit.json`.
+- Report generation:
+  - Gemini input package: `data/gemini_inputs/20260810-174230-312727`.
+  - Markdown: `reports/markdown/20260810-174230-312727-gemini-report.md`.
+  - Final constructive bilingual title: `AI时代生存指南：从个人成长到企业战略，驾驭变革与风险 (AI Era Survival Guide: Navigating Change and Risk from Personal Growth to Corporate Strategy)`.
+  - Gemini review passed: `reports/markdown/20260810-174230-312727-gemini-review.md`.
+- Final artifacts:
+  - DOCX: `reports/word/260810-Spotify播客情报研报.docx`; SHA-256 `3820ecbfdc5d17ae7703c58f3ca205a3226e5e81340e5799051c9c3c4283b270`.
+  - PDF: `reports/pdf/260810-Spotify播客情报研报.pdf`; SHA-256 `94370e810cdaa820d13fbd2c56d12d6a430874825e8c43bd5349a18052a783ba`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `13` episode headings, all required labels present, PDF page count `35`.
+  - Conditional pagination check passed: 第三部分 page `31` zone `0.723`; 第四部分 page `33` zone `0.222`; 第五部分 page `34` zone `0.522`.
+  - Visual spot-check pages `31`, `33`, `34`, and `35` showed no orphan heading, excessive blank page, or bottom-quarter heading problem.
+  - PDF line-start punctuation scan passed with `0` line-start punctuation issues.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF item id `4414`, title `260810-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1786358234`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/01I16LZC/260810-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash `94370e810cdaa820d13fbd2c56d12d6a430874825e8c43bd5349a18052a783ba`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2608/google-drive/260810-Spotify播客情报研报.docx`; SHA-256 `3820ecbfdc5d17ae7703c58f3ca205a3226e5e81340e5799051c9c3c4283b270`.
+  - Staged PDF: `reports/archive/pending/2608/discord-todo/260810-Spotify播客情报研报.pdf`; SHA-256 `94370e810cdaa820d13fbd2c56d12d6a430874825e8c43bd5349a18052a783ba`.
+  - Google Drive upload verified by Drive listing containing `260810-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1786358257778-b9a9fa66-abbf-4b2a-b6c1-dd90a281d4d2-discord`, sent at `2026-08-10T10:38:53.115Z`.
+  - Discord debugging note: the queue initially only showed `Queued` because a stale local `node src/server.js` process (PID `460`) held `127.0.0.1:3000`, causing LaunchAgent `com.hannah.codex.telegrambot` to fail with `EADDRINUSE`. Killed the stale process, kickstarted the LaunchAgent, and the existing queued 260810 notification was sent without re-queueing a duplicate.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=13 removed=13 english_seen=13 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit: expected `13` unique episode IDs; English found `13`, duplicate IDs `0`, missing `0`; Chinese found `13`, duplicate IDs `0`, missing `0`.
+  - Final late-RSS audit before mark-seen: `data/runs/20260810-183946-535921-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `27`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=13 manifest=data/runs/20260810-174230-312727-manifest.json`.
+- 260810 workflow is complete end to end, including full original and Chinese transcript coverage, final report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
