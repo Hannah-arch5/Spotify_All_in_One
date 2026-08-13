@@ -884,7 +884,7 @@ def export_docx_to_pdf_with_word(docx_path: Path, pdf_path: Path) -> bool:
         pdf_path.unlink()
     script = f'''
 set inputPath to POSIX file "{docx_path}"
-set outputPath to POSIX file "{pdf_path}"
+set outputPath to "{pdf_path}"
 tell application "Microsoft Word"
     open inputPath
     delay 1

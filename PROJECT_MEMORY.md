@@ -5,6 +5,18 @@
 
 Updated: 2026-05-26 CST
 
+## 2026-08-13 CST - 260812 Spotify Report Generated, Awaiting Delivery Approval
+
+- User invoked `spotify-mwf-report` to generate the latest report. The correct fixed schedule window is the Wednesday 260812 report window (`2026-08-10T07:00:00+00:00` to `2026-08-12T07:00:00+00:00`), not the request date.
+- Manifest: `data/runs/20260813-082053-542362-manifest.json`; current-RSS late-arrival audit for the 260812 cutoff was clean. A wider audit found post-cutoff 260814-window items, which were intentionally not mixed into 260812.
+- Episode count: 10, sorted newest to oldest by `published_at`. Original/source transcript coverage reached 10/10. Nine episodes used Spotify native transcript capture through Comet/CDP; the 小Lin说 episode used the official matched Bilibili AI subtitle because Xiaoyuzhou/Spotify native transcript was not accessible in the browser.
+- Chinese transcript backfill status: original/source transcripts are complete, but Chinese archive coverage is still 0/10 for this run. `scripts/translate_spotify_transcripts_to_zh.py` correctly blocked because sending the current 260812 transcript payload to Google Translate (`clients5.google.com`) needs explicit current external-disclosure approval. Report generation proceeded from original/source transcripts, per project rule.
+- Final constructive bilingual title: `AI Agent 驱动的产业重构：从生物制药到企业运营的范式跃迁 (AI Agent-Driven Industrial Restructuring: A Paradigm Shift from Biopharma to Enterprise Operations)`.
+- Report artifacts for preview: Markdown `reports/markdown/20260813-082053-542362-gemini-report.md`; DOCX `reports/word/260812-Spotify播客情报研报.docx`; PDF `reports/pdf/260812-Spotify播客情报研报.pdf`.
+- Review/audit status: Gemini review passed; delivery format audit passed with 5 H2 sections, 10 episode headings, 10/10 required labels, PDF 30 pages; PDF line-start punctuation issues `0`. Visual page inspection confirmed the title page, third/fourth/fifth section starts, and fifth-section conditional page break are acceptable.
+- Code fix made during generation: `scripts/render_delivery_reports.py` now passes the Word PDF output path as a POSIX string instead of a `POSIX file`, because current Microsoft Word AppleScript accepted the former and rejected the latter in the renderer's sandboxed subprocess. The renderer still refuses lower-fidelity ReportLab fallback unless explicitly allowed.
+- Not yet done: external delivery to Zotero/Google Drive/Discord, transcript Downloads cleanup/dedup, final late-RSS audit, mark-seen, and full delivery memory entry. Do not mark this manifest seen until delivery gates pass or Hannah explicitly skips delivery.
+
 ## Goal
 
 Build a Monday / Wednesday / Friday podcast intelligence workflow.
