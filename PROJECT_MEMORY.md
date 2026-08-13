@@ -17,6 +17,23 @@ Updated: 2026-05-26 CST
 - Code fix made during generation: `scripts/render_delivery_reports.py` now passes the Word PDF output path as a POSIX string instead of a `POSIX file`, because current Microsoft Word AppleScript accepted the former and rejected the latter in the renderer's sandboxed subprocess. The renderer still refuses lower-fidelity ReportLab fallback unless explicitly allowed.
 - Not yet done: external delivery to Zotero/Google Drive/Discord, transcript Downloads cleanup/dedup, final late-RSS audit, mark-seen, and full delivery memory entry. Do not mark this manifest seen until delivery gates pass or Hannah explicitly skips delivery.
 
+## 2026-08-13 CST - 260812 Spotify Report Delivered
+
+- Hannah approved delivery after preview. Completed Zotero, Google Drive, Discord, transcript cleanup, duplicate audit, final late-RSS audit, and mark-seen.
+- Final files:
+  - Markdown: `reports/markdown/20260813-082053-542362-gemini-report.md`; SHA-256 `3529b6fb81941b238e288a7d77e3147d224fc5186f90903f602be96ec853f005`.
+  - DOCX: `reports/word/260812-Spotify播客情报研报.docx`; SHA-256 `8cde1a030945dc74eb41ad818df5067b511ebe31db4d9211e6a62a18333dc7da`.
+  - PDF: `reports/pdf/260812-Spotify播客情报研报.pdf`; SHA-256 `c829ced7cd17fea75ed6b2696c1d7088b281f8fb2a52f04d094cd5b1bd1507bf`.
+- Zotero: archived as direct PDF item `4415`, title `260812-Spotify播客情报研报`, backup `/Users/hannah/Zotero/zotero.sqlite.backup-1786583174`, active PDF `/Users/hannah/Zotero/storage/GRQTUW99/260812-Spotify播客情报研报.pdf`; verification hash matched local PDF.
+- Google Drive: staged/uploaded DOCX `reports/archive/pending/2608/google-drive/260812-Spotify播客情报研报.docx`; Drive listing verified `260812-Spotify播客情报研报.docx`.
+- Discord: staged/sent PDF `reports/archive/pending/2608/discord-todo/260812-Spotify播客情报研报.pdf`; live Discord Studio queue confirmed `notification_sent` id `1786583227981-19129d20-653f-4ee5-be0e-71667f01cf33-discord`.
+- Transcript cleanup: ran `scripts/import_spotify_transcripts.py --move`; Downloads transcript collector has `0` JSON files left.
+- Transcript archive audit: current-run original/source transcripts `10/10`, duplicate IDs `0`; Chinese transcripts `8/10`, duplicate IDs `0`.
+- Chinese backfill gap: missing complete Chinese transcripts for JRE `1N0R1H6p3nqZXRrrE0qvY4` and Kavak `2nqibP5Zei1t2vVqV07BUV`. Translation/backfill completed the other 8/10; do not describe this run as fully Chinese-complete until these two are resumed and verified.
+- Final late-RSS audits: after passing `--allowed-manifest data/runs/20260813-082053-542362-manifest.json`, clean audits were `data/runs/20260813-091415-461404-late-rss-arrivals-audit.json` for the current window and `data/runs/20260813-091425-299318-late-rss-arrivals-audit.json` for the previous+current window. Earlier audits without `--allowed-manifest` correctly listed the current 10 not-yet-seen episodes and should not be treated as true late arrivals.
+- Mark seen: `marked_seen=10 manifest=data/runs/20260813-082053-542362-manifest.json`.
+- Local delivery log: `data/service_logs/20260813-260812-manual-delivery.json`.
+
 ## Goal
 
 Build a Monday / Wednesday / Friday podcast intelligence workflow.
