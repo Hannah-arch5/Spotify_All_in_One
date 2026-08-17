@@ -2940,3 +2940,53 @@ Monday batch notes:
   - Mark-seen completed: `marked_seen=16 manifest=data/runs/20260815-084914-268339-manifest.json`.
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
+
+## 2026-08-17 260817 Spotify MWF Report Delivered
+
+- Fixed schedule window:
+  - Manifest: `data/runs/20260817-155211-351162-manifest.json`.
+  - Window: `2026-08-14T07:00:00+00:00` to `2026-08-17T07:00:00+00:00`.
+  - Episode count: `10`; sort rule `published_at desc`; latest episode appears first.
+- Transcript collection:
+  - Primary transcript source used Spotify native transcript capture through Comet/CDP on DevTools port `9223`.
+  - URL candidate matching found `9/10` high-confidence Spotify episode IDs; the Diary Of A CEO / Brian Greene episode had a Spotify/RSS title mismatch, so the verified RSS Flightcast transcript URL from the manifest was converted into project-standard original transcript JSON instead of accepting a low-confidence Spotify title match.
+  - Import before review confirmed original/English coverage `10/10`; evidence pack: `data/runs/20260817-155211-351162-evidence-pack.json`; collection queue ready `10`, queue `0`.
+  - Chinese language audit: `data/runs/20260817-155211-351162-transcript-language-audit.json`; English/original `10/10`, Chinese `0/10`, missing Chinese `10`.
+  - Chinese backfill blocker: no complete Chinese transcripts were available from native capture, and no explicit transcript-specific authorization for this 260817 set was given to send all 10 archived English transcripts to an external translation service. Chinese subtitles remain a required backfill item and must not be treated as complete.
+- Report generation:
+  - Gemini input package: `data/gemini_inputs/20260817-155211-351162`.
+  - Markdown: `reports/markdown/20260817-155211-351162-gemini-report.md`.
+  - Final constructive bilingual title: `AI 时代的人类韧性与产业重塑：从宇宙哲学到商业实践的深度洞察 (Human Resilience and Industrial Reshaping in the AI Era: From Cosmic Philosophy to Business Practice)`.
+  - Initial chunked Gemini final synthesis used a non-standard `情报摘要` structure and failed review for missing 第一至第五部分. Fixed by using `scripts/assemble_gemini_report_from_briefs.py` to preserve all 10 episode briefs in 第二部分 and regenerate only the integrated first/third/fourth/fifth sections, then manually replaced remaining `转述结论` lines with exact transcript-verifiable original quotes plus italicized unlabeled Chinese translations.
+  - Final Gemini review passed: `reports/markdown/20260817-155211-351162-gemini-review.md`; errors `0`, warnings `0`.
+- Final artifacts:
+  - DOCX: `reports/word/260817-Spotify播客情报研报.docx`; SHA-256 `14cb33c0c126c6f81bf60e2415f3d20113689071522bd8f6dfd5ed76be7f7c35`.
+  - PDF: `reports/pdf/260817-Spotify播客情报研报.pdf`; SHA-256 `96bb90eaa7aeb341bad995599fe960f1a31de6a55f73da46559abb71c8e367ba`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `10` episode headings, all required labels present, PDF page count `31`.
+  - Title gate passed: constructive, insight-led, bilingual, no run ID/date pileup/generic title.
+  - Episode 1 quote gate passed: meaningful source-language quotes with italicized unlabeled translation lines; no `转述结论` remains.
+  - Evidence anchor gate passed; no low-value greeting/thanks/housekeeping anchor was accepted as evidence.
+  - Conditional pagination check passed: 第三部分 page `27` zone `0.116`; 第四部分 page `28` zone `0.570`; 第五部分 page `30` zone `0.338`.
+  - Visual spot-check pages `1`, `27`, `28`, and `30` showed normal Chinese rendering, constructive bilingual title, no orphan heading, and no excessive blank page.
+  - PDF line-start punctuation scan passed with `0` line-start punctuation issues.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF attachment id `4419`, title `260817-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1786956238`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/KDF79VXO/260817-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash `96bb90eaa7aeb341bad995599fe960f1a31de6a55f73da46559abb71c8e367ba`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2608/google-drive/260817-Spotify播客情报研报.docx`; SHA-256 `14cb33c0c126c6f81bf60e2415f3d20113689071522bd8f6dfd5ed76be7f7c35`.
+  - Staged PDF: `reports/archive/pending/2608/discord-todo/260817-Spotify播客情报研报.pdf`; SHA-256 `96bb90eaa7aeb341bad995599fe960f1a31de6a55f73da46559abb71c8e367ba`.
+  - Google Drive upload verified by Drive listing containing `260817-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1786956282855-5bd728fa-7fd1-4006-8eab-2f3186374ce2-discord`, sent at `2026-08-17T08:44:47.803Z` and again logged at `2026-08-17T08:44:48.680Z` for the same queue id.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=10 removed=10 english_seen=10 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit using evidence-pack Spotify episode IDs: expected `10`; English found `10`, duplicate IDs `0`, missing `0`; Chinese found `0`, duplicate IDs `0`, missing `10`.
+  - Final late-RSS audit before mark-seen: `data/runs/20260817-164547-009898-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `26`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=10 manifest=data/runs/20260817-155211-351162-manifest.json`.
+- 260817 workflow is complete for report generation and external delivery. Remaining follow-up: obtain explicit authorization or a working non-external/native path to backfill the 10 missing Chinese transcripts; do not mark the Chinese archive as complete until all 10 zh files exist and duplicate IDs remain `0`.
+- GitHub note:
+  - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
