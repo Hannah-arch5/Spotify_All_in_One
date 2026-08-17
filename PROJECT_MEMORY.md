@@ -2951,8 +2951,9 @@ Monday batch notes:
   - Primary transcript source used Spotify native transcript capture through Comet/CDP on DevTools port `9223`.
   - URL candidate matching found `9/10` high-confidence Spotify episode IDs; the Diary Of A CEO / Brian Greene episode had a Spotify/RSS title mismatch, so the verified RSS Flightcast transcript URL from the manifest was converted into project-standard original transcript JSON instead of accepting a low-confidence Spotify title match.
   - Import before review confirmed original/English coverage `10/10`; evidence pack: `data/runs/20260817-155211-351162-evidence-pack.json`; collection queue ready `10`, queue `0`.
-  - Chinese language audit: `data/runs/20260817-155211-351162-transcript-language-audit.json`; English/original `10/10`, Chinese `0/10`, missing Chinese `10`.
-  - Chinese backfill blocker: no complete Chinese transcripts were available from native capture, and no explicit transcript-specific authorization for this 260817 set was given to send all 10 archived English transcripts to an external translation service. Chinese subtitles remain a required backfill item and must not be treated as complete.
+  - Chinese language audit before delivery: `data/runs/20260817-155211-351162-transcript-language-audit.json`; English/original `10/10`, Chinese `0/10`, missing Chinese `10`.
+  - Chinese backfill completed after Hannah explicitly authorized sending the 260817 set of 10 archived English transcripts to the Google Translate-style external translation service. Status: `data/background_jobs/20260817-155211-351162-zh-translation-status.json`; source `10`, complete `10`, blocked `0`.
+  - Final Chinese language audit after backfill: `data/runs/20260817-155211-351162-transcript-language-audit.json`; English/original `10/10`, Chinese `10/10`, missing Chinese `0`.
 - Report generation:
   - Gemini input package: `data/gemini_inputs/20260817-155211-351162`.
   - Markdown: `reports/markdown/20260817-155211-351162-gemini-report.md`.
@@ -2984,9 +2985,10 @@ Monday batch notes:
 - Cleanup, final audits, and mark-seen:
   - Post-delivery cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=10 removed=10 english_seen=10 chinese_seen=0`.
   - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
-  - Current-run formal archive duplicate audit using evidence-pack Spotify episode IDs: expected `10`; English found `10`, duplicate IDs `0`, missing `0`; Chinese found `0`, duplicate IDs `0`, missing `10`.
+  - Current-run formal archive duplicate audit after delivery before Chinese backfill: expected `10`; English found `10`, duplicate IDs `0`, missing `0`; Chinese found `0`, duplicate IDs `0`, missing `10`.
+  - Post-backfill formal archive duplicate audit using evidence-pack Spotify episode IDs: expected `10`; English found `10`, duplicate IDs `0`, missing `0`; Chinese found `10`, duplicate IDs `0`, missing `0`; no incomplete `_zh` files and no untranslated non-empty zh segments.
   - Final late-RSS audit before mark-seen: `data/runs/20260817-164547-009898-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `26`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
   - Mark-seen completed: `marked_seen=10 manifest=data/runs/20260817-155211-351162-manifest.json`.
-- 260817 workflow is complete for report generation and external delivery. Remaining follow-up: obtain explicit authorization or a working non-external/native path to backfill the 10 missing Chinese transcripts; do not mark the Chinese archive as complete until all 10 zh files exist and duplicate IDs remain `0`.
+- 260817 workflow is complete end to end, including full original and Chinese transcript coverage, final report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
