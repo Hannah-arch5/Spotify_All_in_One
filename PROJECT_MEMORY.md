@@ -5,6 +5,54 @@
 
 Updated: 2026-05-26 CST
 
+## 2026-08-19 CST - 260819 Spotify MWF Report Delivered, Chinese Backfill Awaiting Explicit Authorization
+
+- Fixed schedule window:
+  - Manifest: `data/runs/20260819-181735-315588-manifest.json`.
+  - Window: `2026-08-17T07:00:00+00:00` to `2026-08-19T07:00:00+00:00`.
+  - Episode count: `9`; sorted newest to oldest by `published_at`.
+- Transcript collection:
+  - Used Spotify native transcript capture through Comet/CDP on DevTools port `9223`.
+  - URL candidates matched all `9/9` Spotify episode IDs with high confidence.
+  - Imported original/source transcripts before report generation; original/source coverage `9/9`.
+  - Post-delivery cleanup ran `scripts/import_spotify_transcripts.py --move`; `/Users/hannah/Downloads/Spotify Transcript Collector/` loose JSON count is `0`.
+  - Current-run duplicate audit: English/original found `9/9`, duplicate IDs `0`, missing `0`; Chinese found `0/9`, duplicate IDs `0`, missing `9`.
+  - Chinese backfill is a recorded blocker, not a silent omission: Codex safety rejected the 260819 Google Translate-style external translation command without a current transcript-specific authorization. Required authorization text if Hannah wants this completed: `我已了解把 260819 的 9 份 Spotify 英文 transcript 发送给 Google Translate 风格外部翻译服务属于外部披露风险，仍明确授权你生成完整中文字幕。`
+- Report generation and content fixes:
+  - Gemini package: `data/gemini_inputs/20260819-181735-315588`.
+  - Markdown: `reports/markdown/20260819-181735-315588-gemini-report.md`.
+  - Final constructive bilingual title: `AI时代的真正分水岭：把技术奇点转化为人类韧性、组织能力与可信社会契约 (The Real AI Inflection Point: Turning Technical Singularity into Human Resilience, Organizational Capability, and a Trusted Social Contract)`.
+  - Initial final synthesis failed review because it omitted the required 第一至第五部分 H2 structure. Fixed by assembling from completed per-episode briefs with `scripts/assemble_gemini_report_from_briefs.py`, then manually replacing weak/merged quote lines with transcript-verifiable original quotes.
+  - Hannah flagged 情报 1 evidence anchors as far too many. Fixed by reducing 情报 1 anchors to `8` substantive transcript anchors and removing low-value Q&A, greetings, search traces, and repeated filler.
+  - Final Gemini review passed: `reports/markdown/20260819-181735-315588-gemini-review.md`.
+- Final artifacts:
+  - DOCX: `reports/word/260819-Spotify播客情报研报.docx`; SHA-256 `54b30401fbc2e85a2f8fa7c16d103fad5a1ef92938e188e7a567b3cbe225f1f4`.
+  - PDF: `reports/pdf/260819-Spotify播客情报研报.pdf`; SHA-256 `ea3692420cc09586639f2fb979127f917010a41ff36401b65813f6eebdc3f6cd`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `9` episode headings, all required labels present, PDF page count `26`.
+  - Title gate passed: constructive, insight-led, bilingual, no date pileup/run id/generic title.
+  - Episode 1 quote gate passed after repair; no `转述结论` or forbidden translation labels remained.
+  - Evidence-anchor gate passed after 情报 1 anchor reduction.
+  - Conditional pagination passed after adding a pagebreak before 第五部分: 第三部分 page `22` zone `0.419`, 第四部分 page `23` zone `0.649`, 第五部分 page `25` zone `0.222`.
+  - PDF line-start punctuation scan passed with `0` issues.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF item `4420`, title `260819-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1787137595`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/5V7IMYDN/260819-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash `ea3692420cc09586639f2fb979127f917010a41ff36401b65813f6eebdc3f6cd`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2608/google-drive/260819-Spotify播客情报研报.docx`; SHA-256 `54b30401fbc2e85a2f8fa7c16d103fad5a1ef92938e188e7a567b3cbe225f1f4`.
+  - Staged PDF: `reports/archive/pending/2608/discord-todo/260819-Spotify播客情报研报.pdf`; SHA-256 `ea3692420cc09586639f2fb979127f917010a41ff36401b65813f6eebdc3f6cd`.
+  - Google Drive initial `rclone copy` hung because the expired OAuth token refresh tried to reach `oauth2.googleapis.com` directly over IPv6 and timed out. Retried successfully with local proxy `127.0.0.1:7897`; Drive listing verified `260819-Spotify播客情报研报.docx`.
+  - Discord Studio queued the PDF but the queue consumer did not emit `notification_sent`; direct Discord Bot API fallback through `curl -x http://127.0.0.1:7897` succeeded. Queue id `1787138405124-e87af0df-ed76-4f40-91b7-e03ed9a1a6ba-discord` was marked `notification_sent` at `2026-08-19T11:22:44.587Z`, `directDiscordMessageId=1539595339386847303`.
+- Final late-RSS audit and mark-seen:
+  - Final late-RSS audit: `data/runs/20260819-192425-073136-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `19`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=9 manifest=data/runs/20260819-181735-315588-manifest.json`.
+- Completion status:
+  - 260819 report delivery is complete for report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate English archive audit, final late-RSS audit, and mark-seen.
+  - Chinese archive coverage remains incomplete (`0/9`) pending explicit 260819 external-translation authorization.
+
 ## 2026-08-13 CST - 260812 Spotify Report Generated, Awaiting Delivery Approval
 
 - User invoked `spotify-mwf-report` to generate the latest report. The correct fixed schedule window is the Wednesday 260812 report window (`2026-08-10T07:00:00+00:00` to `2026-08-12T07:00:00+00:00`), not the request date.
