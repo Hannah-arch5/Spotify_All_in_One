@@ -5,7 +5,7 @@
 
 Updated: 2026-08-24 CST
 
-## 2026-08-24 CST - 260824 Spotify MWF Report Delivered, Chinese Backfill Pending
+## 2026-08-24 CST - 260824 Spotify MWF Report Delivered, Chinese Backfill Completed
 
 - Fixed schedule window:
   - Manifest: `data/runs/20260824-161639-383684-manifest.json`.
@@ -16,8 +16,10 @@ Updated: 2026-08-24 CST
   - Original/source coverage reached `14/14`.
   - Source mix: episode 1 used official RSS VTT converted into project JSON; 11 episodes used `spotify_api_cdp`; episode 3 and episode 6 used transparent fallback source notes because Spotify native transcript was unavailable and Gemini audio ASR was unstable/too slow. These two should be replaced later if a full native/ASR transcript becomes available.
   - Post-delivery cleanup ran `scripts/import_spotify_transcripts.py --move`; `/Users/hannah/Downloads/Spotify Transcript Collector/` loose JSON count is `0`.
-  - Current-run duplicate audit: English/original found `14/14`, duplicate IDs `0`, missing `0`; Chinese found `0/14`, duplicate IDs `0`, missing `14`.
-  - Chinese archive coverage remains pending and must be backfilled later; do not describe 260824 as Chinese-complete.
+  - Current-run duplicate audit after delivery: English/original found `14/14`, duplicate IDs `0`, missing `0`; Chinese initially found `0/14`, duplicate IDs `0`, missing `14`.
+  - Chinese backfill completed after delivery on 2026-08-24 CST from the exact archived source transcript JSON, using the Google Translate-style `clients5` translator through the local proxy where needed. Status files include `data/background_jobs/20260824-161639-383684-zh-translation-status.json`, `data/background_jobs/20260824-161639-383684-zh-index-7-status.json`, `data/background_jobs/20260824-161639-383684-zh-index-12-status.json`, and `data/background_jobs/20260824-161639-383684-zh-index-13-14-status.json`.
+  - Final language audit: English/original found `14/14`; Chinese found `14/14`, missing `0`.
+  - Final archive dedup audit: English/original duplicate IDs `0`; Chinese duplicate IDs `0`; no `_zh_INCOMPLETE` files retained; `/Users/hannah/Downloads/Spotify Transcript Collector/` loose JSON count remained `0`.
 - Report generation and content fixes:
   - Gemini package: `data/gemini_inputs/20260824-161639-383684`.
   - Markdown: `reports/markdown/20260824-161639-383684-gemini-report.md`; SHA-256 `67d2d16696a8b39118ab865a95aba7e3b235997bda1a0904afb572048202558d` before final user-requested edits, then re-rendered after edits.
@@ -52,8 +54,7 @@ Updated: 2026-08-24 CST
   - Current-window final late-RSS audit clean: `data/runs/20260824-172852-117736-late-rss-arrivals-audit.json`; feed failures `0`, late/unprocessed `0`.
   - Mark-seen completed: `marked_seen=14 manifest=data/runs/20260824-161639-383684-manifest.json`.
 - Completion status:
-  - 260824 report delivery is complete for report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate English/original archive audit, final current-window late-RSS audit, and mark-seen.
-  - Remaining blocker: complete Chinese transcripts for `14/14` episodes are still missing and should be backfilled later from archived source transcripts without using Gemini report-generation tokens.
+  - 260824 report delivery is complete for report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, final current-window late-RSS audit, mark-seen, and Chinese transcript backfill.
   - No skill/code changes were made in this run, so public GitHub skill sync was not required.
 
 ## 2026-08-19 CST - 260819 Spotify MWF Report Delivered, Chinese Backfill Awaiting Explicit Authorization
