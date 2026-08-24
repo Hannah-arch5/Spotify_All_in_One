@@ -3,7 +3,58 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-05-26 CST
+Updated: 2026-08-24 CST
+
+## 2026-08-24 CST - 260824 Spotify MWF Report Delivered, Chinese Backfill Pending
+
+- Fixed schedule window:
+  - Manifest: `data/runs/20260824-161639-383684-manifest.json`.
+  - Window: `2026-08-21T07:00:00+00:00` to `2026-08-24T07:00:00+00:00`.
+  - Episode count: `14`; sorted newest to oldest by `published_at`.
+- Transcript collection:
+  - Used Spotify native transcript capture through Comet/CDP on DevTools port `9223` for the available Spotify-native transcripts.
+  - Original/source coverage reached `14/14`.
+  - Source mix: episode 1 used official RSS VTT converted into project JSON; 11 episodes used `spotify_api_cdp`; episode 3 and episode 6 used transparent fallback source notes because Spotify native transcript was unavailable and Gemini audio ASR was unstable/too slow. These two should be replaced later if a full native/ASR transcript becomes available.
+  - Post-delivery cleanup ran `scripts/import_spotify_transcripts.py --move`; `/Users/hannah/Downloads/Spotify Transcript Collector/` loose JSON count is `0`.
+  - Current-run duplicate audit: English/original found `14/14`, duplicate IDs `0`, missing `0`; Chinese found `0/14`, duplicate IDs `0`, missing `14`.
+  - Chinese archive coverage remains pending and must be backfilled later; do not describe 260824 as Chinese-complete.
+- Report generation and content fixes:
+  - Gemini package: `data/gemini_inputs/20260824-161639-383684`.
+  - Markdown: `reports/markdown/20260824-161639-383684-gemini-report.md`; SHA-256 `67d2d16696a8b39118ab865a95aba7e3b235997bda1a0904afb572048202558d` before final user-requested edits, then re-rendered after edits.
+  - Final constructive bilingual title: `AI 时代的重构任务：把技术突破转化为可信的社会与产业能力 (The Reconstruction Mandate in the AI Era: Turning Breakthroughs into Trusted Social and Industrial Capability)`.
+  - `gemini-2.5-flash` completed the 14 episode briefs but hit daily free-tier quota before final synthesis; `gemini-2.5-flash-lite` successfully generated the integrated first/third/fourth/fifth sections through `scripts/assemble_gemini_report_from_briefs.py`.
+  - Initial content review passed after removing weak `转述结论` labels and restoring verifiable source quotes; review file: `reports/markdown/20260824-161639-383684-gemini-review.md`.
+  - Hannah flagged 情报 12 evidence anchors as low-value. Fixed by replacing weak/irrelevant anchors with substantive transcript anchors about media as power check, information velocity creating narrative nihilism, platform monetization incentives, AI account-scale narrative manipulation, lying eroding truth perception, technical surveillance, and social-media attention hygiene.
+  - Hannah requested bold emphasis in 第三/四/五部分. Restored bold for key section judgments and strategic points. The delivery audit's "body bold emphasis" warning is therefore a user-directed style exception for this run, not an accidental formatting defect.
+- Final artifacts:
+  - DOCX: `reports/word/260824-Spotify播客情报研报.docx`; SHA-256 `18c14fa4469f245c253b6db6cfc78a01a605707c14077e447b8e340c06c06b13`.
+  - PDF: `reports/pdf/260824-Spotify播客情报研报.pdf`; SHA-256 `27235d54611de3961324f6628346389699b58b8c982e18edba835527bb062263`.
+- Quality gates:
+  - PDF audit passed with no issues; PDF page count `39`.
+  - DOCX structure counts passed: `5` H2 sections, `14` episode headings, all required labels present. The only remaining docx audit issue was the user-requested body bold emphasis in 第三/四/五部分.
+  - Title gate passed: constructive, insight-led, bilingual, no date pileup/run id/generic title.
+  - Episode 1 quote gate passed; no forbidden translation labels remained.
+  - Evidence-anchor gate passed after 情报 12 anchor replacement.
+  - Conditional pagination passed: 第三部分 page `33` zone `0.395`, 第四部分 page `35` zone `0.163`, 第五部分 page `37` zone `0.127`; no heading began in the bottom quarter.
+  - PDF line-start punctuation scan passed with `0` issues.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF item `4433`, title `260824-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1787563596`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/OGGLIT08/260824-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched local final PDF SHA-256 `27235d54611de3961324f6628346389699b58b8c982e18edba835527bb062263`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2608/google-drive/260824-Spotify播客情报研报.docx`; SHA-256 `18c14fa4469f245c253b6db6cfc78a01a605707c14077e447b8e340c06c06b13`.
+  - Staged PDF: `reports/archive/pending/2608/discord-todo/260824-Spotify播客情报研报.pdf`; SHA-256 `27235d54611de3961324f6628346389699b58b8c982e18edba835527bb062263`.
+  - Google Drive upload completed through the configured command and listing verified `260824-Spotify播客情报研报.docx`.
+  - Discord Studio sent PDF to channel `1508163671988109393`; queue id `1787563659613-1d3e0f4f-6c22-47c1-9ea4-34033d0db6ba-discord`, `notification_sent` at `2026-08-24T09:27:42.432Z`.
+- Final late-RSS audit and mark-seen:
+  - Current-window final late-RSS audit clean: `data/runs/20260824-172852-117736-late-rss-arrivals-audit.json`; feed failures `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=14 manifest=data/runs/20260824-161639-383684-manifest.json`.
+- Completion status:
+  - 260824 report delivery is complete for report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate English/original archive audit, final current-window late-RSS audit, and mark-seen.
+  - Remaining blocker: complete Chinese transcripts for `14/14` episodes are still missing and should be backfilled later from archived source transcripts without using Gemini report-generation tokens.
+  - No skill/code changes were made in this run, so public GitHub skill sync was not required.
 
 ## 2026-08-19 CST - 260819 Spotify MWF Report Delivered, Chinese Backfill Awaiting Explicit Authorization
 
