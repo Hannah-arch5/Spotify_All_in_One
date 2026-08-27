@@ -3,9 +3,9 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-08-24 CST
+Updated: 2026-08-27 CST
 
-## 2026-08-27 CST - 260826 Spotify MWF Report Generated, Awaiting Delivery Approval
+## 2026-08-27 CST - 260826 Spotify MWF Report Delivered, Chinese Backfill Completed
 
 - Fixed schedule window:
   - Manifest: `data/runs/20260827-202548-284937-manifest.json`.
@@ -19,8 +19,9 @@ Updated: 2026-08-24 CST
   - Captured Spotify native transcripts through CDP for episodes `2-9`; imported `8` original transcripts.
   - Episode `1` did not produce a high-confidence Spotify search candidate, but AI Daily Brief's official page exposed Spotify episode ID `2BJCqAHfqjRZRrtnPNImqs` and official transcript Markdown at `https://aidailybrief.ai/e/2026-08-25/transcript.md`; converted that official transcript into project JSON as source `aidailybrief_official_transcript_md`.
   - Evidence pack: `data/runs/20260827-202548-284937-evidence-pack.json`; original transcript coverage `9/9`, missing `0`.
-  - Chinese language audit before delivery: `data/runs/20260827-202548-284937-transcript-language-audit.json`; English/original `9/9`, Chinese `0/9`, missing Chinese `9`.
-  - Attempted to start Google Translate-style Chinese backfill, but Codex safety review rejected the command because it would send this run's `9` transcripts to an external translation service without a current transcript-specific authorization. This is a recorded blocker, not a silent missing-subtitle state. Required authorization text if Hannah wants this completed: `我已了解把 260826 的 9 份 Spotify/官方英文 transcript 发送给 Google Translate 风格外部翻译服务属于外部披露风险，仍明确授权你生成完整中文字幕。`
+  - Chinese language audit before delivery initially showed English/original `9/9`, Chinese `0/9`, missing Chinese `9`.
+  - Chinese backfill completed after Hannah explicitly authorized sending the `260826` set of `9` Spotify/official English transcripts to the Google Translate-style external translation service.
+  - Final language audit: `data/runs/20260827-202548-284937-transcript-language-audit.json`; English/original `9/9`, Chinese `9/9`, missing Chinese `0`; every Chinese file has all segments translated.
 - Report generation:
   - Gemini input package: `data/gemini_inputs/20260827-202548-284937`.
   - Chunked Gemini generated `9/9` episode briefs and an initial Markdown report. Initial review failed because Gemini omitted the standard 第一至第五部分 H2 structure and mistyped the episode 1 Spotify URL.
@@ -28,7 +29,7 @@ Updated: 2026-08-24 CST
   - Final Markdown: `reports/markdown/20260827-202548-284937-gemini-report.md`.
   - Final constructive bilingual title: `AI 时代的新范式：用资本、代理与信任重塑产业能力 (The New AI Paradigm: Rebuilding Industrial Capability Through Capital, Agents, and Trust)`.
   - Gemini review passed: `reports/markdown/20260827-202548-284937-gemini-review.md`.
-- Rendered preview artifacts:
+- Final artifacts:
   - DOCX: `reports/word/260826-Spotify播客情报研报.docx`; SHA-256 `48eb8b4583735ca047158d78731f0e1605e3f10a58510f6964139e6f582c49cb`.
   - PDF: `reports/pdf/260826-Spotify播客情报研报.pdf`; SHA-256 `d39006ebff4a2905da404d28158da62692ab74f4f3853a2f3f37ecffcdc56f6f`.
 - Quality gates:
@@ -38,9 +39,24 @@ Updated: 2026-08-24 CST
   - Conditional pagination passed: 第三部分 page `23` zone `0.163`, 第四部分 page `24` zone `0.337`, 第五部分 page `25` zone `0.522`; no heading began in the bottom quarter.
   - PDF line-start punctuation scan passed with `0` issues.
   - Visual spot check rendered and inspected cover plus pages `23-25`; no overlapping text or orphaned major heading observed.
-- Not yet done:
-  - Awaiting Hannah preview/delivery approval before Zotero, Google Drive, Discord, final cleanup/duplicate audit, final late-RSS audit, and mark-seen.
-  - Chinese transcript backfill still needs the explicit 260826 external-translation authorization above.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF item id `4440`, title `260826-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1787838512`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/4W4I89XQ/260826-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash `d39006ebff4a2905da404d28158da62692ab74f4f3853a2f3f37ecffcdc56f6f`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2608/google-drive/260826-Spotify播客情报研报.docx`; SHA-256 `48eb8b4583735ca047158d78731f0e1605e3f10a58510f6964139e6f582c49cb`.
+  - Staged PDF: `reports/archive/pending/2608/discord-todo/260826-Spotify播客情报研报.pdf`; SHA-256 `d39006ebff4a2905da404d28158da62692ab74f4f3853a2f3f37ecffcdc56f6f`.
+  - Google Drive upload verified by Drive listing containing `260826-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1787838550163-35b8e77c-dfae-4e70-92f4-6122a5338432-discord`, sent at `2026-08-27T13:49:14.580Z`.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=8 removed=8 english_seen=8 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit: expected `9` unique episode IDs; English/original found `9`, duplicate IDs `0`, missing `0`; Chinese found `9`, duplicate IDs `0`, missing `0`; no `_zh_INCOMPLETE` files retained.
+  - Final live/proxy late-RSS audit before mark-seen: `data/runs/20260827-215203-257048-late-rss-arrivals-audit.json`; feed failures `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=9 manifest=data/runs/20260827-202548-284937-manifest.json`.
+  - 260826 workflow is complete end to end, including full original and Chinese transcript coverage, final report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
 
 ## 2026-08-24 CST - 260824 Spotify MWF Report Delivered, Chinese Backfill Completed
 
