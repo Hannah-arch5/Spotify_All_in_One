@@ -3,7 +3,46 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-08-27 CST
+Updated: 2026-08-28 CST
+
+## 2026-08-28 CST - 260828 Spotify MWF Report Generated, Awaiting Preview/Delivery Approval
+
+- Fixed schedule window:
+  - Manifest: `data/runs/20260828-182541-279450-manifest.json`.
+  - Intended report date/filename: `260828`.
+  - Window: `2026-08-26T07:00:00+00:00` to `2026-08-28T07:00:00+00:00`.
+  - Episode count: `17`; sorted newest to oldest by `published_at`.
+- Pre-generation late RSS audit:
+  - Live/proxy RSS audit `data/runs/20260828-182514-583500-late-rss-arrivals-audit.json` found `17` unprocessed episodes in the 260828 window with feed failures `0`; these are the normal current-window episodes, not a past-window leak.
+- Transcript collection:
+  - Comet was relaunched with `--remote-debugging-port=9223`.
+  - Spotify URL candidate matching found all `17/17` episode URLs with confidence `1`.
+  - Captured Spotify native transcripts through CDP for all `17/17` episodes, including long JRE/DOAC/Lex episodes and Chinese-language episodes.
+  - Import result before generation: `imported=17 skipped=1 removed=0 english_seen=17 chinese_seen=0`.
+  - Evidence pack: `data/runs/20260828-182541-279450-evidence-pack.json`; original transcript coverage `17/17`, missing `0`.
+  - Chinese language audit before delivery: `data/runs/20260828-182541-279450-transcript-language-audit.json`; English/original `17/17`, Chinese `0/17`, missing Chinese `17`.
+  - Chinese backfill is still required as a completeness artifact, but needs a separate current external-translation authorization for sending this `260828` transcript set to the Google Translate-style service. Do not silently leave this gap after delivery.
+- Report generation:
+  - Gemini input package: `data/gemini_inputs/20260828-182541-279450`.
+  - `gemini-2.5-flash` completed all `17/17` episode briefs, then hit free-tier final-report quota (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, limit `20`) before final synthesis.
+  - Reassembled with `scripts/assemble_gemini_report_from_briefs.py` using `gemini-2.5-flash-lite`, preserving every completed episode brief in 第二部分 and generating only the integrated 第一/三/四/五 sections.
+  - Final Markdown: `reports/markdown/20260828-182541-279450-gemini-report.md`.
+  - Final constructive bilingual title: `把 AI 冲击转化为可信能力：从人类动机、产业基础设施到科学治理的系统重建 (Turning AI Disruption into Trusted Capability: Rebuilding Human Motivation, Industrial Infrastructure, and Scientific Governance)`.
+  - Initial review failed for two mistyped Spotify URL case errors and three key-quote timestamp markers; fixed the URLs, removed timestamp markers from key quotes, replaced warning-prone quote strings with transcript-verifiable source lines, and reran review.
+  - Final Gemini/content review passed: `reports/markdown/20260828-182541-279450-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260828-Spotify播客情报研报.docx`; SHA-256 `8609c83da7d6971b7a7e142e52cb8b7c2f8d269310b1a097695cc7f173a4ab6b`.
+  - PDF: `reports/pdf/260828-Spotify播客情报研报.pdf`; SHA-256 `cf3302c5387efc96ee789e65981cc474771a4bd689f0e6d7c353230670b28553`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `17` episode headings, all required labels present, PDF page count `46`.
+  - Title gate passed: constructive, insight-led, bilingual, no date pileup/run id/generic title.
+  - Gemini/content review passed after link/quote fixes.
+  - Conditional pagination passed: 第三部分 page `41` zone `0.594`, 第四部分 page `43` zone `0.547`, 第五部分 page `45` zone `0.116`; no heading began in the bottom quarter.
+  - PDF line-start punctuation scan passed with `0` issues.
+  - Visual spot check rendered and inspected cover plus pages `41`, `43`, and `45`; no overlapping text, excessive blank page, or orphaned major heading observed.
+- Not yet done:
+  - Awaiting Hannah preview/delivery approval before Zotero, Google Drive, Discord, final cleanup/duplicate audit, final late-RSS audit, and mark-seen.
+  - Chinese transcript backfill still needs explicit `260828` external-translation authorization unless a local/non-external translation route is provided.
 
 ## 2026-08-27 CST - 260826 Spotify MWF Report Delivered, Chinese Backfill Completed
 
