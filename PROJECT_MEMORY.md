@@ -3,7 +3,44 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-08-28 CST
+Updated: 2026-09-02 CST
+
+## 2026-09-02 CST - 260901 And 260902 Spotify Reports Generated, Awaiting Preview/Delivery Approval
+
+- 260901 fixed window:
+  - Manifest: `data/runs/20260902-163300-708944-manifest.json`.
+  - Intended report date/filename: `260901`.
+  - Window: `2026-08-28T07:00:00+00:00` to `2026-09-01T07:00:00+00:00`.
+  - Episode count: `16`; sorted newest to oldest by `published_at`.
+  - Original/source transcript coverage: `16/16`; evidence pack `data/runs/20260902-163300-708944-evidence-pack.json`.
+  - Chinese transcript coverage: `16/16`; final audit `data/runs/20260902-163300-708944-transcript-language-audit.json`.
+  - Final constructive bilingual title: `在AI机器时代建立可控增长：用基础设施、治理与自主工具链应对失控风险 (Building Controllable Growth in the AI Machine Age: Infrastructure, Governance, and Self-Owned Toolchains)`.
+  - Final Markdown: `reports/markdown/20260902-163300-708944-gemini-report.md`; SHA-256 `75be2014df9f1179f47925259a798b40560e6304993481e096a16c1d1d614987`.
+  - DOCX: `reports/word/260901-Spotify播客情报研报.docx`; SHA-256 `8348155f06bcf98c3af524a48b8a19da0769eec5b18b510a87ecd07c2a35df70`.
+  - PDF: `reports/pdf/260901-Spotify播客情报研报.pdf`; SHA-256 `c4ce545f426b8c4f4ef86b0402f859605646e2e965889b1d46627d9f2c25bd7c`.
+  - Gemini/content review passed: `reports/markdown/20260902-163300-708944-gemini-review.md`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `16` episode headings, required labels `16/16`, PDF page count `44`.
+  - Pagination/line-break gates passed: no checked heading began in the bottom quarter; PDF line-start punctuation scan returned `0` issues.
+- 260902 fixed window:
+  - Manifest: `data/runs/20260902-183519-241217-manifest.json`.
+  - Intended report date/filename: `260902`.
+  - Effective non-overlap window: `2026-09-01T07:00:00+00:00` to `2026-09-02T07:00:00+00:00`; this excluded `4` episodes already covered by 260901.
+  - Episode count: `6`; sorted newest to oldest by `published_at`.
+  - Spotify native transcript capture through Comet/CDP found all `6/6` high-confidence Spotify episode URLs and saved all `6/6` original transcripts.
+  - Original/source transcript coverage: `6/6`; evidence pack `data/runs/20260902-183519-241217-evidence-pack.json`.
+  - Chinese transcript coverage: `6/6`; final audit `data/runs/20260902-183519-241217-transcript-language-audit.json`.
+  - Gemini `gemini-2.5-flash` hit free-tier quota after `4/6` briefs; resumed with `gemini-2.5-flash-lite`, preserving existing briefs and completing the final report.
+  - Final constructive bilingual title: `让AI代理走向可控协作：在算力约束与自主行为风险中寻找产业落点 (Making AI Agents Collaborate Safely: Finding Industrial Traction Amid Compute Limits and Autonomy Risks)`.
+  - Final Markdown: `reports/markdown/20260902-183519-241217-gemini-report.md`; SHA-256 `679a2400ceb41dbc7b5eb19ba55d0512e9503e58686bc8421073b3b2a52fa359`.
+  - DOCX: `reports/word/260902-Spotify播客情报研报.docx`; SHA-256 `ea29e6eacf92e383c81c82ac9496865c504097bec4917d7b6a0ce902b59c3c64`.
+  - PDF: `reports/pdf/260902-Spotify播客情报研报.pdf`; SHA-256 `663dfa16c3d87ed9a94ec0fafe31dca0e32a3d57a3bee14eb25f2a8971ede985`.
+  - Gemini/content review passed: `reports/markdown/20260902-183519-241217-gemini-review.md`.
+  - Delivery-format audit passed with no issues: `5` H2 sections, `6` episode headings, required labels `6/6`, PDF page count `19`.
+  - Pagination/line-break gates passed: 第三部分 page `15` zone `0.350`, 第四部分 page `16` zone `0.638`, 第五部分 page `18` zone `0.384`; episode headings all outside the bottom quarter; PDF line-start punctuation scan returned `0` issues.
+- Not yet done:
+  - Awaiting Hannah preview/delivery approval before Zotero, Google Drive, Discord, final Downloads cleanup, duplicate-ID archive audit, final late-RSS audit, and mark-seen.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` still contains `37` JSON files; do not clean them until delivery gates succeed.
+  - Git status is clean for tracked source/doc changes after this memory update is applied only locally; generated report/transcript artifacts are ignored by git.
 
 ## 2026-08-28 CST - 260828 Spotify MWF Report Generated, Awaiting Preview/Delivery Approval
 
