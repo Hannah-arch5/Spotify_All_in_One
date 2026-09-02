@@ -5,7 +5,7 @@
 
 Updated: 2026-09-02 CST
 
-## 2026-09-02 CST - 260901 And 260902 Spotify Reports Generated, Awaiting Preview/Delivery Approval
+## 2026-09-02 CST - 260901 And 260902 Spotify Reports Delivered
 
 - 260901 fixed window:
   - Manifest: `data/runs/20260902-163300-708944-manifest.json`.
@@ -21,6 +21,9 @@ Updated: 2026-09-02 CST
   - Gemini/content review passed: `reports/markdown/20260902-163300-708944-gemini-review.md`.
   - Delivery-format audit passed with no issues: `5` H2 sections, `16` episode headings, required labels `16/16`, PDF page count `44`.
   - Pagination/line-break gates passed: no checked heading began in the bottom quarter; PDF line-start punctuation scan returned `0` issues.
+  - Zotero archived as direct PDF item `4442`, title `260901-Spotify播客情报研报`; backup `/Users/hannah/Zotero/zotero.sqlite.backup-1788349942`; active PDF `/Users/hannah/Zotero/storage/3MMTBSSG/260901-Spotify播客情报研报.pdf`; Zotero hash matched local PDF SHA-256 `c4ce545f426b8c4f4ef86b0402f859605646e2e965889b1d46627d9f2c25bd7c`.
+  - Google Drive staged DOCX: `reports/archive/pending/2609/google-drive/260901-Spotify播客情报研报.docx`; staged hash matched local DOCX SHA-256 `8348155f06bcf98c3af524a48b8a19da0769eec5b18b510a87ecd07c2a35df70`; Drive listing verified `260901-Spotify播客情报研报.docx`.
+  - Discord staged PDF: `reports/archive/pending/2609/discord-todo/260901-Spotify播客情报研报.pdf`; staged hash matched local PDF SHA-256 `c4ce545f426b8c4f4ef86b0402f859605646e2e965889b1d46627d9f2c25bd7c`; Discord `#todo` sent and queue marked `notification_sent`, id `1788349953968-dcd4e15a-960c-4ed4-ae65-f3230d1623ec-discord`, direct Discord message id `1544677299712958485`.
 - 260902 fixed window:
   - Manifest: `data/runs/20260902-183519-241217-manifest.json`.
   - Intended report date/filename: `260902`.
@@ -37,10 +40,19 @@ Updated: 2026-09-02 CST
   - Gemini/content review passed: `reports/markdown/20260902-183519-241217-gemini-review.md`.
   - Delivery-format audit passed with no issues: `5` H2 sections, `6` episode headings, required labels `6/6`, PDF page count `19`.
   - Pagination/line-break gates passed: 第三部分 page `15` zone `0.350`, 第四部分 page `16` zone `0.638`, 第五部分 page `18` zone `0.384`; episode headings all outside the bottom quarter; PDF line-start punctuation scan returned `0` issues.
-- Not yet done:
-  - Awaiting Hannah preview/delivery approval before Zotero, Google Drive, Discord, final Downloads cleanup, duplicate-ID archive audit, final late-RSS audit, and mark-seen.
-  - `/Users/hannah/Downloads/Spotify Transcript Collector/` still contains `37` JSON files; do not clean them until delivery gates succeed.
-  - Git status is clean for tracked source/doc changes after this memory update is applied only locally; generated report/transcript artifacts are ignored by git.
+  - Zotero archived as direct PDF item `4443`, title `260902-Spotify播客情报研报`; backup `/Users/hannah/Zotero/zotero.sqlite.backup-1788349955`; active PDF `/Users/hannah/Zotero/storage/VBVSWW97/260902-Spotify播客情报研报.pdf`; Zotero hash matched local PDF SHA-256 `663dfa16c3d87ed9a94ec0fafe31dca0e32a3d57a3bee14eb25f2a8971ede985`.
+  - Google Drive staged DOCX: `reports/archive/pending/2609/google-drive/260902-Spotify播客情报研报.docx`; staged hash matched local DOCX SHA-256 `ea29e6eacf92e383c81c82ac9496865c504097bec4917d7b6a0ce902b59c3c64`; Drive listing verified `260902-Spotify播客情报研报.docx`.
+  - Discord staged PDF: `reports/archive/pending/2609/discord-todo/260902-Spotify播客情报研报.pdf`; staged hash matched local PDF SHA-256 `663dfa16c3d87ed9a94ec0fafe31dca0e32a3d57a3bee14eb25f2a8971ede985`; Discord `#todo` sent and queue marked `notification_sent`, id `1788349966423-b13b3857-1222-421a-8498-a390d5a9c28a-discord`, direct Discord message id `1544677308168675469`.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup ran `scripts/import_spotify_transcripts.py --move`: `imported=0 skipped=37 removed=37 english_seen=36 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit passed:
+    - 260901 expected `16`; English/original found `16`, duplicate IDs `0`, missing `0`, incomplete `0`; Chinese found `16`, duplicate IDs `0`, missing `0`, incomplete `0`.
+    - 260902 expected `6`; English/original found `6`, duplicate IDs `0`, missing `0`, incomplete `0`; Chinese found `6`, duplicate IDs `0`, missing `0`, incomplete `0`.
+  - Final late-RSS audit before mark-seen, allowing the two in-flight manifests, passed: `data/runs/20260902-195934-091044-late-rss-arrivals-audit.json`.
+  - Mark-seen completed: `marked_seen=16 manifest=data/runs/20260902-163300-708944-manifest.json`; `marked_seen=6 manifest=data/runs/20260902-183519-241217-manifest.json`.
+  - Final post-mark-seen late-RSS audit passed clean: `data/runs/20260902-200124-906919-late-rss-arrivals-audit.json`.
+  - Root cause/operational note: Discord Studio queue insertion succeeded, but the automatic consumer did not send because its cron worker hit `EADDRINUSE` on `127.0.0.1:3000`. Direct Discord bot fallback sent both PDFs successfully and appended `notification_sent` for the queued ids to prevent later duplicate sends.
 
 ## 2026-08-28 CST - 260828 Spotify MWF Report Generated, Awaiting Preview/Delivery Approval
 
