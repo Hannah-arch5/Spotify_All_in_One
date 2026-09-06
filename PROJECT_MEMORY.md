@@ -3,7 +3,46 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-09-02 CST
+Updated: 2026-09-06 CST
+
+## 2026-09-06 CST - 260904 Spotify MWF Report Generated, Awaiting Preview/Delivery Approval
+
+- Fixed schedule window:
+  - Manifest: `data/runs/20260906-062230-245927-manifest.json`.
+  - Intended report date/filename: `260904`.
+  - Window: `2026-09-02T07:00:00+00:00` to `2026-09-04T07:00:00+00:00`.
+  - Episode count: `11`; sorted newest to oldest by `published_at`.
+- Pre-generation completeness checks:
+  - LaunchAgent `com.hannah.spotify-podcast-report` was registered but not running (`active count = 0`).
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose JSON count before collection: `0`.
+  - Live/proxy late-RSS audit for previous+current window passed clean: `data/runs/20260906-062334-413975-late-rss-arrivals-audit.json`; `late_unprocessed_count=0`, `feed_failures=0`.
+  - The initial sandboxed RSS check produced a bad all-feed-failure manifest `data/runs/20260906-062205-180135-manifest.json`; it was discarded and replaced by the live/proxy manifest above.
+- Transcript collection:
+  - Original/source transcript coverage reached `11/11`; evidence pack `data/runs/20260906-062230-245927-evidence-pack.json`.
+  - Used Comet/CDP native Spotify transcript capture on DevTools port `9223` for `10/11` episodes.
+  - Episode 6, `Andrew Huberman: Stop Wasting Money On Bad Vitamins, I Take THESE Supplements Every Single Day!`, had only a low-confidence Spotify search match (`0.508`), so the low-confidence candidate was not used. Instead, RSS official VTT `https://rss.flightcast.com/transcripts/01M0ZPY4TQJ3P79EJ838S4NJAD.vtt` was converted into project JSON as `rss_vtt_transcript`.
+  - Chinese transcript backfill completed after Hannah explicitly authorized this `260904` set: `data/background_jobs/20260906-062230-245927-zh-cdp-translation-status.json`; `source_count=11`, `complete_count=11`, `blocked_count=0`.
+  - Final language audit passed: `data/runs/20260906-062230-245927-transcript-language-audit.json`; English/source `11/11`, Chinese `11/11`, missing Chinese `0`.
+- Report generation:
+  - Gemini input package: `data/gemini_inputs/20260906-062230-245927`.
+  - Chunked Gemini generated all `11/11` episode briefs with `gemini-2.5-flash`.
+  - Initial final report failed review because Gemini omitted the standard five-section H2 structure and mistyped two Spotify episode URLs. Reassembled from completed briefs with `scripts/assemble_gemini_report_from_briefs.py` using `gemini-2.5-flash-lite`, then fixed the two links manually.
+  - Final constructive bilingual title: `把 AI 效率转化为可持续组织能力：从代理循环、芯片基础设施到个性化医疗的落地路径 (Turning AI Efficiency into Sustainable Organizational Capability: From Agentic Loops and Chip Infrastructure to Personalized Medicine)`.
+  - Final Markdown: `reports/markdown/20260906-062230-245927-gemini-report.md`.
+  - Gemini/content review passed: `reports/markdown/20260906-062230-245927-gemini-review.md`.
+- Rendered preview artifacts:
+  - DOCX: `reports/word/260904-Spotify播客情报研报.docx`; SHA-256 `9a783a254f37275c4fa3ea1e343567ff6653d50b1c196d792c51d9faad9c6bd5`.
+  - PDF: `reports/pdf/260904-Spotify播客情报研报.pdf`; SHA-256 `5b16d7553ff340308456dcd72425fa75746f4693fa5bbe5c7a4d46dec52cb2d9`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `11` episode headings, required labels `11/11`, PDF page count `31`.
+  - Title gate passed: constructive, insight-led, bilingual, no date pileup/run id/generic title.
+  - Episode 1 quote gate passed; forbidden translation/explanation labels scan returned `0`.
+  - Gemini/content review passed after structure/link fixes.
+  - Conditional pagination and visual checks passed: 第三部分 page `28` zone `0.187`, 第四部分 page `29` zone `0.384`, 第五部分 page `30` zone `0.545`; no checked major heading began in the bottom quarter, and sections flowed naturally without forced blank pages.
+  - PDF line-start punctuation scan passed with `0` issues using bundled Poppler `pdftotext`.
+- Not yet done:
+  - Awaiting Hannah preview/delivery approval before Zotero, Google Drive, Discord, final cleanup, formal duplicate archive audit, final late-RSS audit, and mark-seen.
+  - Downloads currently contains the `11` raw transcript JSON files captured/converted for this run; run `scripts/import_spotify_transcripts.py --move` only after delivery gates succeed, then verify loose JSON count returns to `0`.
 
 ## 2026-09-02 CST - 260901 And 260902 Spotify Reports Delivered
 
