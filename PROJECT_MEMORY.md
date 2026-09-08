@@ -5,7 +5,7 @@
 
 Updated: 2026-09-06 CST
 
-## 2026-09-06 CST - 260904 Spotify MWF Report Generated, Awaiting Preview/Delivery Approval
+## 2026-09-06 CST - 260904 Spotify MWF Report Delivered
 
 - Fixed schedule window:
   - Manifest: `data/runs/20260906-062230-245927-manifest.json`.
@@ -40,9 +40,24 @@ Updated: 2026-09-06 CST
   - Gemini/content review passed after structure/link fixes.
   - Conditional pagination and visual checks passed: 第三部分 page `28` zone `0.187`, 第四部分 page `29` zone `0.384`, 第五部分 page `30` zone `0.545`; no checked major heading began in the bottom quarter, and sections flowed naturally without forced blank pages.
   - PDF line-start punctuation scan passed with `0` issues using bundled Poppler `pdftotext`.
-- Not yet done:
-  - Awaiting Hannah preview/delivery approval before Zotero, Google Drive, Discord, final cleanup, formal duplicate archive audit, final late-RSS audit, and mark-seen.
-  - Downloads currently contains the `11` raw transcript JSON files captured/converted for this run; run `scripts/import_spotify_transcripts.py --move` only after delivery gates succeed, then verify loose JSON count returns to `0`.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF item `4445`, title `260904-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1788688743`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/L4Q5Z850/260904-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched local PDF SHA-256 `5b16d7553ff340308456dcd72425fa75746f4693fa5bbe5c7a4d46dec52cb2d9`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2609/google-drive/260904-Spotify播客情报研报.docx`; SHA-256 `9a783a254f37275c4fa3ea1e343567ff6653d50b1c196d792c51d9faad9c6bd5`.
+  - Staged PDF: `reports/archive/pending/2609/discord-todo/260904-Spotify播客情报研报.pdf`; SHA-256 `5b16d7553ff340308456dcd72425fa75746f4693fa5bbe5c7a4d46dec52cb2d9`.
+  - Google Drive upload completed and Drive listing verified `260904-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1788688786010-00ffe288-5a3f-47c5-8749-cd856ef60d3e-discord`, sent at `2026-09-06T09:59:50.315Z`.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup ran `scripts/import_spotify_transcripts.py --move`: `imported=0 skipped=11 removed=11 english_seen=11 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit passed: expected `11`; English/source found `11`, duplicate IDs `0`, missing `0`, incomplete `0`; Chinese found `11`, duplicate IDs `0`, missing `0`, incomplete `0`.
+  - Final live/proxy late-RSS audit before mark-seen passed: `data/runs/20260906-180119-861709-late-rss-arrivals-audit.json`; `feed_failures=0`, `late_unprocessed_count=0`.
+  - Mark-seen completed: `marked_seen=11 manifest=data/runs/20260906-062230-245927-manifest.json`.
+  - 260904 workflow is complete end to end for report generation, full original and Chinese transcript coverage, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, final late-RSS audit, and mark-seen.
 
 ## 2026-09-02 CST - 260901 And 260902 Spotify Reports Delivered
 
