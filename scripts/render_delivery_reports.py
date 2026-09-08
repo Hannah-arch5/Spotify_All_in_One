@@ -889,7 +889,7 @@ tell application "Microsoft Word"
     open inputPath
     delay 1
     set reportDocument to active document
-    save as reportDocument file name outputPath file format format PDF
+    save as reportDocument file name outputPath file format 17
     close reportDocument saving no
 end tell
 '''
