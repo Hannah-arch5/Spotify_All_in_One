@@ -3236,6 +3236,112 @@ Monday batch notes:
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
 
+## 2026-09-10 CST - 260909 Spotify MWF Report Delivered
+
+- Fixed schedule window:
+  - Intended report date: `260909` (Wednesday), based on the scheduled cutoff rather than the request date.
+  - Manifest: `data/runs/20260910-185721-028271-manifest.json`.
+  - Window: `2026-09-07T07:00:00+00:00` to `2026-09-09T07:00:00+00:00`.
+  - Episode count: `7`; manifest order verified as `published_at desc`.
+- Transcript collection and Chinese backfill:
+  - Primary transcript source used Spotify native transcript capture through Comet/CDP on DevTools port `9223`; identity verification succeeded for all `7` Spotify episode IDs before save.
+  - Evidence pack: `data/runs/20260910-185721-028271-evidence-pack.json`; original/English coverage `7/7`, missing `0`.
+  - Hannah explicitly authorized sending this 260909 set to the Google Translate-style external translation service and Gemini.
+  - Chinese backfill completed from the exact archived English transcript JSON for all `7` episodes. Final language audit: `data/runs/20260910-185721-028271-transcript-language-audit.json`; English `7/7`, Chinese `7/7`, missing Chinese `0`, untranslated non-empty segments `0`.
+- Report generation:
+  - Gemini input package: `data/gemini_inputs/20260910-185721-028271`.
+  - Chunked generation completed `7/7` episode briefs, but the final large synthesis call failed after the briefs were saved. Used `scripts/assemble_gemini_report_from_briefs.py` with `gemini-2.5-flash-lite` to preserve all episode briefs in 第二部分 and generate the integrated first/third/fourth/fifth sections.
+  - Markdown: `reports/markdown/20260910-185721-028271-gemini-report.md`.
+  - Final constructive bilingual title: `AI 的下一场竞争：把新能力转化为团队与制度优势 (The Next AI Race: Turning New Capabilities into Team and Institutional Advantage)`.
+  - Fixed one malformed Spotify episode URL, normalized every quote translation to italic unlabeled text, and removed the remaining `转述结论` label before final review.
+  - Final Gemini review passed: `reports/markdown/20260910-185721-028271-gemini-review.md`; errors `0`, warnings `0`.
+- Final artifacts:
+  - DOCX: `reports/word/260909-Spotify播客情报研报.docx`; SHA-256 `77b6b2be6313f7e79089add40a0f8884892404aba65b6c52174c093e813dd87f`.
+  - PDF: `reports/pdf/260909-Spotify播客情报研报.pdf`; SHA-256 `9373c9bc0a51700704014a921dc0828a0b80be0c6b30eb4d558ae321f2367089`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `7` episode headings, all required labels present, PDF page count `22`.
+  - Title gate passed: constructive, insight-led, bilingual, no run ID/date pileup/generic title.
+  - Episode 1 quote gate passed: meaningful source-language quotes with italicized unlabeled translations.
+  - Evidence-anchor gate passed; no greeting, thanks, ad, housekeeping, or closing pleasantry was accepted as evidence.
+  - Sections 3/4/5 remained integrated cross-episode analysis rather than per-episode summaries; key subtitle content is bold.
+  - Conditional pagination check passed: 第三部分 page `18` zone `0.187`; 第四部分 page `19` zone `0.477`; 第五部分 page `20` zone `0.696`. No major section was blindly forced to a new page.
+  - Visual spot-check pages `1`, `18`, `19`, and `20` showed normal Chinese rendering, no orphan heading, no overlap, and no excessive blank page.
+  - PDF line-start punctuation scan passed with `0` issues; banned translation labels (`中文解释`, `中文翻译`, `英文解释`, `英文翻译`, `转述结论`) did not remain.
+  - Word export note: the first sandboxed attempt could not load Word automation and misreported an AppleScript syntax error; rerunning the unchanged renderer with approved Microsoft Word automation succeeded. No lower-fidelity fallback was used and no renderer code change was needed.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF attachment id `4447`, title `260909-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1789040751`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/L8O1PLHI/260909-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash `9373c9bc0a51700704014a921dc0828a0b80be0c6b30eb4d558ae321f2367089`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2609/google-drive/260909-Spotify播客情报研报.docx`; hash matched the local DOCX.
+  - Staged PDF: `reports/archive/pending/2609/discord-todo/260909-Spotify播客情报研报.pdf`; hash matched the local PDF.
+  - Google Drive upload verified by remote listing containing `260909-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by `notification_sent`: queue id `1789040791158-9ff52c60-784f-4eed-be37-c35f1ab1c2bd-discord`, sent at `2026-09-10T11:50:32.496Z`, Discord message id `1547574998598815794`.
+  - Discord root cause and recovery: the existing port `3000` server had failed its Discord login because of a network timeout and did not reconnect, while watchdog retries hit `EADDRINUSE`. The pending item was sent once using the existing Discord Studio Bot configuration, then the same queue id was marked `notification_sent` to prevent duplicate delivery.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=7 removed=7 english_seen=7 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run archive audit: expected `7`; English found `7`, missing `0`, duplicate IDs `0`; Chinese found `7`, missing `0`, duplicate IDs `0`, incomplete IDs `0`.
+  - Final late-RSS audit: `data/runs/20260910-195244-975755-late-rss-arrivals-audit.json`; configured podcasts `27`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=7 manifest=data/runs/20260910-185721-028271-manifest.json`.
+- GitHub note:
+  - No Spotify skill/source code changed during this report-only run. The only repository change is private `PROJECT_MEMORY.md`, which includes local Zotero paths and Discord identifiers and is not suitable for the public GitHub snapshot without separate explicit authorization.
+
+## 2026-09-08 CST - 260907 Spotify MWF Report Delivered
+
+- Fixed schedule window:
+  - Intended report date: `260907` (Monday), not the request date.
+  - Base manifest: `data/runs/20260908-173648-458497-manifest.json`.
+  - Final plus-late manifest: `data/runs/20260908-173648-458497-plus-late-manifest.json`.
+  - Window: `2026-09-04T07:00:00+00:00` to `2026-09-07T07:00:00+00:00`.
+  - Base RSS run found `11` episodes; required late-RSS audit found `3` a16z episodes from a feed parse failure and they were appended to the final 260907 report as late arrivals. Final report episode count: `14`, sorted by `published_at desc`.
+- Transcript collection and Chinese backfill:
+  - Primary transcript source used Spotify native transcript capture through Comet/CDP on DevTools port `9223`.
+  - 12/14 episodes were captured from Spotify native transcripts with high-confidence episode IDs.
+  - The Diary Of A CEO / Dr Leanne ten Brinke episode used its official RSS VTT transcript URL and was converted into project-standard JSON; segment count `1397`.
+  - The 厚雪长波 episode could not be safely matched to a current Spotify episode; the only Spotify candidate was low-confidence and pointed to an older episode, so it was rejected. Xiaoyuzhou/RSS exposed official show notes but no full verbatim transcript; saved as `xiaoyuzhou_official_show_notes` with explicit low-fidelity notes and did not pretend it was a complete transcript.
+  - Original/English evidence gate passed: `missing_transcripts=0`; evidence pack `data/runs/20260908-173648-458497-plus-late-evidence-pack.json`.
+  - Hannah explicitly authorized sending the 260907 set to the Google Translate-style external translation service and Gemini. Chinese backfill completed for all 14 episodes.
+  - Final transcript language audit: `data/runs/20260908-173648-458497-plus-late-transcript-language-audit.json`; English/original `14/14`, Chinese `14/14`, missing Chinese `0`.
+- Report generation:
+  - Full Gemini run initially hung at the final synthesis call after package creation. Switched to chunked generation; `14/14` episode briefs were completed under `data/gemini_chunks/20260908-173648-458497-plus-late/`.
+  - The chunked final synthesis also hung at the final report call, so used `scripts/assemble_gemini_report_from_briefs.py` with `gemini-2.5-flash-lite` to assemble the complete report from the completed briefs.
+  - Markdown: `reports/markdown/20260908-173648-458497-plus-late-gemini-report.md`.
+  - Final constructive bilingual title: `从效率工具到责任系统：AI 正在把企业循环、教育辅导和医疗服务重构为可验证的协作网络 (From Productivity Tools to Accountable Systems: AI Is Turning Company Loops, Learning, and Care into Verifiable Collaboration Networks)`.
+  - Manual cleanup after review: removed remaining `转述结论` quote fallbacks, replaced them with transcript-verifiable original quotes plus italic unlabeled Chinese translations, corrected Transcript source for official RSS VTT and Xiaoyuzhou show-notes fallback, and capped evidence anchors to substantive items only.
+  - Final Gemini review passed: `reports/markdown/20260908-173648-458497-plus-late-gemini-review.md`; errors `0`, warnings `0`.
+- Final artifacts:
+  - DOCX: `reports/word/260907-Spotify播客情报研报.docx`; SHA-256 `d8966e162b54722c135fe990a575d0f725113fbc24bb28eb93b0041358311db2`.
+  - PDF: `reports/pdf/260907-Spotify播客情报研报.pdf`; SHA-256 `a86418238a89e0edff9078434c84a50ed4948d554c50ae7e8c4c528af1d1ae48`.
+- Quality gates:
+  - Delivery-format audit passed with no issues: `5` H2 sections, `14` episode headings, all required labels present, PDF page count `37`.
+  - Title gate passed: constructive, insight-led, bilingual, no run ID/date pileup/generic title.
+  - Episode 1 quote gate passed: meaningful source-language quote with italicized unlabeled translation line.
+  - Evidence anchor gate passed after reducing overly dense anchors and removing non-substantive items; no greeting/thanks/housekeeping anchor accepted.
+  - Conditional pagination and visual checks passed: 第三部分 page `34`, 第四部分 page `35`, 第五部分 page `36`; sections 3/4/5 were not blindly page-broken and were allowed to follow conditional available-space rules.
+  - PDF line-start punctuation scan passed with `0` line-start punctuation issues; banned translation labels (`中文解释`, `中文翻译`, `英文解释`, `英文翻译`, `转述结论`) did not remain in final PDF text.
+- Zotero:
+  - Quit Zotero before direct local DB write.
+  - Archived as direct PDF attachment id `4446`, title `260907-Spotify播客情报研报`.
+  - Zotero backup: `/Users/hannah/Zotero/zotero.sqlite.backup-1788872366`.
+  - Active Zotero storage PDF: `/Users/hannah/Zotero/storage/UM20Q2H0/260907-Spotify播客情报研报.pdf`.
+  - Zotero PDF hash matched the local final PDF hash `a86418238a89e0edff9078434c84a50ed4948d554c50ae7e8c4c528af1d1ae48`.
+- Google Drive and Discord:
+  - Staged DOCX: `reports/archive/pending/2609/google-drive/260907-Spotify播客情报研报.docx`; SHA-256 `d8966e162b54722c135fe990a575d0f725113fbc24bb28eb93b0041358311db2`.
+  - Staged PDF: `reports/archive/pending/2609/discord-todo/260907-Spotify播客情报研报.pdf`; SHA-256 `a86418238a89e0edff9078434c84a50ed4948d554c50ae7e8c4c528af1d1ae48`.
+  - Google Drive upload verified by Drive listing containing `260907-Spotify播客情报研报.docx`.
+  - Discord `#todo` delivery verified by live Discord Studio `notification_sent`: id `1788872390138-72c585e1-9ad5-4680-9bf9-861231640d9b-discord`, sent at `2026-09-08T12:59:56.153Z`; Discord Studio also logged a second `notification_sent` for the same queue id at `2026-09-08T12:59:57.940Z`.
+- Cleanup, final audits, and mark-seen:
+  - Post-delivery cleanup command `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=14 removed=14 english_seen=14 chinese_seen=0`.
+  - `/Users/hannah/Downloads/Spotify Transcript Collector/` loose transcript JSON count after cleanup: `0`.
+  - Current-run formal archive duplicate audit: expected `14` unique episode IDs; English found `14`, duplicate IDs `0`, missing `0`; Chinese found `14`, duplicate IDs `0`, missing `0`.
+  - Final late-RSS audit before mark-seen: `data/runs/20260908-210247-756880-late-rss-arrivals-audit.json`; configured podcasts `27`, windowed current RSS episodes `25`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=14 manifest=data/runs/20260908-173648-458497-plus-late-manifest.json`.
+- Code/process fix:
+  - Updated `scripts/render_delivery_reports.py` to export Word PDFs with file format code `17` instead of the brittle AppleScript name `format PDF`; this fixed the Word export syntax error seen during 260907 rendering and should reduce future PDF export stalls.
+
 ## 2026-08-17 260817 Spotify MWF Report Delivered
 
 - Fixed schedule window:
