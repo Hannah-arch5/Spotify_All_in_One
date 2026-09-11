@@ -616,7 +616,7 @@ def add_report_body(doc: Document, markdown: str) -> None:
             doc,
             role,
             text,
-            italic=in_key_quote and is_translation_line(line),
+            italic=is_translation_line(line),
             allow_leading_subtitle_bold=role == "body" and current_part_number >= 3,
         )
         if paragraph is not None and role == "body":
@@ -884,12 +884,12 @@ def export_docx_to_pdf_with_word(docx_path: Path, pdf_path: Path) -> bool:
         pdf_path.unlink()
     script = f'''
 set inputPath to POSIX file "{docx_path}"
-set outputPath to POSIX file "{pdf_path}"
+set outputPath to "{pdf_path}"
 tell application "Microsoft Word"
     open inputPath
     delay 1
     set reportDocument to active document
-    save as reportDocument file name outputPath file format format PDF
+    save as reportDocument file name outputPath file format 17
     close reportDocument saving no
 end tell
 '''

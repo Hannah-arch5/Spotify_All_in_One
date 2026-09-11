@@ -13,6 +13,8 @@
 - 按最近更新时间筛选新增 episode
 - 用本地 SQLite 记录已处理 episode，避免重复
 - 输出 JSON manifest 和 Markdown 清单
+- 强制英文证据锚点逐条附带无标签斜体中文翻译，并在 Markdown 与 DOCX 两层阻断遗漏
+- 交付前检查每集只有一份原文字幕和一份完整中文字幕，阻断缺失、重复和未完成文件
 
 ## 目录结构
 
@@ -58,6 +60,18 @@
 
 ```bash
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py --move
+```
+
+清理后执行字幕正式档案完整性硬检查：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/audit_transcript_archive_integrity.py data/runs/<run-id>-evidence-pack.json --require-clean
+```
+
+如果旧报告中的英文证据锚点缺少中文，可从已对齐的中英文 transcript 确定性补齐；脚本可重复运行，不会重复追加：
+
+```bash
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/add_evidence_anchor_translations.py reports/markdown/<run-id>-gemini-report.md --evidence data/runs/<run-id>-evidence-pack.json --language-audit data/runs/<run-id>-transcript-language-audit.json --write
 ```
 
 清理项目内超过 90 天的旧 transcript，默认先预览不删除：

@@ -1,0 +1,139 @@
+#!/usr/bin/env node
+const fs = require("fs");
+const path = require("path");
+let chromium;
+try {
+  ({ chromium } = require("playwright"));
+} catch (_) {
+  ({ chromium } = require("/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright"));
+}
+
+const ROOT = path.resolve(__dirname, "..");
+
+function argValue(name, fallback = null) {
+  const index = process.argv.indexOf(name);
+  return index >= 0 && index + 1 < process.argv.length ? process.argv[index + 1] : fallback;
+}
+
+function clean(value) {
+  return String(value || "unknown").replace(/[\\/:*?"<>|#%]/g, "_").trim();
+}
+
+function formatTimestamp(value) {
+  let seconds = Math.max(0, Math.floor(Number(value) || 0));
+  const hours = Math.floor(seconds / 3600);
+  seconds -= hours * 3600;
+  const minutes = Math.floor(seconds / 60);
+  seconds -= minutes * 60;
+  return hours
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    : `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+async function main() {
+  if (process.argv.includes("--help")) {
+    console.log(`Usage:
+  node scripts/import_bilibili_subtitle_cdp.js --manifest data/runs/RUN-manifest.json --index N --bvid BV... --cid N [--port 9223]
+
+Imports an official Bilibili Chinese/AI subtitle into the original transcript library and
+creates the matching Chinese archive copy. Requires a logged-in Chromium browser on CDP.`);
+    return;
+  }
+
+  const manifestPath = path.resolve(ROOT, argValue("--manifest"));
+  const episodeIndex = Number(argValue("--index"));
+  const bvid = argValue("--bvid");
+  const cid = argValue("--cid");
+  const port = Number(argValue("--port", "9223"));
+  if (!manifestPath || !episodeIndex || !bvid || !cid) {
+    throw new Error("--manifest, --index, --bvid, and --cid are required");
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const episode = manifest.new_episodes[episodeIndex - 1];
+  if (!episode) throw new Error(`Manifest has no episode at index ${episodeIndex}`);
+
+  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`);
+  const context = browser.contexts()[0];
+  const page = await context.newPage();
+  const videoUrl = `https://www.bilibili.com/video/${bvid}/`;
+  try {
+    await page.goto(videoUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+    const payload = await page.evaluate(async ({ requestedBvid, requestedCid }) => {
+      const metadataResponse = await fetch(
+        `https://api.bilibili.com/x/player/wbi/v2?bvid=${requestedBvid}&cid=${requestedCid}`,
+        { credentials: "include" },
+      );
+      const metadata = await metadataResponse.json();
+      if (metadata.code !== 0) throw new Error(`Bilibili metadata error ${metadata.code}: ${metadata.message}`);
+      const subtitles = metadata.data && metadata.data.subtitle && metadata.data.subtitle.subtitles;
+      const selected = Array.isArray(subtitles)
+        ? subtitles.find((item) => /^ai-zh|^zh/i.test(item.lan || "")) || subtitles[0]
+        : null;
+      if (!selected || !selected.subtitle_url) throw new Error("No Bilibili subtitle is available");
+      const subtitleUrl = selected.subtitle_url.startsWith("//")
+        ? `https:${selected.subtitle_url}`
+        : selected.subtitle_url;
+      return { selected, subtitleUrl };
+    }, { requestedBvid: bvid, requestedCid: String(cid) });
+
+    const subtitleResponse = await context.request.get(payload.subtitleUrl);
+    if (!subtitleResponse.ok()) {
+      throw new Error(`Bilibili subtitle download failed: HTTP ${subtitleResponse.status()}`);
+    }
+    payload.subtitle = await subtitleResponse.json();
+
+    const body = payload.subtitle && payload.subtitle.body;
+    if (!Array.isArray(body) || body.length === 0) throw new Error("Bilibili subtitle body is empty");
+    const segments = body
+      .map((item) => ({
+        start: Number(item.from || 0),
+        end: Number(item.to || 0),
+        timestamp: formatTimestamp(item.from),
+        speaker: episode.podcast_title || null,
+        text: String(item.content || "").trim(),
+      }))
+      .filter((item) => item.text);
+
+    const publishedDate = String(episode.published_at || episode.publishedDate || "").slice(0, 10);
+    const podcastTitle = episode.podcast_title;
+    const episodeTitle = episode.episode_title;
+    const baseName = `${publishedDate} - ${clean(podcastTitle)} - ${clean(episodeTitle)} - bilibili-${bvid}`;
+    const original = {
+      source: "bilibili_official_ai_subtitle",
+      capturedAt: new Date().toISOString(),
+      spotifyEpisodeId: `bilibili-${bvid}`,
+      episodeUrl: videoUrl,
+      originalEpisodeUrl: episode.episode_url || null,
+      podcastName: podcastTitle,
+      episodeTitle,
+      publishedDate,
+      duration: segments.length ? segments[segments.length - 1].end : null,
+      transcriptLanguage: payload.selected.lan || payload.subtitle.lang || "zh-CN",
+      isAutoGenerated: /^ai-/i.test(payload.selected.lan || ""),
+      segments,
+    };
+    const chinese = {
+      ...original,
+      segments: segments.map((segment) => ({ ...segment, translation: segment.text })),
+    };
+
+    const originalDir = path.join(ROOT, "data", "transcripts", "spotify_en");
+    const chineseDir = path.join(ROOT, "data", "transcripts", "spotify_zh");
+    fs.mkdirSync(originalDir, { recursive: true });
+    fs.mkdirSync(chineseDir, { recursive: true });
+    const originalPath = path.join(originalDir, `${baseName}.json`);
+    const chinesePath = path.join(chineseDir, `${baseName.replace(` - bilibili-${bvid}`, `_zh - bilibili-${bvid}`)}.json`);
+    fs.writeFileSync(originalPath, `${JSON.stringify(original, null, 2)}\n`);
+    fs.writeFileSync(chinesePath, `${JSON.stringify(chinese, null, 2)}\n`);
+    console.log(JSON.stringify({ originalPath, chinesePath, segments: segments.length }, null, 2));
+  } finally {
+    await page.close();
+    await browser.close();
+  }
+}
+
+main().catch((error) => {
+  console.error(error.stack || error.message);
+  process.exit(1);
+});

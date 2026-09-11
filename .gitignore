@@ -17,3 +17,4 @@ reports/pdf/
 reports/qa/
 reports/archive/
 vendor/python/
+tmp/

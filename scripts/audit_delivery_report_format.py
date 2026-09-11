@@ -318,6 +318,35 @@ def audit_docx(path: Path) -> dict[str, Any]:
     if non_italic_translation_lines:
         issues.append(f"translation/explanation lines in key quote blocks must be italicized: {non_italic_translation_lines[:8]}")
 
+    evidence_translation_failures = []
+    for index, paragraph in enumerate(paragraphs):
+        text = paragraph.text.strip()
+        if not re.match(r"^\[[0-9:]+\]", text):
+            continue
+        if len(re.findall(r"[A-Za-z][A-Za-z']+", text)) < 4:
+            continue
+        next_paragraph = next(
+            (candidate for candidate in paragraphs[index + 1 :] if candidate.text.strip()),
+            None,
+        )
+        if next_paragraph is None:
+            evidence_translation_failures.append(text[:120])
+            continue
+        translation_text = next_paragraph.text.strip()
+        visible_runs = [run for run in next_paragraph.runs if run.text.strip()]
+        if (
+            not re.search(r"[\u4e00-\u9fff]", translation_text)
+            or any(pattern in translation_text for pattern in TRANSLATION_LABEL_PATTERNS)
+            or not visible_runs
+            or not all(run.italic for run in visible_runs)
+        ):
+            evidence_translation_failures.append(text[:120])
+    if evidence_translation_failures:
+        issues.append(
+            "English evidence anchors must be followed by an unlabeled italic Chinese translation: "
+            f"{evidence_translation_failures[:8]}"
+        )
+
     episode_one_quote_issue = audit_episode_one_quote_gate(paragraphs, episode_headings)
     if episode_one_quote_issue:
         issues.append(episode_one_quote_issue)

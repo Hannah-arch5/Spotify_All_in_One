@@ -34,6 +34,9 @@ KEY_QUOTE_FORBIDDEN_RE = re.compile(
     r"(?:Timestamp\s*:|\bSpeaker\s*\d+\b|发言者\s*\d+|\[\d{1,2}:\d{2}(?::\d{2})?\]|\(\d{1,2}:\d{2}(?::\d{2})?\)|（\d{1,2}:\d{2}(?::\d{2})?）)",
     re.IGNORECASE,
 )
+EVIDENCE_LABEL_RE = re.compile(r"^-\s*证据锚点[：:]\s*$")
+EVIDENCE_ANCHOR_RE = re.compile(r"^-\s*\[[0-9:]+\]\s*(.+)$")
+ITALIC_CHINESE_RE = re.compile(r"^\s+\*[^*]*[\u4e00-\u9fff][^*]*\*\s*$")
 
 
 @dataclass
@@ -146,6 +149,33 @@ def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> li
     return findings
 
 
+def _evidence_translation_findings(section: dict[str, Any]) -> list[Finding]:
+    lines = section["body"].splitlines()
+    try:
+        start = next(index for index, line in enumerate(lines) if EVIDENCE_LABEL_RE.match(line.strip())) + 1
+    except StopIteration:
+        return [Finding("error", f"情报 {section['number']} 缺少证据锚点区块。")]
+
+    findings: list[Finding] = []
+    for index in range(start, len(lines)):
+        match = EVIDENCE_ANCHOR_RE.match(lines[index].strip())
+        if not match or len(re.findall(r"[A-Za-z][A-Za-z']+", match.group(1))) < 4:
+            continue
+        next_index = index + 1
+        while next_index < len(lines) and not lines[next_index].strip():
+            next_index += 1
+        translation = lines[next_index] if next_index < len(lines) else ""
+        if not ITALIC_CHINESE_RE.match(translation):
+            timestamp = lines[index].split("]", 1)[0].lstrip("- [")
+            findings.append(
+                Finding(
+                    "error",
+                    f"情报 {section['number']} 的英文证据锚点 [{timestamp}] 后缺少无标签斜体中文翻译。",
+                )
+            )
+    return findings
+
+
 def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = None) -> dict[str, Any]:
     manifest = _read_json(manifest_path)
     evidence = _read_json(evidence_path) if evidence_path else None
@@ -206,6 +236,7 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
 
         transcript_text = _episode_transcript_text(evidence, expected_index)
         findings.extend(_quote_support_findings(section, transcript_text))
+        findings.extend(_evidence_translation_findings(section))
 
     extra_sections = sections[expected_count:]
     for section in extra_sections:
