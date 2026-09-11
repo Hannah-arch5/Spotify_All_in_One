@@ -102,7 +102,7 @@ function canonicalPodcastName(name) {
 async function main() {
   if (hasArg("--help")) {
     console.log(`Usage:
-  node scripts/capture_spotify_transcripts_cdp.js --manifest data/runs/RUN-manifest.json --candidates data/runs/RUN-spotify-url-candidates.json
+  node scripts/capture_spotify_transcripts_cdp.js --manifest data/runs/RUN-manifest.json --candidates data/runs/RUN-spotify-url-candidates.json [--index N]
 
 Requires Comet or Chrome to be running with a local DevTools port, for example:
   open -na /Applications/Comet.app --args --remote-debugging-port=9223 --user-data-dir="$HOME/Library/Application Support/Comet"
@@ -114,6 +114,7 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
   const candidatesPath = path.resolve(ROOT, argValue("--candidates"));
   const outDir = path.resolve(argValue("--out-dir", DEFAULT_OUT_DIR));
   const port = Number(argValue("--port", DEFAULT_PORT));
+  const requestedIndex = Number(argValue("--index", 0));
   const executablePath = argValue("--executable");
   const launched = hasArg("--launch");
   fs.mkdirSync(outDir, { recursive: true });
@@ -126,7 +127,13 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
   const context = launched ? await browser.newContext() : browser.contexts()[0];
   const results = [];
 
-  for (const row of candidates.filter((item) => item.best && item.best.href && item.best.score >= 0.9)) {
+  for (const row of candidates.filter(
+    (item) =>
+      item.best &&
+      item.best.href &&
+      item.best.score >= 0.9 &&
+      (!requestedIndex || item.index === requestedIndex),
+  )) {
     const episode = manifest.new_episodes[row.index - 1];
     const page = await context.newPage();
     let captured = null;

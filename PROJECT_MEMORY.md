@@ -1548,6 +1548,8 @@ Monday batch notes:
 - Evidence-anchor gate:
   - Evidence anchors must be meaningful and should support a claim, example, mechanism, number, decision, disagreement, or strategic implication.
   - Do not include greetings, mutual thanks, ad reads, housekeeping, closing pleasantries, repeated intros/outros, or generic low-value anchors.
+  - Every English evidence anchor must preserve a transcript-verifiable source sentence and be followed immediately by its corresponding Chinese translation on a separate italicized line. Do not add labels such as `中文翻译：` or `中文解释：`. Chinese-source anchors remain in Chinese and must not be duplicated as a redundant translation.
+  - This is a hard preview/delivery gate enforced by both the Markdown review and final DOCX audit; the report cannot be delivered when any English anchor is missing its italic Chinese translation.
   - Screenshot example from user: an ending anchor like `[1:18:11] 播客结束时，Zach Braff 和主持人互相表达了感谢和欣赏。` is not meaningful evidence and must be removed before delivery.
 - Synthesis gate:
   - Sections 3/4/5 must be integrated cross-episode analysis, second-order thinking, and strategic conclusions.
@@ -3235,6 +3237,40 @@ Monday batch notes:
   - Mark-seen completed: `marked_seen=16 manifest=data/runs/20260815-084914-268339-manifest.json`.
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
+
+## 2026-09-12 CST - 260911 Spotify MWF Report Delivered
+
+- Fixed schedule window and source coverage:
+  - Intended report date: `260911` (Friday), independent of the later completion time.
+  - Manifest: `data/runs/20260911-225922-220335-manifest.json`; window `2026-09-09T07:00:00+00:00` to `2026-09-11T07:00:00+00:00`; `13` episodes sorted by `published_at desc`.
+  - Evidence pack: `data/runs/20260911-225922-220335-evidence-pack.json`.
+  - Final language audit: original `13/13`, Chinese `13/13`, missing Chinese `0`.
+- Report and new evidence-anchor hard gate:
+  - Final title: `把AI速度转化为可验证进步：守住认知能力、重建技术信任并配置新增长引擎 (Turning AI Speed into Verifiable Progress: Preserving Human Judgment, Rebuilding Trust, and Investing in New Growth Engines)`.
+  - Markdown: `reports/markdown/20260911-225922-220335-gemini-report.md`.
+  - Every English evidence anchor must now preserve a transcript-verifiable source sentence and be followed immediately by an unlabeled italic Chinese translation. Chinese-source anchors are not duplicated.
+  - The 260911 report contains `76` English anchors with aligned italic Chinese translations and `4` Chinese-source anchors. `scripts/add_evidence_anchor_translations.py` performs deterministic transcript alignment and is idempotent.
+  - `scripts/check_gemini_report.py` and `scripts/audit_delivery_report_format.py` now block preview/delivery when any English anchor lacks the required Chinese translation or when the rendered translation is not italic.
+  - Final report review passed; DOCX/PDF format audit passed with no issues; PDF has `40` pages. Final line-start punctuation scan found `0` issues.
+  - Conditional pagination passed: 第三部分 page `35` with sufficient remaining space; 第四部分 starts page `37` because its prior position was below the one-quarter threshold; 第五部分 flows on page `39` because sufficient space remained.
+- Final artifacts and hashes:
+  - DOCX: `reports/word/260911-Spotify播客情报研报.docx`; SHA-256 `075b59689a360de2f5c8188d33b966ac90876d41d8660904af46037811fe613d`.
+  - PDF: `reports/pdf/260911-Spotify播客情报研报.pdf`; SHA-256 `27751697028faf533f61ae9056711d14a6837b90348940590038de114fef8635`.
+- Zotero, Drive, and Discord:
+  - Zotero direct-PDF item id `4448`; backup `/Users/hannah/Zotero/zotero.sqlite.backup-1789161864`; active PDF `/Users/hannah/Zotero/storage/EEQDVYV5/260911-Spotify播客情报研报.pdf`; Zotero hash matches the final PDF.
+  - Google Drive upload verified by remote listing containing `260911-Spotify播客情报研报.docx`; staged DOCX hash matches local final.
+  - Discord `#todo` delivery verified: queue id `1789161893054-16f46ecd-0a1c-4149-9e82-6d2f1e71394a-discord`; message id `1548083027379363880`; staged PDF hash matches local final.
+- Cleanup and final gates:
+  - `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=11 removed=11`; Downloads loose transcript JSON count is `0`.
+  - Added `scripts/audit_transcript_archive_integrity.py` as a hard completion gate. Final result: original `13/13`, Chinese `13/13`, missing IDs `0`, duplicate IDs `0`, incomplete Chinese IDs `0`.
+  - Final late-RSS audit: `data/runs/20260912-053237-375169-late-rss-arrivals-audit.json`; configured podcasts `27`, feed failures `0`, cached fallbacks `0`, late/unprocessed `0`.
+  - Mark-seen completed: `marked_seen=13 manifest=data/runs/20260911-225922-220335-manifest.json`.
+- Discord automation repair:
+  - Root cause of repeated `EADDRINUSE`: cron watchdog searched for an absolute `src/server.js` process path while the real command line was `node src/server.js`, so it repeatedly started duplicate processes beside the LaunchAgent.
+  - Updated the watchdog process pattern, terminated the stale process, and restarted `com.hannah.codex.telegrambot`. Verified LaunchAgent state `running`, one listener on `127.0.0.1:3000`, and `/health` returned `{"ok":true}`.
+- Skill and global rules:
+  - Updated project and installed Spotify MWF Skill with the evidence-anchor translation gate and formal archive integrity gate.
+  - Updated authoritative global memory `/Users/hannah/.gemini/GEMINI.md` with the cross-project English-evidence-anchor translation requirement.
 
 ## 2026-09-10 CST - 260909 Spotify MWF Report Delivered
 

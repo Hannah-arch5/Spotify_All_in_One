@@ -65,6 +65,7 @@
   - Sections 3/4/5 are integrated cross-episode analysis, second-order thinking, and strategic conclusions. They must not read as per-episode summaries grouped under loose topics.
   - Episode 1 has the same `关键金句 / 结论` quality as every other episode, including meaningful source-language original sentences and italicized translation/explanation lines when useful. Translation lines must not include labels like `中文解释：`, `中文翻译：`, `中文翻译/解释：`, `英文解释：`, `英文翻译：`, or `英文翻译/解释：`.
   - Evidence anchors are meaningful: remove greetings, thanks, ad reads, housekeeping, closing pleasantries, and generic low-value anchors. Keep anchors with concrete claims, examples, mechanisms, numbers, decisions, disagreements, or strategic implications.
+  - Every English evidence anchor is a transcript-verifiable source sentence followed immediately by an unlabeled italic Chinese translation on its own line. Chinese-source anchors stay as one Chinese source line and are not redundantly translated.
   - If exact quote verification is weak, return to transcript JSON and select exact, verifiable source lines; do not downgrade to `转述结论` unless a real transcript scan confirms no meaningful verifiable original quote exists.
 
 ## 5. Render And Audit
@@ -79,6 +80,7 @@
   - Required labels match episode count.
   - `关键金句 / 结论` exists for every episode including episode 1, with meaningful source-language original quotes plus italicized unlabeled translation/explanation. `转述结论` is allowed only after transcript-level verification proves no meaningful quote exists.
   - Evidence anchors are substantive and do not contain low-value greetings/thanks/housekeeping as final anchors.
+  - Every English evidence anchor is followed immediately by an unlabeled italic Chinese translation; Chinese-source anchors are not duplicated. This must pass both the Markdown checker and the final DOCX audit.
   - Pagination quality: if a heading or subtitle-like bold heading and the following body begin in the bottom quarter of a page, insert `<!-- pagebreak -->` before that heading and rerender. Do not force all major sections onto new pages; apply the break only when the heading position is too low.
   - Line-breaking quality: punctuation must stay attached to the end of the preceding line in the final PDF. Do not accept punctuation as the first character on a new line; fix and rerender before delivery.
   - PDF page count is plausible.
@@ -113,6 +115,7 @@
   - `scripts/import_spotify_transcripts.py --move`
   - Verify `/Users/hannah/Downloads/Spotify Transcript Collector/` has zero JSON files.
 - Audit the current evidence pack's episode IDs in `data/transcripts/spotify_en/` and `data/transcripts/spotify_zh/` after cleanup. Confirm each language has at most one file per episode and report `duplicate_ids=0` for both directories. A missing complete Chinese transcript may be reported as a gap; an incomplete or duplicate file must not be retained to make coverage appear complete.
+- Run `scripts/audit_transcript_archive_integrity.py <evidence-pack> --require-clean`; it must confirm one original and one complete Chinese transcript per episode, with zero missing, duplicate, or incomplete IDs.
 - Rerun the late-arriving RSS audit after cleanup and before mark-seen. A clean result is required for completion.
 - Mark manifests seen only after delivery gates pass:
   - `scripts/mark_manifest_seen.py <manifest>`

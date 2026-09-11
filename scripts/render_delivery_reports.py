@@ -616,7 +616,7 @@ def add_report_body(doc: Document, markdown: str) -> None:
             doc,
             role,
             text,
-            italic=in_key_quote and is_translation_line(line),
+            italic=is_translation_line(line),
             allow_leading_subtitle_bold=role == "body" and current_part_number >= 3,
         )
         if paragraph is not None and role == "body":
