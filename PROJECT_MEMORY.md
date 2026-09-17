@@ -3238,6 +3238,18 @@ Monday batch notes:
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
 
+## 2026-09-18 CST - 260914 and 260916 Report Run Paused by Gemini Quota
+
+- Fixed windows were created separately and must remain separate:
+  - `260914`: `2026-09-11T07:00:00Z` to `2026-09-14T07:00:00Z`, 14 episodes, manifest `data/runs/20260918-034018-948995-manifest.json`.
+  - `260916`: `2026-09-14T07:00:00Z` to `2026-09-16T07:00:00Z`, 13 episodes, manifest `data/runs/20260918-034102-985741-manifest.json`.
+  - Both manifests use `published_at desc`; the newest published episode is first.
+- Original transcript coverage completed `27/27` through Comet/Spotify native CDP capture. The 260914 厚雪长波 episode was handled through its official RSS VTT (`116` segments) because its only Spotify candidate was score `0` and was rejected as unsafe.
+- Chinese transcript backfill completed `27/27` from the exact archived originals. Language audits and formal archive integrity audit passed for 260914: original `14/14`, Chinese `14/14`, duplicates `0`, incomplete `0`. The 260916 audit also passed: original `13/13`, Chinese `13/13`, duplicates `0`, incomplete `0`.
+- Gemini generation was started separately for both windows with explicit user authorization. It produced partial episode briefs (`3` for 260914 and `3` for 260916), then hit the Gemini free-tier quota (`429 RESOURCE_EXHAUSTED`, `gemini-2.5-flash`, 20 requests/day). The waiting retry processes were terminated safely; no final reports were generated, delivered, or marked seen.
+- Resume point: reuse the existing evidence packs and partial briefs; do not recollect or retransmit subtitles. After quota recovery, finish each report independently, run all title/evidence/format/pagination/line-break audits, then deliver and mark seen only after cleanup and late-RSS checks.
+- Comet recovery: the temporary CDP profile was stopped and the formal Comet profile was reopened. The original tabs remain available in Comet history/session restore; no formal profile data was deleted.
+
 ## 2026-09-12 CST - 260911 Spotify MWF Report Delivered
 
 - Fixed schedule window and source coverage:
