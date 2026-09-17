@@ -3249,6 +3249,7 @@ Monday batch notes:
 - Gemini generation was started separately for both windows with explicit user authorization. It produced partial episode briefs (`3` for 260914 and `3` for 260916), then hit the Gemini free-tier quota (`429 RESOURCE_EXHAUSTED`, `gemini-2.5-flash`, 20 requests/day). The waiting retry processes were terminated safely; no final reports were generated, delivered, or marked seen.
 - Resume point: reuse the existing evidence packs and partial briefs; do not recollect or retransmit subtitles. After quota recovery, finish each report independently, run all title/evidence/format/pagination/line-break audits, then deliver and mark seen only after cleanup and late-RSS checks.
 - Comet recovery: the temporary CDP profile was stopped and the formal Comet profile was reopened. The original tabs remain available in Comet history/session restore; no formal profile data was deleted.
+- Follow-up API diagnosis: the current `.env` `GEMINI_API_KEY` successfully returned `HTTP 200` from Google's models endpoint and exposed `models/gemini-2.5-flash`, so the key is valid and not expired/revoked. The report-generation failure is specifically `429 RESOURCE_EXHAUSTED` for the Gemini free-tier request quota, not authentication failure. Do not rotate the key unless a future request returns `401/403` or an invalid-key error.
 
 ## 2026-09-12 CST - 260911 Spotify MWF Report Delivered
 
