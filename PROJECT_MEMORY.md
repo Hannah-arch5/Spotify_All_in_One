@@ -3254,7 +3254,12 @@ Monday batch notes:
 - Delivery artifacts and rendering:
   - DOCX: `reports/word/260914-Spotify播客情报研报.docx` and `reports/word/260916-Spotify播客情报研报.docx`; both passed delivery-format audit with all required sections, episode counts, and labels.
   - PDF: `reports/pdf/260914-Spotify播客情报研报.pdf` (41 pages) and `reports/pdf/260916-Spotify播客情报研报.pdf` (36 pages), regenerated from the audited DOCX files with LibreOffice after the local Word AppleScript exporter failed on a syntax error.
-  - No Zotero, Google Drive, Discord upload, or mark-seen action was performed in this continuation because no new external-delivery authorization was given for these two files.
+- No Zotero, Google Drive, Discord upload, or mark-seen action was performed in this continuation because no new external-delivery authorization was given for these two files.
+
+- Rendering fix discovered after visual review:
+  - LibreOffice PDF export preserved Chinese text in the text layer but rendered it blank because the DOCX renderer assigned `Google Sans` to `eastAsia` characters.
+  - `scripts/render_delivery_reports.py` now separates Latin fonts from Chinese fonts: Google Sans for Latin text and Hiragino Sans GB / W6 for Chinese regular/bold text.
+  - Both regenerated PDFs were visually checked on page 1 and Chinese glyphs render correctly.
 
 ## 2026-09-18 CST - 260914 and 260916 Report Run Paused by Gemini Quota
 

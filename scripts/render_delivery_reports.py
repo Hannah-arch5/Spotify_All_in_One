@@ -30,7 +30,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FONT = "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
 REFERENCE_DOCX = Path("/Users/hannah/Downloads/科技播客情报分析报告.docx")
 DOCX_FONT = "Google Sans"
-DOCX_BOLD_FONT = "PingFang SC Semibold"
+DOCX_ZH_FONT = "Hiragino Sans GB"
+DOCX_BOLD_FONT = "Hiragino Sans GB W6"
 METADATA_LABELS = ("原始标题", "来源与发布者", "原始链接")
 CONTENT_BLOCK_LABELS = ("核心内容摘要", "情报价值点", "关键金句", "证据锚点")
 COMPACT_LABELS = METADATA_LABELS + CONTENT_BLOCK_LABELS
@@ -374,8 +375,9 @@ def set_run_font(run, font_name: str = DOCX_FONT) -> None:
     if rfonts is None:
         rfonts = OxmlElement("w:rFonts")
         r_pr.append(rfonts)
-    for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
+    for attr in ("ascii", "hAnsi", "cs"):
         rfonts.set(qn(f"w:{attr}"), font_name)
+    rfonts.set(qn("w:eastAsia"), DOCX_ZH_FONT)
     lang = r_pr.find(qn("w:lang"))
     if lang is None:
         lang = OxmlElement("w:lang")
@@ -404,8 +406,9 @@ def force_style_bold(style) -> None:
     if rfonts is None:
         rfonts = OxmlElement("w:rFonts")
         r_pr.append(rfonts)
-    for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
+    for attr in ("ascii", "hAnsi", "cs"):
         rfonts.set(qn(f"w:{attr}"), DOCX_BOLD_FONT)
+    rfonts.set(qn("w:eastAsia"), DOCX_BOLD_FONT)
     for tag in ("w:b", "w:bCs"):
         element = r_pr.find(qn(tag))
         if element is None:
@@ -649,8 +652,9 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
             continue
         style = styles[name]
         style.font.name = DOCX_FONT
-        for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
+        for attr in ("ascii", "hAnsi", "cs"):
             style._element.rPr.rFonts.set(qn(f"w:{attr}"), DOCX_FONT)
+        style._element.rPr.rFonts.set(qn("w:eastAsia"), DOCX_ZH_FONT)
         style.font.size = Pt(11)
         style.paragraph_format.space_after = Pt(7.5)
         style.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
@@ -666,8 +670,9 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
         if rfonts is None:
             rfonts = OxmlElement("w:rFonts")
             r_pr.append(rfonts)
-        for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
+        for attr in ("ascii", "hAnsi", "cs"):
             rfonts.set(qn(f"w:{attr}"), DOCX_BOLD_FONT)
+        rfonts.set(qn("w:eastAsia"), DOCX_BOLD_FONT)
         style.font.size = Pt(size)
         force_style_bold(style)
         style.font.color.rgb = color
