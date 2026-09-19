@@ -5,6 +5,14 @@
 
 Updated: 2026-09-06 CST
 
+## 2026-09-19 CST - 260918 Friday Report Delivered
+
+- Fixed report window: `2026-09-16T07:00:00+00:00` to `2026-09-18T07:00:00+00:00`; intended report date `260918`; `19/19` episodes sorted newest to oldest by `published_at`.
+- Comet/CDP native Spotify capture completed all `19/19` English transcripts; Downloads cleanup removed all `19` temporary JSON files. Chinese translation was explicitly authorized and completed `19/19`; archive integrity audit passed with no missing, duplicate, or incomplete IDs.
+- Gemini generated all `19/19` episode briefs. The final merge hit the `gemini-2.5-flash` free-tier request limit, so the completed briefs were merged with `gemini-2.5-flash-lite`; evidence translations and section structure were repaired and the final content audit returned `通过`.
+- Final Markdown: `reports/markdown/20260919-144321-509089-gemini-report.md`; native Word PDF: `reports/pdf/260918-Spotify播客情报研报.pdf` (55 pages, Quartz PDF). Visual checks confirmed bilingual title, episode 1 quote translation, bold Part 3/4/5 subtitles, and Parts 3-5 after the episode section.
+- Delivery: Zotero item `4496`, PDF SHA-256 `a506e309dfaa5a21e4d87ea90cc9d8c9a752b070f8d2113d90a25ad9c03b4283` matched local; Google Drive listing contains `260918-Spotify播客情报研报.docx`; Discord #todo notification was queued as `1789803515484-00f111b8-2950-4ff0-a882-23b0f5489b2a-discord` and still requires live `notification_sent` confirmation before claiming Discord delivery.
+
 ## 2026-09-19 CST - 260914/260916 Report Quality Recovery
 
 - The prior “passed” claim was invalid because the final PDFs had been generated with the ReportLab fallback. Word native export was restored using the accepted reference font mapping: CJK `eastAsia=Google Sans`, bold `PingFang SC Semibold`; final PDFs now use Word/Quartz export and Chinese renders correctly.
