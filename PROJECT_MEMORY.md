@@ -3261,6 +3261,12 @@ Monday batch notes:
   - `scripts/render_delivery_reports.py` now separates Latin fonts from Chinese fonts: Google Sans for Latin text and Hiragino Sans GB / W6 for Chinese regular/bold text.
   - Both regenerated PDFs were visually checked on page 1 and Chinese glyphs render correctly.
 
+- 260914/260916 quality correction after user review:
+  - The first assembled versions were rejected because evidence anchors preserved long dialogue blocks, some labels/section names drifted from the established format, and several verifiable key points were incorrectly downgraded to `转述结论`.
+  - Corrective gate: every evidence anchor must be a concise, information-bearing source sentence or excerpt, with no `Speaker N` prefix, no full Q&A exchange, and an immediate unlabeled italic translation when the source is English.
+  - Restored section names: `第一部分：本期核心判断` and `第二部分：逐集情报与证据`; removed all remaining `转述结论` from both reports and reran the content review with zero hard errors.
+  - Added `scripts/normalize_report_delivery_format.py` to enforce these delivery-format rules conservatively without truncating Markdown structure or quote translations.
+
 ## 2026-09-18 CST - 260914 and 260916 Report Run Paused by Gemini Quota
 
 - Fixed windows were created separately and must remain separate:
