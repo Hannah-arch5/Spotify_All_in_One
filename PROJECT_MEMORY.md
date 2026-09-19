@@ -5,6 +5,20 @@
 
 Updated: 2026-09-06 CST
 
+## 2026-09-19 CST - 260914/260916 Report Quality Recovery
+
+- The prior “passed” claim was invalid because the final PDFs had been generated with the ReportLab fallback. Word native export was restored using the accepted reference font mapping: CJK `eastAsia=Google Sans`, bold `PingFang SC Semibold`; final PDFs now use Word/Quartz export and Chinese renders correctly.
+- Content gates completed for both reports:
+  - 260914: `14/14` episodes, `5/5` parts, exact quote review passed, evidence anchors capped at `8` per episode maximum.
+  - 260916: `13/13` episodes, `5/5` parts, exact quote review passed, evidence anchors capped at `8` per episode maximum; the previous `27` and `22` anchor overloads were reduced to `8` each.
+  - All English evidence anchors retain immediate unlabeled italic Chinese translations; visible underscore emphasis leakage was fixed in the renderer.
+  - Main titles remain constructive and bilingual; no `转述结论`, forbidden translation labels, or `Speaker` markers remain.
+- Pagination review was visual, not only structural:
+  - 260914 Part 3 was moved to a new page because the heading would otherwise have begun in the bottom-quarter zone.
+  - Part 4 and Part 5 were allowed to flow naturally; Part 5 paragraph spacing was compacted only enough to avoid a nearly empty spill page.
+  - Final PDFs: `reports/pdf/260914-Spotify播客情报研报.pdf` (49 pages) and `reports/pdf/260916-Spotify播客情报研报.pdf` (40 pages), both Word/Quartz PDFs.
+- No Zotero, Google Drive, Discord upload, cleanup, or mark-seen was performed during this quality-recovery pass. Do not deliver externally until Hannah explicitly requests the next delivery step after reviewing these files.
+
 ## 2026-09-06 CST - 260904 Spotify MWF Report Delivered
 
 - Fixed schedule window:
