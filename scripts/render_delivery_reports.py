@@ -30,8 +30,10 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FONT = "/System/Library/Fonts/Supplemental/Arial Unicode.ttf"
 REFERENCE_DOCX = Path("/Users/hannah/Downloads/科技播客情报分析报告.docx")
 DOCX_FONT = "Google Sans"
-DOCX_ZH_FONT = "Hiragino Sans GB"
-DOCX_BOLD_FONT = "Hiragino Sans GB W6"
+# Word's PDF exporter in this environment reliably renders CJK when the
+# eastAsia mapping follows the accepted reference document.
+DOCX_ZH_FONT = "Google Sans"
+DOCX_BOLD_FONT = "PingFang SC Semibold"
 METADATA_LABELS = ("原始标题", "来源与发布者", "原始链接")
 CONTENT_BLOCK_LABELS = ("核心内容摘要", "情报价值点", "关键金句", "证据锚点")
 COMPACT_LABELS = METADATA_LABELS + CONTENT_BLOCK_LABELS
@@ -250,6 +252,9 @@ def should_keep_inline_bold(text: str) -> bool:
 
 def inline_runs(text: str, italic: bool = False, *, allow_leading_subtitle_bold: bool = False) -> list[TextRun]:
     text = text.strip()
+    # Accept the underscore emphasis emitted by some bilingual brief blocks;
+    # the delimiter must never leak into the rendered delivery file.
+    text = re.sub(r"(?<!\w)_(.*?)_(?!\w)", r"\1", text)
     if allow_leading_subtitle_bold:
         match = re.match(r"^(\s*(?:\d+\.\s*)?)\*\*(.+?)\*\*([：:]?)(.*)$", text)
         if match:
@@ -625,6 +630,10 @@ def add_report_body(doc: Document, markdown: str) -> None:
         if paragraph is not None and role == "body":
             normalized = clean_inline(text)
             previous_body_kind = apply_body_spacing(paragraph, normalized, previous_body_kind)
+            # Keep the strategic conclusion compact enough to avoid a nearly
+            # empty spill page while preserving the normal spacing elsewhere.
+            if current_part_number == 5 and previous_body_kind == "body":
+                paragraph.paragraph_format.space_after = Pt(3)
         last_role = role
 
 

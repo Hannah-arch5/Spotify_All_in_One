@@ -9,6 +9,14 @@ from pathlib import Path
 EPISODE_RE = re.compile(r"^#### 情报 \d+：")
 ANCHOR_RE = re.compile(r"^(?P<prefix>\s*-\s*`?\[[^\]]+\]`?\s*)(?P<body>.+)$")
 SENTENCE_END_RE = re.compile(r"[.!?。！？](?=\s|$|[\"'”’`)）])")
+MAX_ANCHORS_PER_EPISODE = 8
+
+# These windows deliberately cover mechanisms, constraints, and strategic
+# implications instead of retaining every timestamp produced by synthesis.
+CURATED_ANCHOR_TIMES = {
+    "推理芯片技术路径与市场格局分析": {"4:46", "7:05", "14:46", "34:11", "36:45", "52:49", "1:00:47", "1:18:24"},
+    "AI研究的自动化与超级智能的未来愿景": {"0:16", "3:18", "4:26", "8:11", "9:41", "19:52", "20:03", "45:57"},
+}
 
 
 def shorten_anchor(line: str) -> str:
@@ -44,8 +52,18 @@ def normalize(path: Path) -> bool:
     lines = path.read_text(encoding="utf-8").splitlines()
     out: list[str] = []
     in_evidence = False
+    episode_title = ""
+    anchor_count = 0
+    keep_times: set[str] | None = None
+    skip_translation = False
     changed = False
     for line in lines:
+        episode_match = EPISODE_RE.match(line)
+        if episode_match:
+            episode_title = line.split("：", 1)[-1].strip()
+            keep_times = CURATED_ANCHOR_TIMES.get(episode_title)
+            anchor_count = 0
+            skip_translation = False
         if line.strip() in {"情报价值点：", "关键金句 / 结论：", "证据锚点："}:
             replacement = "- " + line.strip()
             changed |= line != replacement
@@ -68,11 +86,28 @@ def normalize(path: Path) -> bool:
             in_evidence = True
         elif in_evidence and (line.startswith("---") or line.startswith("## ") or EPISODE_RE.match(line)):
             in_evidence = False
+        if skip_translation:
+            if not line.strip() or line.lstrip().startswith("*"):
+                skip_translation = False
+                changed = True
+                continue
+            skip_translation = False
         if in_evidence:
             numbered = re.match(r"^(\s*)\d+\.\s+\*\*(\[[^\]]+\])\s*(.*?)\*\*:?\s*(.*)$", line)
             if numbered:
                 line = f"{numbered.group(1)}- {numbered.group(2)} {numbered.group(3)} {numbered.group(4)}".rstrip()
         if in_evidence and ANCHOR_RE.match(line):
+            timestamp_match = re.search(r"\[([^\]]+)\]", line)
+            timestamp = timestamp_match.group(1) if timestamp_match else ""
+            if keep_times is not None:
+                keep = timestamp in keep_times
+            else:
+                keep = anchor_count < MAX_ANCHORS_PER_EPISODE
+            anchor_count += 1
+            if not keep:
+                skip_translation = True
+                changed = True
+                continue
             new_line = shorten_anchor(line)
             changed |= new_line != line
             out.append(new_line)
