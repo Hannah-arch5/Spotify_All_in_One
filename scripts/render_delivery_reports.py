@@ -273,7 +273,7 @@ def inline_runs(text: str, italic: bool = False, *, allow_leading_subtitle_bold:
             continue
         if part.startswith("**") and part.endswith("**"):
             content = part[2:-2]
-            runs.append(TextRun(content, italic=italic))
+            runs.append(TextRun(content, bold=True, italic=italic))
         else:
             runs.append(TextRun(part.replace("*", ""), italic=italic))
     return runs
@@ -567,6 +567,10 @@ def report_body_lines(markdown: str) -> Iterable[str]:
 def is_translation_line(line: str) -> bool:
     stripped = line.strip()
     if not stripped.startswith("*"):
+        return False
+    # List-style bold subtitles in Parts 3–5 begin with `*   **...**`;
+    # they are headings, not translation paragraphs.
+    if "**" in stripped:
         return False
     if re.search(r"\[\d{0,2}:?\d{1,2}:\d{2}\]|\d{1,2}:\d{2}", stripped):
         return False
