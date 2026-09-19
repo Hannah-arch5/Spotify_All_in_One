@@ -3238,6 +3238,24 @@ Monday batch notes:
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
 
+## 2026-09-19 260914 / 260916 Gemini Resume and QA
+
+- Gemini quota diagnosis and recovery:
+  - The API key remained valid; the prior failure was the Gemini project-level free-tier daily generation quota, not an expired or revoked key.
+  - On the next date, both authorized report runs resumed successfully from existing episode briefs without regenerating completed episodes.
+- Transcript and evidence status:
+  - 260914 fixed window contains 14/14 original transcripts and 14/14 Chinese subtitle artifacts; formal archive integrity audit had no duplicate or incomplete subtitle files.
+  - 260916 fixed window contains 13/13 original transcripts and 13/13 Chinese subtitle artifacts; the corrected evidence-pack path is `data/runs/20260918-034102-985741-evidence-pack.json`.
+- Report generation:
+  - 260914: `reports/markdown/20260918-034018-948995-gemini-report.md`.
+  - 260916: `reports/markdown/20260918-034102-985741-gemini-report.md`.
+  - Both reports were rebuilt from complete episode briefs with the local assembler, then repaired for missing evidence blocks, bilingual italic translations, and required five-part heading structure.
+  - Hard content errors are `0` for both reports. Remaining review warnings are transcript quote-normalization warnings only; no missing transcript or missing episode was found.
+- Delivery artifacts and rendering:
+  - DOCX: `reports/word/260914-Spotify播客情报研报.docx` and `reports/word/260916-Spotify播客情报研报.docx`; both passed delivery-format audit with all required sections, episode counts, and labels.
+  - PDF: `reports/pdf/260914-Spotify播客情报研报.pdf` (41 pages) and `reports/pdf/260916-Spotify播客情报研报.pdf` (36 pages), regenerated from the audited DOCX files with LibreOffice after the local Word AppleScript exporter failed on a syntax error.
+  - No Zotero, Google Drive, Discord upload, or mark-seen action was performed in this continuation because no new external-delivery authorization was given for these two files.
+
 ## 2026-09-18 CST - 260914 and 260916 Report Run Paused by Gemini Quota
 
 - Fixed windows were created separately and must remain separate:
