@@ -5,6 +5,15 @@
 
 Updated: 2026-09-06 CST
 
+## 2026-09-21 CST - 260921 Report Started, Browser Transcript Capture Blocked
+
+- Current Monday schedule manifest: `data/runs/20260921-182025-945790-manifest.json`; fixed window `2026-09-18T07:00:00+00:00` to `2026-09-21T07:00:00+00:00`; 15 episodes sorted `published_at desc`.
+- Pipeline dry-run created evidence pack `data/runs/20260921-182025-945790-evidence-pack.json`: 1 original transcript present, 14 missing; Downloads transcript JSON count was 0.
+- Live late-RSS audit passed with `feed_failures=0`, `feed_cached_fallbacks=0`: `data/runs/20260921-182205-900356-late-rss-arrivals-audit.json`. It found 20 unprocessed rows: 19 are already manifested in the 260918 report manifest but remain unmarked-seen; 1 genuinely unmanifested current-window arrival is `Behind the Craft — How to Save Money Now with ChatGPT Finances (6 Real Use Cases) | Ethan Bloch` (`published_at=2026-09-20T13:00:00+00:00`). Add this late arrival as the final episode in the 260921 report with an explicit note identifying its original 260921 window.
+- Spotify transcript collection and report generation are blocked: the browser security reviewer denied connecting to the currently active Comet tab because it was on a Perplexity origin. Do not retry through another browser surface, raw CDP, or another route to the same session. Resume only after the user provides an allowed Spotify/Comet session path or the reviewer grants access.
+- No transcripts were newly captured; no Gemini request, report rendering, external upload, transcript cleanup, or mark-seen occurred for 260921. Do not mark either the 260921 manifest or the 260918 manifest seen until all required gates and delivery verifications are complete.
+- LaunchAgent `com.hannah.spotify-podcast-report` was not running at check time (`active count=0`, prior exit code `78: EX_CONFIG`). Git remote exists; working tree was clean before this memory entry.
+
 ## 2026-09-19 CST - 260918 Friday Report Delivered
 
 - Fixed report window: `2026-09-16T07:00:00+00:00` to `2026-09-18T07:00:00+00:00`; intended report date `260918`; `19/19` episodes sorted newest to oldest by `published_at`.
