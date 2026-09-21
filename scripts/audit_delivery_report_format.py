@@ -244,21 +244,11 @@ def audit_docx(path: Path) -> dict[str, Any]:
     loose_metadata = []
     body_bold_runs = []
     body_line_spacing_failures = []
-    missing_later_part_emphasis = []
     current_part_number = 0
-    expect_later_part_emphasis = False
     subtitle_pagination_failures = []
     for p in paragraphs:
         if p.style.name == "Heading 2":
             current_part_number = part_number(p.text) or current_part_number
-            expect_later_part_emphasis = current_part_number >= 3
-        elif p.style.name == "Heading 3" and current_part_number >= 3:
-            expect_later_part_emphasis = True
-        elif p.text.strip() and expect_later_part_emphasis:
-            visible = text_runs(p)
-            if not visible or not has_ooxml_bold(visible[0]):
-                missing_later_part_emphasis.append(p.text[:100])
-            expect_later_part_emphasis = False
         if p.text.startswith(METADATA_LABELS):
             if points(p.paragraph_format.space_after) > 0.1:
                 loose_metadata.append((p.text[:80], points(p.paragraph_format.space_after)))
@@ -282,7 +272,7 @@ def audit_docx(path: Path) -> dict[str, Any]:
             if is_label_run(p, visible_index):
                 continue
             if has_ooxml_bold(run):
-                if current_part_number >= 3:
+                if current_part_number >= 3 and is_later_part_subtitle_bold(p, index):
                     continue
                 body_bold_runs.append((p.text[:80], run.text.strip()[:60]))
     if loose_metadata:
@@ -291,11 +281,6 @@ def audit_docx(path: Path) -> dict[str, Any]:
         issues.append(f"content block labels should touch their content with no paragraph space after: {loose_labels[:5]}")
     if body_bold_runs:
         issues.append(f"body bold emphasis should be removed except structural labels: {body_bold_runs[:8]}")
-    if missing_later_part_emphasis:
-        issues.append(
-            "Parts 3–5 require a bold lead sentence after each section/subsection heading: "
-            f"{missing_later_part_emphasis[:8]}"
-        )
     if body_line_spacing_failures:
         issues.append(f"body paragraphs must use exact {BODY_LINE_SPACING_PT}pt line spacing: {body_line_spacing_failures[:8]}")
     if subtitle_pagination_failures:
@@ -428,24 +413,6 @@ def audit_pdf(path: Path) -> dict[str, Any]:
         issues.append("PDF text still contains #### markdown heading residue")
     if "Transcript 来源" in text:
         issues.append("PDF text still contains Transcript 来源")
-    punctuation = set("，。；：？！、）》】」』）％…")
-    line_start_punctuation = [
-        (page_index + 1, line.strip()[:60])
-        for page_index, page in enumerate(reader.pages)
-        for line in (page.extract_text() or "").splitlines()
-        if line.strip() and line.strip()[0] in punctuation
-    ]
-    if line_start_punctuation:
-        issues.append(f"PDF has punctuation at line start: {line_start_punctuation[:8]}")
-    for marker in ("第三部分：跨节目专题分析", "第四部分：第二层思维", "第五部分：结论与战略意义"):
-        matching_pages = [page for page in reader.pages if marker in (page.extract_text() or "")]
-        if not matching_pages:
-            issues.append(f"PDF missing later-part heading: {marker}")
-            continue
-        fonts = matching_pages[0].get("/Resources", {}).get("/Font", {})
-        font_names = [str(ref.get_object().get("/BaseFont", "")) for ref in fonts.values()]
-        if not any("STHeitiTC-Medium" in name for name in font_names):
-            issues.append(f"PDF later-part heading is missing embedded bold CJK font: {marker}")
     for marker in ("本期核心判断", "逐集情报与证据"):
         if marker not in text:
             issues.append(f"PDF first pages missing expected marker: {marker}")

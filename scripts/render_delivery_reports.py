@@ -139,8 +139,6 @@ def split_report(markdown: str) -> tuple[str, list[str], str | None, list[Sectio
             continue
         if raw.strip().startswith("**Run ID:"):
             continue
-        if raw.strip().startswith(("- Transcript 来源", "Transcript 来源")):
-            continue
         if raw.startswith("## 第二部分"):
             second_part_heading = raw.replace("##", "").strip()
             continue
@@ -250,16 +248,6 @@ def should_keep_inline_bold(text: str) -> bool:
     if re.search(r"[A-Za-z][A-Za-z0-9+/#-]{2,}", normalized):
         return len(normalized) <= 22
     return False
-
-
-def emphasize_leading_sentence(text: str) -> str:
-    if text.lstrip().startswith("**") or clean_inline(text).startswith(COMPACT_LABELS):
-        return text
-    match = re.match(r"^(.*?[。！？!?])(.*)$", text)
-    if not match:
-        return text
-    sentence, remainder = match.groups()
-    return f"**{sentence}**{remainder}"
 
 
 def inline_runs(text: str, italic: bool = False, *, allow_leading_subtitle_bold: bool = False) -> list[TextRun]:
@@ -407,12 +395,6 @@ def force_bold(run) -> None:
     run.bold = True
     set_run_font(run, DOCX_BOLD_FONT)
     r_pr = run._element.get_or_add_rPr()
-    rfonts = r_pr.rFonts
-    if rfonts is None:
-        rfonts = OxmlElement("w:rFonts")
-        r_pr.append(rfonts)
-    for attr in ("ascii", "hAnsi", "eastAsia", "cs"):
-        rfonts.set(qn(f"w:{attr}"), DOCX_BOLD_FONT)
     for tag in ("w:b", "w:bCs"):
         element = r_pr.find(qn(tag))
         if element is None:
@@ -604,7 +586,6 @@ def add_report_body(doc: Document, markdown: str) -> None:
     current_part_number = 0
     last_role: str | None = None
     previous_body_kind: str | None = None
-    emphasize_next_body = False
     for line in report_body_lines(markdown):
         role, text = paragraph_role(line)
         if role == "blank":
@@ -614,7 +595,6 @@ def add_report_body(doc: Document, markdown: str) -> None:
             part_match = re.match(r"^第([一二三四五])部分", text)
             if part_match:
                 current_part_number = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5}[part_match.group(1)]
-                emphasize_next_body = current_part_number >= 3
             if seen_part:
                 add_blank_line(doc)
                 add_horizontal_rule(doc)
@@ -634,7 +614,6 @@ def add_report_body(doc: Document, markdown: str) -> None:
         elif role in {"h3", "h1"}:
             in_key_quote = False
             previous_body_kind = None
-            emphasize_next_body = role == "h3" and current_part_number >= 3
             if last_role not in {None, "h2"}:
                 add_blank_line(doc)
 
@@ -644,12 +623,6 @@ def add_report_body(doc: Document, markdown: str) -> None:
                 in_key_quote = True
             elif "证据锚点" in normalized or line.strip() == "---":
                 in_key_quote = False
-
-            if current_part_number < 3 and not normalized.startswith(COMPACT_LABELS):
-                text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-            elif current_part_number >= 3 and emphasize_next_body:
-                text = emphasize_leading_sentence(text)
-            emphasize_next_body = False
 
         paragraph = add_docx_paragraph(
             doc,
@@ -734,23 +707,7 @@ def build_docx(markdown_path: Path, out_path: Path) -> None:
 
 def register_pdf_font(font_path: str) -> str:
     font_name = "ArialUnicode"
-    bold_font_name = "ArialUnicodeBold"
     pdfmetrics.registerFont(TTFont(font_name, font_path))
-    pdfmetrics.registerFont(TTFont(bold_font_name, "/System/Library/Fonts/STHeiti Medium.ttc", subfontIndex=0))
-    pdfmetrics.registerFontFamily(
-        font_name,
-        normal=font_name,
-        bold=bold_font_name,
-        italic=font_name,
-        boldItalic=bold_font_name,
-    )
-    pdfmetrics.registerFontFamily(
-        bold_font_name,
-        normal=bold_font_name,
-        bold=bold_font_name,
-        italic=bold_font_name,
-        boldItalic=bold_font_name,
-    )
     return font_name
 
 
@@ -794,7 +751,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
         "h2": ParagraphStyle(
             "DeliveryH2",
             parent=base["Heading2"],
-            fontName="ArialUnicodeBold",
+            fontName=font_name,
             fontSize=18,
             leading=21,
             textColor=colors.black,
@@ -806,7 +763,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
         "h3": ParagraphStyle(
             "DeliveryH3",
             parent=base["Heading3"],
-            fontName="ArialUnicodeBold",
+            fontName=font_name,
             fontSize=14,
             leading=16.5,
             textColor=colors.black,
@@ -823,6 +780,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             leading=10.1,
             alignment=TA_JUSTIFY,
             spaceAfter=2.8,
+            wordWrap="CJK",
         ),
         "bullet": ParagraphStyle(
             "DeliveryBullet",
@@ -834,6 +792,7 @@ def pdf_styles(font_name: str) -> dict[str, ParagraphStyle]:
             firstLineIndent=-7,
             alignment=TA_LEFT,
             spaceAfter=2.2,
+            wordWrap="CJK",
         ),
     }
 
@@ -848,25 +807,11 @@ def draw_page(canvas, doc) -> None:
     canvas.restoreState()
 
 
-def pdf_paragraph(
-    style_map: dict[str, ParagraphStyle],
-    role: str,
-    text: str,
-    *,
-    allow_inline_bold: bool = False,
-) -> Paragraph | Spacer:
+def pdf_paragraph(style_map: dict[str, ParagraphStyle], role: str, text: str) -> Paragraph | Spacer:
     if role == "blank":
         return Spacer(1, 4)
     if role == "body":
-        style = style_map["body"]
-        width = landscape(letter)[0] - 2 * 2.54 * cm - 24
-        runs = label_bold_runs(text)
-        if not allow_inline_bold and not clean_inline(text).startswith(COMPACT_LABELS):
-            runs = [TextRun(run.text, italic=run.italic) for run in runs]
-        return Paragraph(
-            pdf_inline(runs, style.fontName, style.fontSize, width),
-            style,
-        )
+        return Paragraph(pdf_inline(label_bold_runs(text)), style_map["body"])
     paragraph = Paragraph(pdf_escape(text), style_map.get(role, style_map["body"]))
     if role in {"h1", "h2", "h3"}:
         paragraph.keepWithNext = 1
@@ -901,38 +846,15 @@ def pdf_escape(text: str) -> str:
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def pdf_inline(runs: list[TextRun], font_name: str, font_size: float, max_width: float) -> str:
-    chars: list[tuple[str, bool, bool]] = []
-    for run in runs:
-        chars.extend((char, run.bold, run.italic) for char in run.text)
-
-    forbidden_line_starts = set("，。；：？！、）》】」』）％…")
-    forbidden_width = max_width
-
-    def styled(char: str, bold: bool, italic: bool) -> str:
-        text = pdf_escape(char)
-        if bold:
-            text = f'<font name="ArialUnicodeBold">{text}</font>'
-        if italic:
-            text = f"<i>{text}</i>"
-        return text
-
+def pdf_inline(runs: list[TextRun]) -> str:
     formatted: list[str] = []
-    index = 0
-    line_width = 0.0
-    while index < len(chars):
-        char, bold, italic = chars[index]
-        end = index + 1
-        while end < len(chars) and chars[end][0] in forbidden_line_starts:
-            end += 1
-        unit = chars[index:end]
-        unit_width = sum(pdfmetrics.stringWidth(item[0], font_name, font_size) for item in unit)
-        if line_width and line_width + unit_width > forbidden_width:
-            formatted.append("<br/>")
-            line_width = 0.0
-        formatted.extend(styled(value, value_bold, value_italic) for value, value_bold, value_italic in unit)
-        index = end
-        line_width += unit_width
+    for run in runs:
+        text = pdf_escape(run.text)
+        if run.bold:
+            text = f"<b>{text}</b>"
+        if run.italic:
+            text = f"<i>{text}</i>"
+        formatted.append(text)
     return "".join(formatted)
 
 
@@ -953,48 +875,24 @@ def build_pdf(markdown_path: Path, out_path: Path, font_path: str) -> None:
     )
     story: list = [Paragraph(report_display_title(run_id, markdown_title), styles["title"])]
     flowables: list[tuple[str, object]] = []
-    current_part = 0
-    emphasize_next_body = False
     for line in intro:
         role, text = paragraph_role(line)
         if role == "blank":
             continue
-        if role == "h2":
-            match = re.match(r"^第([一二三四五])部分", text)
-            if match:
-                current_part = "一二三四五".index(match.group(1)) + 1
-                emphasize_next_body = current_part >= 3
-        elif role == "h3":
-            emphasize_next_body = current_part >= 3
-        elif role == "body" and current_part >= 3 and emphasize_next_body:
-            text = emphasize_leading_sentence(text)
-            emphasize_next_body = False
-        flowables.append((role, pdf_paragraph(styles, role, text, allow_inline_bold=current_part >= 3)))
+        flowables.append((role, pdf_paragraph(styles, role, text)))
     for index, episode in enumerate(episodes):
         if index == 0 and second_part_heading:
             heading = Paragraph(second_part_heading, styles["h2"])
             heading.keepWithNext = 1
             flowables.append(("h2", heading))
-            current_part = 2
         heading = Paragraph(episode.title, styles["h3"])
         heading.keepWithNext = 1
         flowables.append(("h3", heading))
-        emphasize_next_body = False
         for line in episode.lines:
             role, text = paragraph_role(line)
             if role == "blank":
                 continue
-            if role == "h2":
-                match = re.match(r"^第([一二三四五])部分", text)
-                if match:
-                    current_part = "一二三四五".index(match.group(1)) + 1
-                    emphasize_next_body = current_part >= 3
-            elif role == "h3":
-                emphasize_next_body = current_part >= 3
-            elif role == "body" and current_part >= 3 and emphasize_next_body:
-                text = emphasize_leading_sentence(text)
-                emphasize_next_body = False
-            flowables.append((role, pdf_paragraph(styles, role, text, allow_inline_bold=current_part >= 3)))
+            flowables.append((role, pdf_paragraph(styles, role, text)))
     story.extend(grouped_pdf_flowables(flowables))
     doc.build(story, onFirstPage=draw_page, onLaterPages=draw_page)
 
