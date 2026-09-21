@@ -3,15 +3,17 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-09-06 CST
+Updated: 2026-09-21 CST
 
-## 2026-09-21 CST - 260921 Report Started, Browser Transcript Capture Blocked
+## 2026-09-21 CST - 260921 Transcript Capture Complete, Gemini Authorization Gate Pending
 
-- Current Monday schedule manifest: `data/runs/20260921-182025-945790-manifest.json`; fixed window `2026-09-18T07:00:00+00:00` to `2026-09-21T07:00:00+00:00`; 15 episodes sorted `published_at desc`.
-- Pipeline dry-run created evidence pack `data/runs/20260921-182025-945790-evidence-pack.json`: 1 original transcript present, 14 missing; Downloads transcript JSON count was 0.
-- Live late-RSS audit passed with `feed_failures=0`, `feed_cached_fallbacks=0`: `data/runs/20260921-182205-900356-late-rss-arrivals-audit.json`. It found 20 unprocessed rows: 19 are already manifested in the 260918 report manifest but remain unmarked-seen; 1 genuinely unmanifested current-window arrival is `Behind the Craft — How to Save Money Now with ChatGPT Finances (6 Real Use Cases) | Ethan Bloch` (`published_at=2026-09-20T13:00:00+00:00`). Add this late arrival as the final episode in the 260921 report with an explicit note identifying its original 260921 window.
-- Spotify transcript collection and report generation are blocked: the browser security reviewer denied connecting to the currently active Comet tab because it was on a Perplexity origin. Do not retry through another browser surface, raw CDP, or another route to the same session. Resume only after the user provides an allowed Spotify/Comet session path or the reviewer grants access.
-- No transcripts were newly captured; no Gemini request, report rendering, external upload, transcript cleanup, or mark-seen occurred for 260921. Do not mark either the 260921 manifest or the 260918 manifest seen until all required gates and delivery verifications are complete.
+- Current Monday schedule manifest: `data/runs/20260921-182025-945790-manifest-final.json`; fixed window `2026-09-18T07:00:00+00:00` to `2026-09-21T07:00:00+00:00`; 16 episodes sorted `published_at desc` after late-arrival handling.
+- Live late-RSS audit `data/runs/20260921-182205-900356-late-rss-arrivals-audit.json` passed with `feed_failures=0`, `feed_cached_fallbacks=0`. It found 20 unprocessed rows: 19 already manifested in the 260918 report manifest but still unmarked-seen, plus one genuinely unmanifested current-window arrival: `Behind the Craft — How to Save Money Now with ChatGPT Finances (6 Real Use Cases) | Ethan Bloch` (`published_at=2026-09-20T13:00:00+00:00`). It was appended as episode 16 with `迟到补入，原属 260921 窗口`.
+- Final original/source evidence pack: `data/runs/20260921-182025-945790-evidence-pack.json`; `16/16` matched, `0` missing. Fifteen STD/Spotify-native JSONs were imported from Downloads and episode 3 was added from its official Chinese WebVTT (`207` segments).
+- Transcript language audit: `data/runs/20260921-182025-945790-transcript-language-audit.json`; strict ID-based coverage is `16/16` source and `0/16` Chinese. No Chinese backfill was started because the current approval did not authorize external translation for the 260921 set. Keep the audit as the resumable missing-language queue.
+- Root cause fixed in `scripts/audit_transcript_languages.py`: when both source and Chinese transcripts have episode IDs, a mismatch now scores as no match instead of falling back to similar titles. This corrected a false positive that had matched the September 20 AI Daily Brief episode to an unrelated June episode. Direct strict-ID checks passed; rerunning the language audit now reports `0` Chinese matches.
+- STD safety lesson: the `Auto-Translate to Chinese` switch is per Spotify page and defaults on. Verify it is off on each episode detail page before clicking Spotify's `Transcript` tab; toggling it after opening the tab is too late. Three transcripts (Rick Rubin, Tony Robbins, and Peter Sellis) were inadvertently sent to the extension's background translation queue before this ordering issue was identified; Hannah was informed. All later captures were made with the switch verified off.
+- Report generation is blocked: Codex's approval reviewer rejected sending 260921 transcript/evidence to Gemini because prior explicit approvals were date-specific. Do not retry through another tool or route. Resume only after a fresh explicit approval for 260921. No report Markdown/PDF/DOCX, external delivery, transcript cleanup, or mark-seen has occurred. Do not mark either the 260921 or 260918 manifests seen until all delivery and archive gates pass.
 - LaunchAgent `com.hannah.spotify-podcast-report` was not running at check time (`active count=0`, prior exit code `78: EX_CONFIG`). Git remote exists; working tree was clean before this memory entry.
 
 ## 2026-09-19 CST - 260918 Friday Report Delivered

@@ -91,8 +91,9 @@ def _score(episode: dict[str, object], transcript: dict[str, object]) -> float:
     transcript_meta = episode.get("transcript")
     if isinstance(transcript_meta, dict):
         episode_id = transcript_meta.get("spotify_episode_id")
-    if episode_id and episode_id == transcript.get("spotify_episode_id"):
-        return 1.0
+    transcript_id = transcript.get("spotify_episode_id")
+    if episode_id and transcript_id:
+        return 1.0 if episode_id == transcript_id else 0.0
     title_score = _similarity(str(episode.get("episode_title") or ""), str(transcript.get("episode_title") or ""))
     podcast_score = _similarity(str(episode.get("podcast_title") or ""), str(transcript.get("podcast_name") or ""))
     return title_score * 0.78 + podcast_score * 0.22
