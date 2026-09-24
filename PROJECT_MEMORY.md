@@ -3271,6 +3271,17 @@ Monday batch notes:
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
 
+## 2026-09-24 CST - 260923 Report Generated, Chinese Backfill Authorization Blocked
+
+- Fixed Wednesday schedule window: `2026-09-21T07:00:00+00:00` to `2026-09-23T07:00:00+00:00`; manifest `data/runs/20260924-175034-162944-manifest.json`; 11 episodes sorted by `published_at desc`.
+- Comet/CDP native Spotify capture completed `11/11` original transcripts with exact Spotify episode-ID validation. The first capture missed episode 10, `The State of the AI Debate`; a verified reload captured it with `244` segments.
+- All 15 stale Downloads JSONs from the earlier window were safely deduplicated against the formal archive; the 11 new originals were imported, and Downloads now contains `0` JSON files.
+- Gemini generated the report from English/original transcripts. Initial review failed on missing H2 structure, one episode-URL typo, missing episode 4 evidence anchors, and translation-line formatting. These were repaired against the transcript; final `scripts/check_gemini_report.py` result is `通过`.
+- Final Markdown: `reports/markdown/20260924-175034-162944-gemini-report.md`.
+- Final DOCX/PDF: `reports/word/260923-Spotify播客情报研报.docx`, `reports/pdf/260923-Spotify播客情报研报.pdf`; delivery-format audit passed with 5 H2 sections, 11 episode headings, all labels present, PDF 37 pages. Visual review passed cover, Part 3/4/5 flow, bilingual title, and no orphan major heading.
+- Chinese transcript backfill was attempted through the approved Comet translation workflow but Codex approval rejected external disclosure for this new `260923` batch. Current archive audit: English `11/11`, Chinese `0/11`, duplicates `0`, incomplete `0`; do not upload, mark-seen, or claim end-to-end completion until Chinese backfill authorization and archive integrity pass.
+- LaunchAgent `com.hannah.spotify-podcast-report` remains registered but not running. Comet was restarted with `--remote-debugging-port=9223` for capture.
+
 ## 2026-09-19 260914 / 260916 Gemini Resume and QA
 
 - Gemini quota diagnosis and recovery:

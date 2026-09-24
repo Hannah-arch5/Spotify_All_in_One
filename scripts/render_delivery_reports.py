@@ -382,7 +382,7 @@ def set_run_font(run, font_name: str = DOCX_FONT) -> None:
         r_pr.append(rfonts)
     for attr in ("ascii", "hAnsi", "cs"):
         rfonts.set(qn(f"w:{attr}"), font_name)
-    rfonts.set(qn("w:eastAsia"), DOCX_ZH_FONT)
+    rfonts.set(qn("w:eastAsia"), font_name if font_name == DOCX_BOLD_FONT else DOCX_ZH_FONT)
     lang = r_pr.find(qn("w:lang"))
     if lang is None:
         lang = OxmlElement("w:lang")

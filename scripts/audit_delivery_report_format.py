@@ -242,7 +242,7 @@ def audit_docx(path: Path) -> dict[str, Any]:
 
     loose_labels = []
     loose_metadata = []
-    body_bold_runs = []
+    later_part_emphasis: dict[int, int] = {3: 0, 4: 0, 5: 0}
     body_line_spacing_failures = []
     current_part_number = 0
     subtitle_pagination_failures = []
@@ -271,16 +271,15 @@ def audit_docx(path: Path) -> dict[str, Any]:
             visible_index = len([item for item in p.runs[:index] if item.text.strip()])
             if is_label_run(p, visible_index):
                 continue
-            if has_ooxml_bold(run):
-                if current_part_number >= 3 and is_later_part_subtitle_bold(p, index):
-                    continue
-                body_bold_runs.append((p.text[:80], run.text.strip()[:60]))
+            if current_part_number >= 3 and has_ooxml_bold(run) and not run.italic:
+                later_part_emphasis[current_part_number] += 1
     if loose_metadata:
         issues.append(f"metadata lines should be compact with no paragraph space after: {loose_metadata[:5]}")
     if loose_labels:
         issues.append(f"content block labels should touch their content with no paragraph space after: {loose_labels[:5]}")
-    if body_bold_runs:
-        issues.append(f"body bold emphasis should be removed except structural labels: {body_bold_runs[:8]}")
+    missing_emphasis = [part for part, count in later_part_emphasis.items() if count == 0]
+    if missing_emphasis:
+        issues.append(f"Parts 3–5 must include bold emphasis in their body content: {missing_emphasis}")
     if body_line_spacing_failures:
         issues.append(f"body paragraphs must use exact {BODY_LINE_SPACING_PT}pt line spacing: {body_line_spacing_failures[:8]}")
     if subtitle_pagination_failures:
