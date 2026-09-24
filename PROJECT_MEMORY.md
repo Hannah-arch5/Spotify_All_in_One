@@ -3282,6 +3282,12 @@ Monday batch notes:
 - Chinese transcript backfill was attempted through the approved Comet translation workflow but Codex approval rejected external disclosure for this new `260923` batch. Current archive audit: English `11/11`, Chinese `0/11`, duplicates `0`, incomplete `0`; do not upload, mark-seen, or claim end-to-end completion until Chinese backfill authorization and archive integrity pass.
 - LaunchAgent `com.hannah.spotify-podcast-report` remains registered but not running. Comet was restarted with `--remote-debugging-port=9223` for capture.
 
+### 260923 Chinese Backfill Follow-up
+
+- Hannah subsequently authorized the 260923 batch for external translation.
+- Root cause of the first translation failure was fixed in `scripts/translate_spotify_transcripts_to_zh_cdp.js`: clients5 returns per-line translations inside the first array element, and the old parser concatenated them before splitting. The parser now preserves each returned line and validates exact segment alignment.
+- After the fix, Chinese archive coverage reached `7/11` complete IDs with `0` duplicates and `0` incomplete files. Remaining IDs are `2CW87mVZrePPSGWr6FRymj`, `6Jcw5Cx0RyAIlAH7hGWAlc`, `0vFCXj2qy2satOzSCR8Lpf`, and `76r3P18K40SF5KC62RfmOC`; translation service requests became unresponsive during retries. Do not deliver or mark seen until these four are complete.
+
 ## 2026-09-19 260914 / 260916 Gemini Resume and QA
 
 - Gemini quota diagnosis and recovery:

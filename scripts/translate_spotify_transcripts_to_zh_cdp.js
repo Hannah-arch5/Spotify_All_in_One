@@ -78,16 +78,16 @@ function sourceIsChinese(segments) {
   return cjkRatio(sample) >= 0.35;
 }
 
-function payloadToText(payload) {
-  if (Array.isArray(payload) && payload.length && typeof payload[0] === "string") return payload.join("");
-  if (Array.isArray(payload) && Array.isArray(payload[0]) && typeof payload[0][0] === "string") return payload[0][0];
-  let translated = "";
-  if (Array.isArray(payload) && Array.isArray(payload[0])) {
-    for (const item of payload[0]) {
-      if (item && item[0]) translated += String(item[0]);
-    }
+function payloadToTranslations(payload) {
+  if (!Array.isArray(payload)) return [];
+  if (payload.length && typeof payload[0] === "string") return payload.map((item) => String(item));
+  if (payload.length && Array.isArray(payload[0])) {
+    return payload
+      .flatMap((item) => (Array.isArray(item) && item[0] ? String(item[0]).split("\n") : []))
+      .map((item) => item.trim())
+      .filter(Boolean);
   }
-  return translated;
+  return [];
 }
 
 function chunkIndices(segments, maxChars) {
@@ -142,8 +142,7 @@ async function translateIndices(page, segments, indices, options) {
   for (let attempt = 1; attempt <= options.maxRetries; attempt += 1) {
     try {
       const raw = await translateText(page, text, options.timeoutMs);
-      const translated = payloadToText(JSON.parse(raw));
-      const translations = translated.split("\n").map((line) => line.trim());
+      const translations = payloadToTranslations(JSON.parse(raw)).map((line) => line.trim());
       if (translations.length >= indices.length && indices.every((_, offset) => translations[offset])) {
         indices.forEach((index, offset) => {
           segments[index].translation = translations[offset];
