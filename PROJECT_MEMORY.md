@@ -3288,6 +3288,15 @@ Monday batch notes:
 - Root cause of the first translation failure was fixed in `scripts/translate_spotify_transcripts_to_zh_cdp.js`: clients5 returns per-line translations inside the first array element, and the old parser concatenated them before splitting. The parser now preserves each returned line and validates exact segment alignment.
 - After the fix, Chinese archive coverage reached `7/11` complete IDs with `0` duplicates and `0` incomplete files. Remaining IDs are `2CW87mVZrePPSGWr6FRymj`, `6Jcw5Cx0RyAIlAH7hGWAlc`, `0vFCXj2qy2satOzSCR8Lpf`, and `76r3P18K40SF5KC62RfmOC`; translation service requests became unresponsive during retries. Do not deliver or mark seen until these four are complete.
 
+### 260923 Delivery Completed 2026-10-02
+
+- Hannah re-authorized the remaining four English transcripts for Google Translate-style external translation. Final Chinese archive coverage passed `11/11`; English `11/11`; duplicate IDs `0`; incomplete IDs `0`; Downloads JSON count `0`.
+- Live RSS audits passed for the fixed 260923 window and the previous closed 260921 window; no unmanifested late arrivals were found. Mark-seen manifest: `data/runs/20261002-164301-811875-manifest.json`, `marked_seen=true`, `new_episode_count=11`.
+- Zotero direct PDF archived as item `4499`; backup `/Users/hannah/Zotero/zotero.sqlite.backup-1790930632`; PDF SHA-256 matched local `97ab7a5e4f95339dccf9744ed73f5bb51e687b6e2d6ae5f487b0be77365eb6cb`.
+- Google Drive verified `260923-Spotify播客情报研报.docx` in `gdrive:1.Spotify情报汇总/`.
+- Discord Studio queue was blocked by its existing `127.0.0.1:3000` EADDRINUSE service failure. The PDF was sent through the same configured bot directly and verified with Discord message ID `1555501077661622422`; the queue event was marked `notification_sent`.
+- Current final delivery is complete. No GitHub skill push was needed because only project translation/runtime code and private project memory changed, not the public skill source.
+
 ## 2026-09-19 260914 / 260916 Gemini Resume and QA
 
 - Gemini quota diagnosis and recovery:
