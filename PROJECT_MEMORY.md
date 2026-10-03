@@ -3635,3 +3635,26 @@ Monday batch notes:
   - DOCX SHA-256 `bd82232082f8b727045aeff687c351d8ae40f535983258a36a3019a3acf0359d`.
   - PDF SHA-256 `2fc06bba3f3a3220c62c83ac948de65ea9c6289b6969df34b1d55ef1b193683c`.
 - Zotero attachment `4504` was replaced and hash-verified; Google Drive was resynchronized; Discord `#todo` received the native PDF with notification id `1791036224981-16bb44d2-4239-44b8-a33b-e4cf8f80cff4-discord`, status `notification_sent`.
+
+## 2026-10-03 260928 Recovered Report Generated
+
+- Backlog routing:
+  - Late RSS audit recovered the independent `260928` window with `14` episodes; it was kept separate from `260925` and ordered by `published_at desc`.
+- Transcript and language gates:
+  - Native Spotify/Comet capture completed English coverage `14/14`; the exact Spotify episode ID was verified before each transcript was saved.
+  - Chinese backfill completed `14/14`; the language audit and duplicate/incomplete checks passed.
+- Gemini and report provenance:
+  - Hannah explicitly authorized sending the 14 English transcript/evidence records to Gemini for the report.
+  - Gemini completed episode 1, then the provider quota was exhausted. The remaining 13 episodes were assembled locally from the verified English transcripts under the recorded provenance `assembly_mode: local-transcript-grounded-after-gemini-quota`; this report must not be described as fully Gemini-generated.
+  - Markdown: `reports/markdown/20261003-260928-recovered-gemini-report.md`.
+  - Constructive bilingual title: `从模型能力到可验证工作流：AI 竞争正在转向组织、信任与执行系统 (From Model Capability to Verifiable Workflows: AI Competition Is Shifting to Organizations, Trust, and Execution Systems)`.
+- Final artifacts and QA:
+  - DOCX: `reports/word/260928-Spotify播客情报研报.docx`; SHA-256 `0450ce9138a066a1ad3506cded653de2efbe810baae648188d2daa26d1f4e8a5`.
+  - PDF: `reports/pdf/260928-Spotify播客情报研报.pdf`; SHA-256 `42f04bb576fc9d175a501e308667511929599c761c5d3e90908054f98029586f`.
+  - Markdown: SHA-256 `1f1b5a9fd8d83683a06db78da2ed4a64792d8d5b98cd4703eff26e5be6b4cbd3`.
+  - Native Word PDF export produced `29` pages. DOCX/PDF format audits passed with zero issues; all 14 episode blocks, required labels, italic translations, and heading-position checks passed.
+- Delivery status:
+  - Zotero direct-PDF archive completed and hash-verified against the local PDF.
+  - DOCX and PDF are staged at `reports/archive/pending/2609/google-drive/` and `reports/archive/pending/2609/discord-todo/`.
+  - Google Drive and Discord were intentionally not sent in this turn because the current authorization explicitly covered Gemini generation only, not external disclosure to those destinations.
+- Do not mark the manifest seen or delete staged files until the pending external-delivery authorization is granted and both destinations succeed. The native Word UI print-to-PDF path is the reliable fallback when the AppleScript export path fails.

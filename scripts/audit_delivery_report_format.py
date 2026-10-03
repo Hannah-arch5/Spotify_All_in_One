@@ -299,6 +299,8 @@ def audit_docx(path: Path) -> dict[str, Any]:
     labeled_translation_lines = []
     non_italic_translation_lines = []
     in_key_quote = False
+    expect_source_quote = False
+    expect_translation = False
     for p in paragraphs:
         text = p.text.strip()
         if "关键金句" in text and "结论" in text:
@@ -306,12 +308,25 @@ def audit_docx(path: Path) -> dict[str, Any]:
             continue
         if "证据锚点" in text:
             in_key_quote = False
+            expect_source_quote = False
+            expect_translation = False
         if in_key_quote and any(pattern in text for pattern in TRANSLATION_LABEL_PATTERNS):
             labeled_translation_lines.append(text[:120])
-        if in_key_quote and is_translation_paragraph(text):
+        if in_key_quote and text.startswith("原句"):
+            expect_source_quote = True
+            expect_translation = False
+            continue
+        if in_key_quote and expect_source_quote:
+            # The source quote itself is intentionally upright; its following
+            # paragraph is the translation that must be italicized.
+            expect_source_quote = False
+            expect_translation = True
+            continue
+        if in_key_quote and expect_translation and is_translation_paragraph(text):
             visible_runs = [run for run in p.runs if run.text.strip()]
             if not visible_runs or not all(run.italic for run in visible_runs):
                 non_italic_translation_lines.append(text[:120])
+            expect_translation = False
     if labeled_translation_lines:
         issues.append(f"Chinese translation/explanation lines must be italicized without prefix labels: {labeled_translation_lines[:8]}")
     if non_italic_translation_lines:
