@@ -3649,10 +3649,11 @@ Monday batch notes:
   - Markdown: `reports/markdown/20261003-260928-recovered-gemini-report.md`.
   - Constructive bilingual title: `从模型能力到可验证工作流：AI 竞争正在转向组织、信任与执行系统 (From Model Capability to Verifiable Workflows: AI Competition Is Shifting to Organizations, Trust, and Execution Systems)`.
 - Final artifacts and QA:
-  - DOCX: `reports/word/260928-Spotify播客情报研报.docx`; SHA-256 `0450ce9138a066a1ad3506cded653de2efbe810baae648188d2daa26d1f4e8a5`.
-  - PDF: `reports/pdf/260928-Spotify播客情报研报.pdf`; SHA-256 `42f04bb576fc9d175a501e308667511929599c761c5d3e90908054f98029586f`.
-  - Markdown: SHA-256 `1f1b5a9fd8d83683a06db78da2ed4a64792d8d5b98cd4703eff26e5be6b4cbd3`.
-  - Native Word PDF export produced `29` pages. DOCX/PDF format audits passed with zero issues; all 14 episode blocks, required labels, italic translations, and heading-position checks passed.
+  - Depth revision: Parts 3/4/5 were expanded from short bullet summaries into cross-episode synthesis, second-order impacts, enterprise/product/investment/team implications, and a staged implementation path. The revision remains transcript-grounded and does not add unsupported claims.
+  - DOCX: `reports/word/260928-Spotify播客情报研报.docx`; SHA-256 `2bf7615c6bb6b44799efc7ce57943da896bf2a0a5f1d10153e32a1df9d947f66`.
+  - PDF: `reports/pdf/260928-Spotify播客情报研报.pdf`; SHA-256 `a6db0435125b710fe8fd8a0210bfa1b61e36c6ade58eea412ac183c1c9da7e4c`.
+  - Markdown: SHA-256 `2b7aacf70ba3d24bb6a64f8431b2091f6fd6906e0afebec3f5f4ade38a7fb92f`.
+  - Native Word PDF export produced `29` pages. DOCX/PDF format audits passed with zero issues; all 14 episode blocks, required labels, italic translations, bold Part 3/4/5 key points, and heading-position checks passed.
 - Delivery status:
   - Zotero direct-PDF archive completed and hash-verified against the local PDF.
   - DOCX and PDF are staged at `reports/archive/pending/2609/google-drive/` and `reports/archive/pending/2609/discord-todo/`.
