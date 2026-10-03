@@ -5,6 +5,12 @@
 
 Updated: 2026-09-21 CST
 
+## 2026-10-03 CST - Fixed Report-Window Routing Rule
+
+- Hard correction from Hannah: an episode must be placed in the Monday/Wednesday/Friday report window determined by its `published_at`, never by the discovery or generation date. A late-discovered episode must be backfilled into its original dated report as a separate report; it must not be appended to the next report or merged across windows.
+- The 10 valid late episodes discovered during the 261002 delivery gate belong to the `260930` Wednesday window (`2026-09-28T07:00:00+00:00` to `2026-09-30T07:00:00+00:00`), so they must be handled as a separate `260930` report. The 261002 report remains its original 15-episode report. The Xiaolin episode had no verifiable Spotify episode ID and remains excluded from Spotify transcript/report processing with that reason recorded.
+- Updated both the project source skill (`.codex-skills/spotify-mwf-report/`) and installed skill (`/Users/hannah/.codex/skills/spotify-mwf-report/`) to make time-window routing and separate late-report regeneration mandatory.
+
 ## 2026-10-02 CST - 261002 Friday Report Generated, Delivery Pending
 
 - Fixed schedule window: `2026-09-30T07:00:00+00:00` to `2026-10-02T07:00:00+00:00`; intended report date/filename is `261002`, not the late generation timestamp. Manifest: `data/runs/20261002-165557-226494-manifest.json`; 15 episodes sorted `published_at desc`.
