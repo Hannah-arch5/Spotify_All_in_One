@@ -3547,3 +3547,30 @@ Monday batch notes:
 - 260817 workflow is complete end to end, including full original and Chinese transcript coverage, final report, Zotero, Google Drive, Discord, Downloads cleanup, duplicate archive audit, valid late-RSS audit, and mark-seen.
 - GitHub note:
   - No Spotify skill/source files changed during this run. Public GitHub source snapshot does not include private `PROJECT_MEMORY.md`, transcript archives, generated reports, or `.env`; therefore no public GitHub push was required for this report-only delivery. Local memory should still be committed.
+## 2026-10-03 260930 Late-Window Spotify Report Delivered
+
+- Routing decision: the 10 late RSS arrivals published in the closed 2026-09-28 07:00 UTC to 2026-09-30 07:00 UTC window were placed in a separate `260930` report because no 260930 report had previously been generated or archived. They were not merged into the already-complete 261002 report.
+- Manifest and evidence:
+  - Manifest: `data/runs/20261003-181500-260930-manifest.json`.
+  - Evidence pack: `data/runs/20261003-181500-260930-evidence-pack.json`.
+  - 10 episodes, ordered by `published_at desc`; original/English coverage `10/10`.
+  - One non-Spotify Xiaoyuzhou episode was excluded and did not enter the report.
+- Chinese transcript backfill:
+  - Hannah explicitly authorized sending the 10 archived English transcripts to the Google Translate-style external service.
+  - Status: `data/background_jobs/20261003-181500-260930-zh-translation-status.json`; source `10`, complete `10`, blocked `0`.
+  - Final language audit passed with Chinese coverage `10/10`; no incomplete or untranslated formal archive files.
+- Report:
+  - Markdown: `reports/markdown/20261003-181500-260930-gemini-report.md`.
+  - DOCX: `reports/word/260930-Spotify播客情报研报.docx`; SHA-256 `cad031bfcb7147456daab723a6752490a22bb4c564ea4da95059156f6c63517c`.
+  - PDF: `reports/pdf/260930-Spotify播客情报研报.pdf`; SHA-256 `e0c7ab7bb7abe84e60fa2922e6e72cfbc54cc0a8bfb6f63e1b96858f84e12243`.
+  - Gemini first-pass synthesis failed structure review; fixed with `assemble_gemini_report_from_briefs.py`, then normalized italic translation markers, removed timestamps from key quotes, and corrected one Spotify episode URL ID.
+  - Final content review passed with errors `0`, warnings `0`.
+  - Delivery-format audit passed with no issues: 5 H2 sections, 10 episode headings, all required labels present, PDF page count `35`.
+- Delivery:
+  - Zotero archived as direct PDF attachment title `260930-Spotify播客情报研报`; local/Zotero PDF hashes matched.
+  - DOCX uploaded to Google Drive and verified by Drive listing.
+  - PDF sent to Discord `#todo` via live Discord Studio.
+- Cleanup and completion gates:
+  - `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=0 removed=0`; Downloads contained no loose transcript JSON files.
+  - `scripts/audit_transcript_archive_integrity.py data/runs/20261003-181500-260930-evidence-pack.json --require-clean` passed.
+  - `marked_seen=10 manifest=data/runs/20261003-181500-260930-manifest.json`.
