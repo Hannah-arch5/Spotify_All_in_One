@@ -3613,4 +3613,15 @@ Monday batch notes:
   - Discord queue id `1791034675460-67ddce55-6828-4d47-adda-a6fa0be03d6a-discord` reached `notification_sent` after restarting the Discord Studio LaunchAgent.
 - Completion:
   - `marked_seen=17 manifest=data/runs/20261003-203035-502456-manifest.json`.
-  - Next independent backlog item is `260928` with `14` episodes; do not merge it into 260925.
+- Next independent backlog item is `260928` with `14` episodes; do not merge it into 260925.
+
+## 2026-10-03 260925 Report Depth and Format Revision
+
+- Hannah correctly flagged that the first 260925 delivery was too compressed in Parts 3-5 and did not match the prior deep-report standard.
+- Rewrote Parts 3, 4, and 5 with the established layered structure: cross-episode themes, first-layer evidence, mechanisms, second-order effects, and audience-specific strategic actions. The revised Markdown grew from `770` to `890` lines and the rendered PDF from `28` to `30` pages.
+- Re-rendered and visually checked the revised PDF pages `27`, `28`, `29`, and `30`; Part 3 begins at zone `0.267`, Part 4 at `0.439`, and Part 5 at `0.502`, with no orphaned headings or forced blank pages.
+- Revised artifacts:
+  - DOCX SHA-256 `9b04e78b88442b697e61f910898bf7585b297d8f84691da5bc102eef0695ed8d`.
+  - PDF SHA-256 `392aad0a02c581aef938878de30542a793bfdb53ad3a4003dd3c5aa6532a25cf`.
+  - DOCX format audit and Markdown content review both passed with zero errors.
+- Replaced Zotero attachment `4504` and verified the new storage PDF hash; re-synced Google Drive; resent the revised PDF to Discord `#todo`. Revised Discord notification id: `1791035765576-b4c42312-ddf0-4856-a1a8-4d13386a6f60-discord`, status `notification_sent`.
