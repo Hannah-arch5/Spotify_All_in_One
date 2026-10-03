@@ -18,7 +18,7 @@
 - Run the late-arriving RSS audit against current RSS before accepting a manifest as complete:
   - `scripts/audit_late_rss_arrivals.py --since <previous-window-since> --until <current-window-until> --require-clean`
   - Include at least the current report window and the previous closed M/W/F window.
-  - If the audit finds any episode that now appears in RSS but was not manifested or marked seen, treat it as a hard blocker. Assign it by `published_at` to the fixed M/W/F window it originally belongs to, collect its transcript, and regenerate that dated report separately when needed. Never append it to the next report or merge multiple fixed windows into one oversized report. Record a note such as `迟到发现，归入原属 <YYMMDD> 窗口` in the corrected report/memory.
+  - If the audit finds any episode that now appears in RSS but was not manifested or marked seen, treat it as a hard blocker. Use `published_at` to identify the original fixed M/W/F window. If that window's report is not yet generated or archived, add the episode to that original report. If the original report is already completed/archived, or the gap is too old to reopen cleanly, append the episode to the latest report as the final episode and record `迟到补入，原属 <YYMMDD> 窗口`. Never merge two complete windows wholesale or hide the original date.
   - This check exists because some feeds can publish or refresh late while backdating `published_at`, which can make an episode belong to an already delivered report window even though it was absent from RSS during the original run.
 
 ## 3. Transcript Collection
