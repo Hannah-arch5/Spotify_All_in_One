@@ -3625,3 +3625,13 @@ Monday batch notes:
   - PDF SHA-256 `392aad0a02c581aef938878de30542a793bfdb53ad3a4003dd3c5aa6532a25cf`.
   - DOCX format audit and Markdown content review both passed with zero errors.
 - Replaced Zotero attachment `4504` and verified the new storage PDF hash; re-synced Google Drive; resent the revised PDF to Discord `#todo`. Revised Discord notification id: `1791035765576-b4c42312-ddf0-4856-a1a8-4d13386a6f60-discord`, status `notification_sent`.
+
+## 2026-10-03 260925 Native Word PDF Format Correction
+
+- Root cause of the remaining format complaint: the prior 260925 PDF had been generated through the ReportLab/Office-compatible fallback while Microsoft Word was unavailable. That fallback changed pagination, font metrics, and visible emphasis compared with the established Word-native delivery format.
+- Microsoft Word was relaunched and the report was regenerated through the native Word PDF export path. Final native PDF: `40` pages; DOCX audit and PDF audit both passed with zero issues.
+- Visual checks passed on title page, episode evidence page, Part 3 page `36`, Part 4 page `38`, and Part 5 page `40`: Chinese translations are visibly italic, Part 3-5 headings and emphasized points are bold, headings remain attached to body text, and no punctuation begins a line.
+- Final native artifacts:
+  - DOCX SHA-256 `bd82232082f8b727045aeff687c351d8ae40f535983258a36a3019a3acf0359d`.
+  - PDF SHA-256 `2fc06bba3f3a3220c62c83ac948de65ea9c6289b6969df34b1d55ef1b193683c`.
+- Zotero attachment `4504` was replaced and hash-verified; Google Drive was resynchronized; Discord `#todo` received the native PDF with notification id `1791036224981-16bb44d2-4239-44b8-a33b-e4cf8f80cff4-discord`, status `notification_sent`.
