@@ -50,6 +50,7 @@ Use this skill for Hannah's recurring Spotify podcast intelligence report workfl
 - Mark episodes seen only after the required delivery gates pass, unless the user explicitly skips a blocked channel.
 - Discord delivery must use the live Discord Studio directory: `/Users/hannah/.discord-studio/Discord_Studio`.
 - When sending transcript/evidence to Gemini or files to Google Drive/Discord, respect Codex approval prompts. If `PROJECT_MEMORY.md` records standing user authorization for Spotify MWF Gemini generation, do not ask the user again before the Gemini step, but still obey any Codex/system approval prompt that appears. If approval is blocked, report it directly and do not work around it.
+- Gemini quota exhaustion is a recorded provider blocker, not permission to silently claim Gemini completion. Preserve resumable episode briefs and the exact quota status. If Hannah's standing authorization explicitly allows using Codex's own method, remaining episodes may be completed from verified English transcript JSON with `assembly_mode: local-transcript-grounded-after-gemini-quota`; label that provenance in memory and do not spend more Gemini requests while the quota is exhausted.
 
 ## Common User Triggers
 

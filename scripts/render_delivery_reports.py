@@ -811,7 +811,7 @@ def pdf_paragraph(style_map: dict[str, ParagraphStyle], role: str, text: str) ->
     if role == "blank":
         return Spacer(1, 4)
     if role == "body":
-        return Paragraph(pdf_inline(label_bold_runs(text)), style_map["body"])
+        return Paragraph(pdf_inline(label_bold_runs(text, italic=is_translation_line(text))), style_map["body"])
     paragraph = Paragraph(pdf_escape(text), style_map.get(role, style_map["body"]))
     if role in {"h1", "h2", "h3"}:
         paragraph.keepWithNext = 1

@@ -3581,3 +3581,36 @@ Monday batch notes:
 - Missing windows must become an explicit date-ordered backlog. Complete and deliver one report at a time, with independent transcript, content, format, Zotero/Drive/Discord, cleanup, integrity, and mark-seen gates before moving to the next report.
 - A generated-looking file, an unarchived draft, or an unseen manifest is not a completed report. Never skip directly to the newest window and never merge separate missing windows into one report.
 - This rule is encoded in both `.codex-skills/spotify-mwf-report/SKILL.md` and the installed `/Users/hannah/.codex/skills/spotify-mwf-report/SKILL.md`.
+
+## 2026-10-03 260925 Spotify Report Delivered
+
+- Backlog routing:
+  - RSS audit identified two missing fixed windows: `260925` with `17` episodes and `260928` with `14` episodes. They remain separate reports and were not merged.
+  - Completed the oldest backlog item `260925` first. Episodes were ordered by `published_at desc`, so the newest publication is 情报 1 and the oldest is 情报 17.
+- Transcript collection and language completeness:
+  - Manifest: `data/runs/20261003-203035-502456-manifest.json`; evidence pack: `data/runs/20261003-203035-502456-evidence-pack.json`.
+  - Spotify native Comet/CDP capture completed original English coverage `17/17`; exact Spotify episode IDs were verified before saving.
+  - Chinese backfill completed through the authorized Google Translate-style browser route: `data/background_jobs/20261003-203035-502456-zh-cdp-translation-status.json`.
+  - Final language audit passed: English `17/17`, Chinese `17/17`, missing `0`; archive integrity passed with duplicate IDs `0`, incomplete files `0`; Downloads loose JSON count `0`.
+- Gemini and report generation:
+  - User explicitly authorized sending the 17 English transcripts/evidence to Gemini and the 17 originals to the external translation service.
+  - Gemini completed episode briefs `1-13`, then both `gemini-2.5-flash` and `gemini-2.5-flash-lite` hit the free-tier daily request quota. The status file records the exact 429 retry window and `next_episode_index=14`.
+  - Because the user had already authorized using Codex's own method instead of spending more Gemini quota, episodes `14-17` were completed locally from the verified English transcript JSON. The final report is explicitly marked `assembly_mode: local-transcript-grounded-after-gemini-quota`; it must not be described as fully Gemini-generated.
+  - Markdown: `reports/markdown/20261003-203035-502456-gemini-report.md`.
+  - Constructive bilingual title: `从成本下降到能力重构：AI基础设施、组织适应与制度创新正在重塑竞争力 (From Falling Costs to Capability Redesign: AI Infrastructure, Adaptation, and Institutional Innovation Are Reshaping Competitiveness)`.
+  - Final content review passed: `reports/markdown/20261003-203035-502456-gemini-review.md`, errors `0`, warnings `0`; 17 episode sections and all five main parts present.
+  - Evidence quality fixes included normalizing 情报 7 evidence anchors, preserving unlabeled italic translations, and reducing 情报 10 to eight substantive anchors.
+- Final artifacts and visual QA:
+  - DOCX: `reports/word/260925-Spotify播客情报研报.docx`; SHA-256 `9ca3ef94c8f527fd8fb6cfda15bc5d8b72b161ee69923ece23d0f80e72cef951`.
+  - PDF: `reports/pdf/260925-Spotify播客情报研报.pdf`; SHA-256 `d7d57e147f6ff5f1a553fe5223c00a4c72062e0f7d3203ad56c4129ce4a1df04`.
+  - DOCX audit passed with no issues: 5 H2 sections, 17 episode headings, all required labels and italic translation rules satisfied.
+  - Microsoft Word was unavailable to AppleScript on this machine, so native Word PDF export could not run. The DOCX was visually rendered through the available Office-compatible renderer first, which exposed missing CJK glyphs; final PDF used the project ReportLab preview renderer with CJK font and was visually checked on pages 1, 3, 24, 27, and 28. The native Word export script was left on its original format-code path for a later Word-available run.
+  - Pagination spot check passed: 第三部分 page `27` zone `0.267`, 第四部分 page `28` zone `0.135`, 第五部分 page `28` zone `0.493`; no forced blank pages.
+- Delivery:
+  - Zotero archived as direct PDF attachment `4504`, title `260925-Spotify播客情报研报`; active storage PDF `/Users/hannah/Zotero/storage/OIRNULAE/260925-Spotify播客情报研报.pdf`; local/Zotero hash matched.
+  - Staged DOCX: `reports/archive/pending/2609/google-drive/260925-Spotify播客情报研报.docx`; staged PDF: `reports/archive/pending/2609/discord-todo/260925-Spotify播客情报研报.pdf`; staged hashes matched finals.
+  - Google Drive listing verified `260925-Spotify播客情报研报.docx`.
+  - Discord queue id `1791034675460-67ddce55-6828-4d47-adda-a6fa0be03d6a-discord` reached `notification_sent` after restarting the Discord Studio LaunchAgent.
+- Completion:
+  - `marked_seen=17 manifest=data/runs/20261003-203035-502456-manifest.json`.
+  - Next independent backlog item is `260928` with `14` episodes; do not merge it into 260925.
