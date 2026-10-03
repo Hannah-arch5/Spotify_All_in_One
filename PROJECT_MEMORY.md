@@ -3574,3 +3574,10 @@ Monday batch notes:
   - `scripts/import_spotify_transcripts.py --move` returned `imported=0 skipped=0 removed=0`; Downloads contained no loose transcript JSON files.
   - `scripts/audit_transcript_archive_integrity.py data/runs/20261003-181500-260930-evidence-pack.json --require-clean` passed.
   - `marked_seen=10 manifest=data/runs/20261003-181500-260930-manifest.json`.
+
+## 2026-10-03 CST - Mandatory Report Backlog Preflight
+
+- Hannah requires a hard no-omission rule: before starting the newest Spotify report, enumerate every expected Monday/Wednesday/Friday window since the last confirmed checkpoint and report the expected/completed/missing counts.
+- Missing windows must become an explicit date-ordered backlog. Complete and deliver one report at a time, with independent transcript, content, format, Zotero/Drive/Discord, cleanup, integrity, and mark-seen gates before moving to the next report.
+- A generated-looking file, an unarchived draft, or an unseen manifest is not a completed report. Never skip directly to the newest window and never merge separate missing windows into one report.
+- This rule is encoded in both `.codex-skills/spotify-mwf-report/SKILL.md` and the installed `/Users/hannah/.codex/skills/spotify-mwf-report/SKILL.md`.
