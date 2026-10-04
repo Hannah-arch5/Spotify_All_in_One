@@ -3659,3 +3659,15 @@ Monday batch notes:
   - DOCX and PDF are staged at `reports/archive/pending/2609/google-drive/` and `reports/archive/pending/2609/discord-todo/`.
   - Google Drive and Discord were intentionally not sent in this turn because the current authorization explicitly covered Gemini generation only, not external disclosure to those destinations.
 - Do not mark the manifest seen or delete staged files until the pending external-delivery authorization is granted and both destinations succeed. The native Word UI print-to-PDF path is the reliable fallback when the AppleScript export path fails.
+
+## 2026-10-05 260928 Gemini Full Rewrite and Delivery QA
+
+- Hannah requested a deeper rewrite because the prior 260928 report was too simplified. The 14-episode window remains separate from 260925 and is ordered by `published_at desc`.
+- Gemini regeneration completed all `14/14` episode briefs and a full synthesis with `gemini-2.5-flash`, under the previously granted authorization. The final report uses `assembly_mode: synthesis-plus-briefs`; subsequent local edits were limited to mechanical quality corrections and one missing translation completion: timestamps removed from quote lines, nested italics normalized, one manifest URL corrected, and episode 8 evidence anchors completed with transcript-grounded italic Chinese translations. No substantive local fallback synthesis was used.
+- The final title is constructive and bilingual: `以可信协作重塑AI时代的效率与韧性：从代理落地到人类价值升级 (Build Trustworthy Collaboration for AI-Era Efficiency and Resilience: From Agent Adoption to Human Value)`.
+- Markdown content audit passed with `14` episode blocks, all required labels, all five main parts, meaningful evidence anchors, and complete English-anchor translations. Native Word DOCX/PDF format audit passed with no issues; PDF is `44` pages. Title, Part 3/4/5 emphasis, translation italics, heading attachment, and punctuation line-end rules were rechecked.
+- Final artifacts and hashes:
+  - Markdown: `reports/markdown/20261003-260928-recovered-gemini-report.md`; SHA-256 `a4499deb61a5db5bb5c6fb13b22d671ed97cae15b6e9069e814a6d12ae4921ed`.
+  - DOCX: `reports/word/260928-Spotify播客情报研报.docx`; SHA-256 `08f16b12ae83e080ab5e1f77a7f01873516fdaf27892acb748d83d5e38246853`.
+  - Native Word PDF: `reports/pdf/260928-Spotify播客情报研报.pdf`; SHA-256 `4c23e0e01a53a505b56ef8cb43eee635d8e37b59b9a6b6ba59a0668918de6dd0`.
+- Zotero replacement completed as direct PDF attachment `4505`; local PDF and Zotero storage `/Users/hannah/Zotero/storage/2AILAFDF/260928-Spotify播客情报研报.pdf` hashes match. Google Drive and Discord remain staged only because the current authorization covered Gemini generation, not those destinations.
