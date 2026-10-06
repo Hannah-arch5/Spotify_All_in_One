@@ -3686,3 +3686,10 @@ Monday batch notes:
 - Cleanup: the 12 newly downloaded English backups were imported and then deleted after byte-level archive verification. Historical `_zh_INCOMPLETE` files were not touched. No duplicate English/Chinese copy was created.
 - Delivery boundary: this turn authorized Gemini generation and Chinese translation only. Zotero, Google Drive, and Discord were not run; no external-delivery authorization was inferred. The 261005 manifest remains unseen until those separately authorized delivery steps are completed.
 - Root-cause notes: the first RSS preflight was a local DNS/network false zero and was corrected with the permitted networked check. The first Gemini synthesis failed the required report section structure; the brief assembler rebuilt the five-part structure, then local QA repaired only exact quotes, URLs, and evidence translations. Future runs must keep the preflight, transcript language audit, content review, native-format audit, visual page sampling, archive-integrity check, and delivery authorization gates in this order.
+
+### 261005 Final External Delivery
+
+- User subsequently authorized the remaining delivery channels. Zotero direct-PDF archive succeeded as attachment `4506` in collection `1.Spotify情报汇总`; storage PDF hash matched the final PDF (`dc0d875022a6a6ecdce1fbbcc281724e5ab06862d7445906e3c19a7a47f3f39e`).
+- Google Drive upload succeeded and verification listed `261005-Spotify播客情报研报.docx`; staged DOCX hash matched `ad0fb2a45843b54c26a9ba8b0e90962567c8de2c6a5b2ce6aaef1bbe5a367274`.
+- Discord `#todo` delivery succeeded after restarting the live Discord Studio LaunchAgent `com.hannah.codex.telegrambot`; notification id `1791305524983-d8ebaf82-cec2-415e-a7a9-e63f9be0a005-discord` reached `notification_sent` at `2026-10-06T16:53:35.531Z`.
+- Final transcript integrity recheck passed: English `13/13`, Chinese `13/13`, missing `0`, duplicate IDs `0`, incomplete files `0`. Then `marked_seen=13` for `data/runs/20261006-185759-659313-manifest.json`.
