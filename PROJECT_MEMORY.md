@@ -3693,3 +3693,19 @@ Monday batch notes:
 - Google Drive upload succeeded and verification listed `261005-Spotify播客情报研报.docx`; staged DOCX hash matched `ad0fb2a45843b54c26a9ba8b0e90962567c8de2c6a5b2ce6aaef1bbe5a367274`.
 - Discord `#todo` delivery succeeded after restarting the live Discord Studio LaunchAgent `com.hannah.codex.telegrambot`; notification id `1791305524983-d8ebaf82-cec2-415e-a7a9-e63f9be0a005-discord` reached `notification_sent` at `2026-10-06T16:53:35.531Z`.
 - Final transcript integrity recheck passed: English `13/13`, Chinese `13/13`, missing `0`, duplicate IDs `0`, incomplete files `0`. Then `marked_seen=13` for `data/runs/20261006-185759-659313-manifest.json`.
+
+## 2026-10-07 261007 Spotify Report Generated; Chinese Backfill Pending
+
+- Fixed schedule window: `261007` covers `2026-10-05T07:00:00+00:00` through `2026-10-07T07:00:00+00:00`; the report date is based on this window, not the execution timestamp.
+- Backlog preflight: expected `1`, completed before this run `0`, missing `1`; the window was processed independently with `7` episodes ordered by `published_at desc`.
+- Spotify native transcript collection through Comet/CDP completed exact episode-ID-verified original/English coverage `7/7`. Manifest: `data/runs/20261007-204348-791162-manifest.json`; evidence pack: `data/runs/20261007-204348-791162-evidence-pack.json`.
+- Gemini episode briefs completed `7/7`. The provider then exhausted the free-tier daily quota during final synthesis (`429`, retry advised in about 10h53m). The first final output omitted required H2 structure; local normalization restored the five required sections and corrected only transcript-verifiable quote text, heading levels, translation markers, and evidence density. Final provenance is `assembly_mode: synthesis-plus-briefs` for the briefs plus local structural/quote corrections; no further Gemini request was made after the quota response.
+- Content review passed: `reports/markdown/20261007-204348-791162-gemini-review.md`, errors `0`, warnings `0`. The title is constructive and bilingual; episode 1 has a verifiable source quote; evidence anchors are substantive and capped at 8 per episode; every English evidence anchor has an immediate unlabeled italic Chinese translation; Parts 3/4/5 remain cross-episode synthesis.
+- Final artifacts:
+  - Markdown: `reports/markdown/20261007-204348-791162-gemini-report.md`; SHA-256 `006f9669b5e2b922190bb456454503d4aecf371f588e1e299649caf691a9061e`.
+  - DOCX: `reports/word/261007-Spotify播客情报研报.docx`; SHA-256 `14cb70d2e27eb96e91b81764cb0852c4fce2e4c93348b7d4a9ce6bab2ffbdad4`.
+  - PDF: `reports/pdf/261007-Spotify播客情报研报.pdf`; SHA-256 `80d25367c91d63aed55a180a3cb8a922aaa580c37110251d2ffef2ba3e4740a5`.
+- Format/visual QA passed: `scripts/audit_delivery_report_format.py` found no DOCX/PDF issues; PDF is `25` pages. Title, episode evidence, Part 3/4/5 pages were visually checked; heading/body attachment and conditional pagination passed; PDF line-start punctuation scan found `0` violations.
+- Chinese transcript status: formal archive audit is English `7/7`, Chinese `0/7`, missing Chinese `7`. A resumable queue is recorded at `data/background_jobs/20261007-204348-791162-zh-translation-status.json`. The 10 existing Downloads `_zh_INCOMPLETE` files were not admitted to the archive and were not deleted because the current request did not include explicit authorization for irreversible cleanup. Do not mark seen until the 7 Chinese files are complete and archive integrity passes.
+- External delivery: this turn requested report generation only. Zotero, Google Drive, and Discord were not run; no destination authorization was inferred. Manifest remains unseen.
+- LaunchAgent: `com.hannah.spotify-podcast-report` is loaded as a calendar-triggered LaunchAgent and currently idle between scheduled triggers; this is not a report-generation failure.
