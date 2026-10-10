@@ -3724,3 +3724,12 @@ Monday batch notes:
 - Local Zotero direct-PDF archive succeeded as attachment `4508` under `1.Spotify情报汇总`.
 - Zotero storage PDF `/Users/hannah/Zotero/storage/PZTW6E5H/261007-Spotify播客情报研报.pdf` matches the final local PDF SHA-256 `80d25367c91d63aed55a180a3cb8a922aaa580c37110251d2ffef2ba3e4740a5`.
 - DOCX/PDF are staged for the still-pending external destinations at `reports/archive/pending/2610/google-drive/` and `reports/archive/pending/2610/discord-todo/`; staged hashes match the final artifacts. Google Drive and Discord have not been sent, and the manifest remains unseen.
+
+### 261007 Final Delivery And Completion
+
+- Hannah explicitly authorized 261007 DOCX upload to Google Drive and 261007 PDF delivery to Discord `#todo`.
+- Google Drive upload succeeded; the listing contains `261007-Spotify播客情报研报.docx`, and the staged DOCX SHA-256 matches the final DOCX: `14cb70d2e27eb96e91b81764cb0852c4fce2e4c93348b7d4a9ce6bab2ffbdad4`.
+- Discord delivery succeeded after repairing the Discord Studio service's stale port-3000 instance. Notification id `1791639459489-1148e53f-448a-448f-adaa-a299e5b474d3-discord` reached `notification_sent` at `2026-10-10T13:39:56.247Z`.
+- Post-delivery cleanup completed with `import_spotify_transcripts.py --move`: Downloads JSON count is `0`; the formal archive retains exactly one original and one complete Chinese transcript per episode.
+- Final archive integrity passed: English `7/7`, Chinese `7/7`, missing `0`, duplicate IDs `0`, incomplete IDs `0`. Late RSS audit for the current and previous closed windows passed. Manifest `data/runs/20261007-204348-791162-manifest.json` is now `marked_seen=7`.
+- Standing authorization for this Spotify MWF workflow: after a report is generated and the user says to continue/complete delivery, Google Drive upload and Discord `#todo` delivery are authorized without repeating the question, unless the user changes this instruction. This does not authorize unrelated projects or destinations.
