@@ -3718,3 +3718,9 @@ Monday batch notes:
 - Archive integrity audit with `--require-clean` passed for `data/runs/20261007-204348-791162-evidence-pack.json`.
 - Resumable status: `data/background_jobs/20261007-204348-791162-zh-translation-status.json`; the final no-op verification confirmed all seven entries are complete. The external translator initially failed inside the sandbox because `clients5.google.com` DNS was unavailable; the authorized networked retry completed successfully.
 - This turn did not authorize Zotero, Google Drive, or Discord delivery. The 261007 manifest remains unseen and Downloads cleanup remains pending until destination delivery authorization and delivery success. Historical `_zh_INCOMPLETE` files remain outside the formal archive and were not admitted.
+
+### 261007 Zotero Archive Completed
+
+- Local Zotero direct-PDF archive succeeded as attachment `4508` under `1.Spotify情报汇总`.
+- Zotero storage PDF `/Users/hannah/Zotero/storage/PZTW6E5H/261007-Spotify播客情报研报.pdf` matches the final local PDF SHA-256 `80d25367c91d63aed55a180a3cb8a922aaa580c37110251d2ffef2ba3e4740a5`.
+- DOCX/PDF are staged for the still-pending external destinations at `reports/archive/pending/2610/google-drive/` and `reports/archive/pending/2610/discord-todo/`; staged hashes match the final artifacts. Google Drive and Discord have not been sent, and the manifest remains unseen.
