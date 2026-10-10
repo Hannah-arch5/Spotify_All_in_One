@@ -3709,3 +3709,12 @@ Monday batch notes:
 - Chinese transcript status: formal archive audit is English `7/7`, Chinese `0/7`, missing Chinese `7`. A resumable queue is recorded at `data/background_jobs/20261007-204348-791162-zh-translation-status.json`. The 10 existing Downloads `_zh_INCOMPLETE` files were not admitted to the archive and were not deleted because the current request did not include explicit authorization for irreversible cleanup. Do not mark seen until the 7 Chinese files are complete and archive integrity passes.
 - External delivery: this turn requested report generation only. Zotero, Google Drive, and Discord were not run; no destination authorization was inferred. Manifest remains unseen.
 - LaunchAgent: `com.hannah.spotify-podcast-report` is loaded as a calendar-triggered LaunchAgent and currently idle between scheduled triggers; this is not a report-generation failure.
+
+## 2026-10-10 261007 Chinese Transcript Backfill Completed
+
+- Explicit authorization was received to send the remaining six 261007 English transcripts to the Google Translate-style external translation service. No Gemini request was used for this backfill.
+- Chinese backfill is complete for all `7/7` episodes. The exact episode IDs match the evidence pack; translated segment counts are `281`, `3409`, `691`, `990`, `293`, `255`, and `462`.
+- Language audit: `data/runs/20261007-204348-791162-transcript-language-audit.json`; original `7/7`, Chinese `7/7`, missing `0`, duplicate IDs `0`, incomplete IDs `0`.
+- Archive integrity audit with `--require-clean` passed for `data/runs/20261007-204348-791162-evidence-pack.json`.
+- Resumable status: `data/background_jobs/20261007-204348-791162-zh-translation-status.json`; the final no-op verification confirmed all seven entries are complete. The external translator initially failed inside the sandbox because `clients5.google.com` DNS was unavailable; the authorized networked retry completed successfully.
+- This turn did not authorize Zotero, Google Drive, or Discord delivery. The 261007 manifest remains unseen and Downloads cleanup remains pending until destination delivery authorization and delivery success. Historical `_zh_INCOMPLETE` files remain outside the formal archive and were not admitted.
