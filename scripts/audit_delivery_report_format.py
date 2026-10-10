@@ -88,6 +88,12 @@ def text_runs(paragraph) -> list[Any]:
     return [run for run in paragraph.runs if run.text.strip()]
 
 
+def is_chinese_source_anchor(text: str) -> bool:
+    cjk_count = len(re.findall(r"[\u4e00-\u9fff]", text))
+    latin_count = len(re.findall(r"[A-Za-z][A-Za-z']+", text))
+    return cjk_count > latin_count
+
+
 def points(value: Any) -> float:
     return value.pt if value is not None and hasattr(value, "pt") else 0.0
 
@@ -338,6 +344,8 @@ def audit_docx(path: Path) -> dict[str, Any]:
         if not re.match(r"^\[[0-9:]+\]", text):
             continue
         if len(re.findall(r"[A-Za-z][A-Za-z']+", text)) < 4:
+            continue
+        if is_chinese_source_anchor(text):
             continue
         next_paragraph = next(
             (candidate for candidate in paragraphs[index + 1 :] if candidate.text.strip()),

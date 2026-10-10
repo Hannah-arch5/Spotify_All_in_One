@@ -113,6 +113,10 @@ def normalize(path: Path) -> bool:
             out.append(new_line)
         else:
             new_line = re.sub(r"^(\s*)\*\s+\*(.+)\*\s*$", r"\1*\2*", line)
+            if in_evidence and re.match(r"^\s+\*", new_line) and not new_line.rstrip().endswith("*"):
+                new_line = new_line.rstrip() + "*"
+            if in_evidence and re.match(r"^\s*\*[^*]*[\u4e00-\u9fff][^*]*\*\s*$", new_line):
+                new_line = "    " + new_line.lstrip()
             changed |= new_line != line
             out.append(new_line)
     if changed:
