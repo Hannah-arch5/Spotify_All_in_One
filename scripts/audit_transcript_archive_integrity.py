@@ -21,7 +21,7 @@ def expected_ids(evidence_path: Path) -> tuple[list[str], int]:
     values: list[str] = []
     for episode in episodes:
         transcript = episode.get("transcript") or {}
-        episode_id = transcript.get("spotify_episode_id")
+        episode_id = transcript.get("spotify_episode_id") or transcript.get("source_episode_id")
         if episode_id:
             values.append(str(episode_id))
     return values, len(episodes)
@@ -34,7 +34,7 @@ def inventory(directory: Path, *, chinese: bool) -> dict[str, list[dict[str, Any
             data = read_json(path)
         except (OSError, json.JSONDecodeError):
             continue
-        episode_id = data.get("spotifyEpisodeId")
+        episode_id = data.get("spotifyEpisodeId") or data.get("sourceEpisodeId")
         if not episode_id:
             continue
         segments = data.get("segments") if isinstance(data.get("segments"), list) else []

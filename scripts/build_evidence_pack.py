@@ -75,6 +75,7 @@ def _find_downloaded_transcripts(download_dir: Path) -> list[dict[str, object]]:
                 "path": str(path),
                 "source": data.get("source"),
                 "spotify_episode_id": data.get("spotifyEpisodeId"),
+                "source_episode_id": data.get("sourceEpisodeId"),
                 "episode_url": data.get("episodeUrl"),
                 "podcast_name": data.get("podcastName"),
                 "episode_title": data.get("episodeTitle"),
@@ -215,7 +216,7 @@ def _write_markdown(path: Path, pack: dict[str, object]) -> None:
                 [
                     f"- Transcript 文件：`{transcript['path']}`",
                     f"- 匹配分数：{transcript['match_score']}",
-                    f"- Spotify Episode ID：`{transcript.get('spotify_episode_id') or 'unknown'}`",
+                    f"- 来源 Episode ID：`{transcript.get('spotify_episode_id') or transcript.get('source_episode_id') or 'unknown'}`",
                     f"- 字幕段落数：{transcript['segments_count']}",
                     f"- 字幕语言：{transcript.get('language') or 'unknown'}",
                 ]

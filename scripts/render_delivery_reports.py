@@ -515,6 +515,11 @@ def add_docx_paragraph(doc: Document, role: str, text: str, *, italic: bool = Fa
     if role == "body" and allow_leading_subtitle_bold and leading_subtitle and len(leading_subtitle.group(2).strip()) <= 24:
         paragraph.paragraph_format.keep_with_next = True
         paragraph.paragraph_format.keep_together = True
+    # Keep label-only lines with their following evidence/translation instead of leaving a
+    # dangling label at the bottom of a page.
+    if role in {"body", "bullet", "number"} and text.strip().rstrip().endswith((":", "：")):
+        paragraph.paragraph_format.keep_with_next = True
+        paragraph.paragraph_format.keep_together = True
     runs = (
         label_bold_runs(text, italic=italic, allow_leading_subtitle_bold=allow_leading_subtitle_bold)
         if role in {"body", "bullet", "number"}
