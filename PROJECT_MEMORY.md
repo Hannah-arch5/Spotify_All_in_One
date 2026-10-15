@@ -3764,3 +3764,8 @@ Monday batch notes:
 - Final report QA passed for both DOCX/PDF files: constructive bilingual titles, meaningful original quotes with italic translations, meaningful evidence anchors, integrated Parts 3/4/5, bold key content, conditional pagination, no line-start punctuation, and no orphan evidence labels. 261012 PDF is 31 pages; 261014 PDF is 21 pages.
 - Delivery completed: Zotero items `4510` and `4511` were verified by local PDF hash; DOCX files were uploaded to Google Drive; PDFs were queued to Discord `#todo`. Final archive-integrity and late-RSS audits passed for both windows.
 - Hard code rule: `scripts/render_delivery_reports.py` keeps label-only lines ending in `:` or `：` together with the following evidence/translation, preventing a dangling label at the bottom of a page. This rule and the external-source identity rule belong to the reusable Spotify skill and stay synchronized with GitHub.
+
+## 2026-10-15 Delivery Review Gate
+
+- New hard workflow rule: after every Spotify report is generated and passes content/format/visual QA, first present the local PDF/DOCX to Hannah for review. Do not upload that report to Zotero, Google Drive, or Discord, and do not mark its manifest seen, until she explicitly replies `可以了` or `没问题`.
+- After explicit approval, continue the remaining delivery, cleanup, archive-integrity, late-RSS, mark-seen, Memory, Git, and GitHub steps automatically under the standing Spotify MWF authorization.
