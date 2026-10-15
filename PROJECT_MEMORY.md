@@ -3769,3 +3769,9 @@ Monday batch notes:
 
 - New hard workflow rule: after every Spotify report is generated and passes content/format/visual QA, first present the local PDF/DOCX to Hannah for review. Do not upload that report to Zotero, Google Drive, or Discord, and do not mark its manifest seen, until she explicitly replies `可以了` or `没问题`.
 - After explicit approval, continue the remaining delivery, cleanup, archive-integrity, late-RSS, mark-seen, Memory, Git, and GitHub steps automatically under the standing Spotify MWF authorization.
+
+## 2026-10-15 261012/261014 Rewrite Pending
+
+- Hannah judged the current 261012 and 261014 reports unqualified in depth/quality. Treat both as pending Gemini re-generation when the Gemini quota recovers; do not treat the current local fallback versions as final accepted reports.
+- Rebuild the two fixed windows separately from their verified English evidence packs. Re-run content depth, constructive bilingual title, meaningful original quotes, evidence-anchor, integrated Parts 3/4/5, italic translation, pagination, and visual QA before presenting the revised files.
+- The revised reports must first be sent to Hannah for review. Do not upload replacements to Zotero, Google Drive, or Discord until she explicitly replies `可以了` or `没问题`.
