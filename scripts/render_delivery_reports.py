@@ -591,6 +591,7 @@ def add_report_body(doc: Document, markdown: str) -> None:
     current_part_number = 0
     last_role: str | None = None
     previous_body_kind: str | None = None
+    previous_paragraph = None
     for line in report_body_lines(markdown):
         role, text = paragraph_role(line)
         if role == "blank":
@@ -636,6 +637,11 @@ def add_report_body(doc: Document, markdown: str) -> None:
             italic=is_translation_line(line),
             allow_leading_subtitle_bold=role == "body" and current_part_number >= 3,
         )
+        if paragraph is not None and is_translation_line(line):
+            if previous_paragraph is not None and last_role in {"body", "bullet", "number"}:
+                previous_paragraph.paragraph_format.keep_with_next = True
+                previous_paragraph.paragraph_format.keep_together = True
+            paragraph.paragraph_format.keep_together = True
         if paragraph is not None and role == "body":
             normalized = clean_inline(text)
             previous_body_kind = apply_body_spacing(paragraph, normalized, previous_body_kind)
@@ -644,6 +650,7 @@ def add_report_body(doc: Document, markdown: str) -> None:
             if current_part_number == 5 and previous_body_kind == "body":
                 paragraph.paragraph_format.space_after = Pt(3)
         last_role = role
+        previous_paragraph = paragraph
 
 
 def build_docx(markdown_path: Path, out_path: Path) -> None:

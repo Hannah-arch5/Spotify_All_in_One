@@ -52,6 +52,7 @@ def normalize(path: Path) -> bool:
     lines = path.read_text(encoding="utf-8").splitlines()
     out: list[str] = []
     in_evidence = False
+    in_key_quotes = False
     episode_title = ""
     anchor_count = 0
     keep_times: set[str] | None = None
@@ -64,6 +65,13 @@ def normalize(path: Path) -> bool:
             keep_times = CURATED_ANCHOR_TIMES.get(episode_title)
             anchor_count = 0
             skip_translation = False
+            in_key_quotes = False
+        if line.startswith("## "):
+            in_key_quotes = False
+        if re.match(r"^\s*(?:-\s*)?关键金句\s*/\s*结论[：:]", line):
+            in_key_quotes = True
+        if re.match(r"^\s*(?:-\s*)?证据锚点[：:]", line):
+            in_key_quotes = False
         if line.strip() in {"情报价值点：", "关键金句 / 结论：", "证据锚点："}:
             replacement = "- " + line.strip()
             changed |= line != replacement
@@ -93,6 +101,10 @@ def normalize(path: Path) -> bool:
                 continue
             skip_translation = False
         if in_evidence:
+            bare_anchor = re.match(r"^\s*(?:\d+\.\s*)?(\[[0-9:]+\])\s+(.+)$", line)
+            if bare_anchor:
+                line = f"  - {bare_anchor.group(1)} {bare_anchor.group(2)}"
+                changed = True
             numbered = re.match(r"^(\s*)\d+\.\s+\*\*(\[[^\]]+\])\s*(.*?)\*\*:?\s*(.*)$", line)
             if numbered:
                 line = f"{numbered.group(1)}- {numbered.group(2)} {numbered.group(3)} {numbered.group(4)}".rstrip()
@@ -112,6 +124,11 @@ def normalize(path: Path) -> bool:
             changed |= new_line != line
             out.append(new_line)
         else:
+            if (in_key_quotes or in_evidence) and re.match(r"^\s*\*(?!\*)", line) and re.search(r"[\u4e00-\u9fff]", line):
+                translation = re.sub(r"^(?:\*\s*)+", "", line.strip()).rstrip("* ").strip()
+                replacement = f"    *{translation}*"
+                changed |= replacement != line
+                line = replacement
             new_line = re.sub(r"^(\s*)\*\s+\*(.+)\*\s*$", r"\1*\2*", line)
             if in_evidence and re.match(r"^\s+\*", new_line) and not new_line.rstrip().endswith("*"):
                 new_line = new_line.rstrip() + "*"

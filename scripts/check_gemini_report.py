@@ -99,6 +99,17 @@ def _episode_transcript_text(evidence: dict[str, Any] | None, index: int) -> str
         if episode.get("index") != index:
             continue
         transcript = episode.get("transcript") or {}
+        source_value = transcript.get("path")
+        if source_value:
+            source_path = Path(source_value)
+            if not source_path.is_absolute():
+                source_path = ROOT / source_path
+            if source_path.is_file():
+                source = _read_json(source_path)
+                segments = source.get("segments")
+                if isinstance(segments, list) and segments:
+                    # Display timestamps and speaker labels are not spoken words.
+                    return " ".join(str(segment.get("text") or "") for segment in segments)
         return str(transcript.get("plain_text") or "")
     return ""
 
