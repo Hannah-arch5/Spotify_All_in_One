@@ -62,3 +62,31 @@ included in this diagnostic report.
   They must not be assumed to represent the current effective permission state.
   The missing Spotify entry in that old session file is only a clue, not an
   established cause. Do not edit these files to manufacture authorization.
+
+## Chromium Debugger Compatibility Finding
+
+- Google documents the exact error as a `chrome.debugger.attach()` rejection
+  introduced by stricter host-policy enforcement in Chromium 155:
+  https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions
+  A nonempty `runtime_blocked_hosts` restriction rejects debugger attachment to
+  all targets, even individually allowed origins. This explains why normal
+  browsing and ordinary site permissions can still work.
+- Installed Comet framework `Current` points to `155.0.8059.148`; version 154
+  also remains on disk. The installed ChatGPT app and its configured browser
+  runtime both report `26.1016.62342`, so no current app/runtime version mismatch
+  was found.
+- ChatGPT extension `hehggadaopoacecdllhhajmbjkdcmajg`, version
+  `1.26.1020.11845`, is installed in Comet. Its persisted host permissions include
+  `<all_urls>` and `withholding_permissions` is false.
+- Through permitted native UI, a separate read-only Comet policy diagnostic tab
+  was opened. `comet://policy` reports `No policies set` for Comet policies,
+  extension-install policies and the displayed extension policy groups. No
+  user tabs were closed and no policy was changed.
+- This is strong evidence for a debugger/host-policy compatibility failure,
+  not a Spotify server rejection, but the exact effective restriction and its
+  source remain unverified. Do not claim a configured enterprise host blocklist
+  was discovered: the visible policy page did not show one.
+- Do not disable Chromium security features, delete host restrictions, or use
+  a raw debugging transport to evade the rejection. Resolution requires the
+  applicable browser/extension policy owner or a vendor-supported compatible
+  implementation. No fix has been verified.
