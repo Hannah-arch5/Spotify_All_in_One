@@ -20,7 +20,8 @@ def sha256(path: Path) -> str:
 
 
 def zotero_pdf_paths(db_path: Path, storage_dir: Path, title: str) -> list[Path]:
-    connection = sqlite3.connect(f"file:{db_path}?mode=ro&immutable=1", uri=True)
+    # Immutable mode ignores WAL records, including freshly committed attachments.
+    connection = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     try:
         rows = connection.execute(
             """

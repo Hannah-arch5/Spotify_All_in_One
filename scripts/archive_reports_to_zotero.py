@@ -339,7 +339,7 @@ def main() -> None:
             if args.direct_pdf:
                 pdf_path = ROOT / "reports" / "pdf" / f"{_delivery_stem(markdown_path)}.pdf"
                 title = pdf_path.stem
-                report_date = _run_date(run_id)
+                report_date = datetime.strptime(title[:6], "%y%m%d").strftime("%Y-%m-%d")
                 if not pdf_path.exists():
                     raise SystemExit(f"Missing PDF report: {pdf_path}")
                 print(archive_pdf_direct(connection, args.storage_dir, collection_id, library_id, pdf_path, title, report_date, tags, args.replace_existing))
