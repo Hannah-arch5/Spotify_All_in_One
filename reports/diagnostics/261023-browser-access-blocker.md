@@ -50,3 +50,15 @@ app state, or use another transport to circumvent the denial.
 
 No credentials, cookies, transcript contents, or private browsing history are
 included in this diagnostic report.
+
+## Follow-Up On 2026-10-24
+
+- The user changed only Spotify Browsing to `Requires approval` in the normal
+  application UI. A new documented navigation attempt was still denied; the
+  tool returned no approval request to the agent. Whether a user-facing
+  approval card appeared is awaiting confirmation.
+- Legacy browser global/session TOML files have modification dates 2026-08-15
+  and 2026-09-02 respectively; neither changed with the current UI action.
+  They must not be assumed to represent the current effective permission state.
+  The missing Spotify entry in that old session file is only a clue, not an
+  established cause. Do not edit these files to manufacture authorization.
