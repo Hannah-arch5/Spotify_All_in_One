@@ -49,6 +49,12 @@
   - Treat Chrome retry suffixes such as ` (1)` as duplicate downloads, not distinct archives.
   - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
+- Back up the prepared subtitles independently of the report review boundary:
+  - Local original archive: `data/transcripts/spotify_en/` (contains English and Chinese-program originals); Chinese archive: `data/transcripts/spotify_zh/`.
+  - Google Drive `Spotify字幕` holds actual English original JSON; child `Spotify字幕-中文` holds complete Chinese JSON. Chinese-program originals belong to the Chinese destination through their complete Chinese archive artifact, not the English root.
+  - Run `scripts/backup_spotify_transcripts_to_drive.py --evidence-pack <evidence-pack>` for each ready manifest. For multiple reports, finish their subtitle preparation/backups before generation. This subtitle-backup authorization does not authorize uploading an unreviewed DOCX/PDF.
+  - Local `.env` pins `SPOTIFY_TRANSCRIPT_DRIVE_FOLDER_ID` and `SPOTIFY_TRANSCRIPT_ZH_DRIVE_FOLDER_ID`; `SPOTIFY_TRANSCRIPT_BACKUP_ENABLED=1` enables the pipeline/service integration. Keep these account-specific values out of Git. The pipeline backs up ready files before Gemini; final service delivery requires the complete current-report subtitle backup again before external report delivery/mark-seen.
+  - Use incremental `copy`, never destructive `sync`; retain local files and cloud extras. Verify every selected remote file's unique name, size and MD5, and save the receipt under `data/service_logs/`. A full-history backup without `--evidence-pack` backs up all available valid archives and separately lists historical Chinese gaps; do not call those gaps complete. Never suppress current-report missing-Chinese failures.
 - For late-arriving RSS backfills, transcript coverage must be checked exactly like a normal run: original/English transcript first, then Chinese archive completeness or a recorded blocker. The final report should include the backfilled item at the end of 第二部分 unless Hannah explicitly asks to rebuild the older report.
 - Chinese transcript gaps must be handled promptly. For multiple pending reports, full original and Chinese coverage across the backlog is the generation gate. For a single report, original coverage remains the main generation gate unless Hannah requires Chinese first. Chinese must not be used as the report-generation source by default. If any Chinese archives are missing, immediately start or queue backfill and follow through until complete or explicitly recorded as a temporary external-service/plugin blocker.
 - After English/original coverage is complete, start or record a resumable Chinese backfill:
@@ -122,6 +128,7 @@
   - Verify `/Users/hannah/Downloads/Spotify Transcript Collector/` has zero JSON files.
 - Audit the current evidence pack's episode IDs in `data/transcripts/spotify_en/` and `data/transcripts/spotify_zh/` after cleanup. Confirm each language has at most one file per episode and report `duplicate_ids=0` for both directories. A missing complete Chinese transcript may be reported as a gap; an incomplete or duplicate file must not be retained to make coverage appear complete.
 - Run `scripts/audit_transcript_archive_integrity.py <evidence-pack> --require-clean`; it must confirm one original and one complete Chinese transcript per episode, with zero missing, duplicate, or incomplete IDs.
+- Rerun `scripts/backup_spotify_transcripts_to_drive.py --evidence-pack <evidence-pack>` if any subtitle changed during backfill/cleanup. Require its verified cloud receipt before mark-seen; the approved report uploads remain separate.
 - Rerun the late-arriving RSS audit after cleanup and before mark-seen. A clean result is required for completion.
 - Mark manifests seen only after delivery gates pass:
   - `scripts/mark_manifest_seen.py <manifest>`
@@ -145,6 +152,13 @@
   - Do not stage generated data blindly.
   - Separate code/docs/config changes from large generated artifacts.
   - If no remote exists, tell the user GitHub cannot be updated until a target repo is configured.
+
+## Semiannual Local Retention
+
+- Drive is the long-term full archive; local subtitle JSON normally spans 6-12 months. The existing cleanup automation now runs January 1 and July 1 at 15:00 Asia/Shanghai, replacing the quarterly 90-day preview.
+- First run a fresh full subtitle Drive backup and require both language receipts to verify. Preview `scripts/prune_transcripts.py --keep-months 6 --backup-receipt <fresh-receipt.json>`, inspect the saved plan, then use the same arguments plus `--delete` for the authorized scheduled cleanup. Separate English/Chinese receipts can be supplied by repeating `--backup-receipt`.
+- A receipt older than one hour, incorrect folder, changed local SHA-256, unknown publication date, pending report reference, or outstanding Chinese backfill blocks deletion of the affected file. A Chinese original may be cleared only if the verified cloud Chinese artifact preserves its complete original data and source hash. Keep exceptions and report them; never force deletion to hit a size limit.
+- Use publication dates, not download/modification dates. Never delete Drive backups, report documents or unrelated files. Record actual deleted count/bytes and protected exceptions in Memory. Subtitle retention does not change report windows or mark-seen state.
 
 ## 10. Final Response
 

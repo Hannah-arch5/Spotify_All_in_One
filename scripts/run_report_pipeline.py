@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
+
+from env_utils import load_project_env
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,6 +50,7 @@ def _read_json(path: Path) -> dict:
 
 
 def run(args: argparse.Namespace) -> dict[str, str | int]:
+    load_project_env()
     outputs: dict[str, str | int] = {}
 
     if args.manifest:
@@ -108,6 +112,21 @@ def run(args: argparse.Namespace) -> dict[str, str | int]:
         outputs["status"] = "dry_run_ready_for_gemini"
         print(json.dumps(outputs, ensure_ascii=False, indent=2))
         return outputs
+
+    if os.environ.get("SPOTIFY_TRANSCRIPT_BACKUP_ENABLED", "0").lower() in {"1", "true", "yes"}:
+        language_audit = _read_json(Path(str(outputs["transcript_language_audit"])))
+        missing_zh = int(language_audit["summary"]["chinese_missing_count"])
+        backup_args = ["scripts/backup_spotify_transcripts_to_drive.py", "--evidence-pack", str(evidence_pack)]
+        if missing_zh:
+            backup_args.extend(["--language", "english"])
+            outputs["transcript_backup_pending_chinese"] = missing_zh
+        try:
+            outputs["transcript_drive_backup"] = _last_line(_run(backup_args))
+        except PipelineStepError as exc:
+            outputs["status"] = "blocked_transcript_drive_backup"
+            outputs["transcript_backup_error"] = (exc.stderr or exc.stdout or str(exc))[:1200]
+            print(json.dumps(outputs, ensure_ascii=False, indent=2))
+            return outputs
 
     if args.gemini_mode == "single":
         generate_args = [

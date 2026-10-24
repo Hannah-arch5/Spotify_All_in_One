@@ -60,7 +60,7 @@
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/import_spotify_transcripts.py --move
 ```
 
-清理项目内超过 90 天的旧 transcript，默认先预览不删除：
+本地字幕每半年清理一次，每次保留最近六个日历月，日常约保留 6-12 个月；Google Drive 长期保留完整备份。默认仅预览，不删除：
 
 ```bash
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py
@@ -69,7 +69,7 @@
 确认预览无误后真正删除：
 
 ```bash
-/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py --delete
+/Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/prune_transcripts.py --keep-months 6 --backup-receipt <fresh-verified-backup-receipt.json> --delete
 ```
 
 生成剩余 Spotify transcript 采集队列：
@@ -139,6 +139,15 @@ GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runt
 /Users/hannah/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 scripts/check_new_episodes.py --mark-seen
 ```
 
+## 字幕云端备份
+
+- 本地 `data/transcripts/spotify_en/` 保存原文，包含英文及中文节目原文；`spotify_zh/` 保存完整中文字幕。
+- Google Drive `Spotify字幕` 保存实际英文 JSON，子文件夹 `Spotify字幕-中文` 保存完整中文 JSON。保留原有共享权限，不公开文件。
+- 配置 `.env.example` 中的字幕备份开关及两个已核实的文件夹 ID 后，pipeline 和交付服务会自动备份；回执保存在 `data/service_logs/`。
+- 单期增量备份：`python3 scripts/backup_spotify_transcripts_to_drive.py --evidence-pack <evidence-pack.json>`。全历史可不传 `--evidence-pack`，先用 `--plan-only` 检查。
+- 使用不删除目标文件的增量复制，并逐文件校验大小和 MD5。历史中文缺口单独列出，不能把不完整文件当作完整中文备份。
+- 本地清理必须先取得一小时内的双语云端校验回执；未完成研报、待补中文、未知日期和未验证备份的文件保留。清理本地不删除云端文件。
+
 ## 输出位置
 
 - JSON 运行清单：`data/runs/*-manifest.json`
@@ -146,7 +155,7 @@ GEMINI_API_KEY=你的_key /Users/hannah/.cache/codex-runtimes/codex-primary-runt
 - Transcript 检查报告：`reports/markdown/*-transcript-audit.md`
 - Gemini 证据包：`data/runs/*-evidence-pack.json`
 - Spotify 字幕采集队列：`data/runs/*-spotify-collection-queue.json`
-- Spotify 英文字幕归档：`data/transcripts/spotify_en/`
+- Spotify 原文归档（含英文与中文节目原文）：`data/transcripts/spotify_en/`
 - Spotify 中文字幕归档：`data/transcripts/spotify_zh/`
 - ASR 转写队列：`data/runs/*-transcription-queue.json`
 - Gemini 输入包：`data/gemini_inputs/<run_id>/`

@@ -262,6 +262,14 @@ def run_service(args: argparse.Namespace) -> dict[str, Any]:
     log["delivery_audit"] = json.loads(audit_stdout)
     progress("DELIVERY_AUDIT done")
 
+    if os.environ.get("SPOTIFY_TRANSCRIPT_BACKUP_ENABLED", "0").lower() in {"1", "true", "yes"}:
+        progress("TRANSCRIPT_BACKUP start")
+        log["transcript_drive_backup"] = run_command(
+            [PYTHON, "scripts/backup_spotify_transcripts_to_drive.py", "--evidence-pack", str(pipeline["evidence_pack"])],
+            timeout=14400,
+        )
+        progress("TRANSCRIPT_BACKUP verified")
+
     if not args.skip_zotero:
         progress("ZOTERO start")
         log["zotero"] = archive_to_zotero(report_path, pdf_path)
