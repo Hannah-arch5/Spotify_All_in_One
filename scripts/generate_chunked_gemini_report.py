@@ -125,7 +125,7 @@ def _episode_prompt(run_id: str, episode: dict[str, Any]) -> str:
 - Transcript 来源：Spotify transcript
 - 核心内容摘要：约 600 字，必须来自 transcript。
 - 情报价值点：约 150-250 字。
-- 关键金句 / 结论：2 条；如 transcript 为英文，至少 1 条必须包含英文原句或高度接近原文，下一行直接写斜体中文翻译/解释，例如 `*这句话说明……*`。如 transcript 为中文但需要英文翻译，也直接写斜体英文译文。不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。如无法核验原句，必须写成 `转述结论`，不要伪装成直接引语；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
+- 关键金句 / 结论：2 条有实质意义、可逐字核验的来源原句；如 transcript 为英文，每条英文原句下一行直接写对应的斜体中文翻译。译文不能写成“这句话说明……”之类的解释。如 transcript 为中文，不重复翻译成中文。不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。必须先通读原文寻找可核验金句，确实没有时才写成 `转述结论`，不要伪装成直接引语；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
 - 证据锚点：至少 3 个 timestamp + 可核验的来源原句。英文锚点下一行必须直接写无标签的斜体中文翻译，例如 `*这是对应的中文翻译。*`；中文原生锚点不重复翻译。证据必须有信息价值，能支撑具体观点、机制、数字、例子、分歧或战略判断。不要使用寒暄、感谢、广告、片头片尾、泛泛介绍、互相称赞或结束语作为证据锚点。
 
 每集证据优先选 3-6 条，绝不超过 8 条。统一格式为 `  - [m:ss] 来源原句`，紧接下一行 `    *中文译文*`。每条只保留一至两句有信息价值的原句，不要整段对话、多个时间戳或来回短答。中文来源只保留原句，不增加中文解释作为“翻译”。
@@ -179,6 +179,7 @@ def generate_chunked(
     sleep_seconds: int,
     resume: bool,
     timeout: int,
+    briefs_only: bool = False,
 ) -> Path:
     evidence_path = package_dir / "transcript-evidence-full.json"
     evidence = _read_json(evidence_path)
@@ -235,6 +236,16 @@ def generate_chunked(
                 time.sleep(sleep_seconds)
         briefs.append(brief)
 
+    if briefs_only:
+        _write_json(chunk_dir / "STATUS.json", {
+            "status": "briefs_complete_pending_synthesis",
+            "updated_at": datetime.now().astimezone().isoformat(),
+            "model": model,
+            "completed_episode_count": len(briefs),
+        })
+        print(chunk_dir)
+        return chunk_dir
+
     final_path = ROOT / "reports" / "markdown" / f"{run_id}-gemini-report.md"
     final_path.parent.mkdir(parents=True, exist_ok=True)
     print("generate final report")
@@ -279,6 +290,7 @@ def main() -> None:
     parser.add_argument("--sleep-seconds", type=int, default=65)
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--no-resume", action="store_true")
+    parser.add_argument("--briefs-only", action="store_true")
     args = parser.parse_args()
     generate_chunked(
         args.package_dir,
@@ -286,6 +298,7 @@ def main() -> None:
         sleep_seconds=args.sleep_seconds,
         resume=not args.no_resume,
         timeout=args.timeout,
+        briefs_only=args.briefs_only,
     )
 
 

@@ -68,6 +68,7 @@
 
 - When multiple reports were pending, confirm that every dated manifest has passed transcript preparation before generating the oldest report. Then make and review/deliver each report separately in date order; advance collection does not waive the PDF review boundary or the per-report completion gates.
 - Use the repo's pipeline scripts, usually chunked Gemini mode.
+- For a long window, generate resumable episode briefs with `generate_chunked_gemini_report.py --briefs-only`, review them against the originals, then use `assemble_gemini_report_from_briefs.py` for compact integrated synthesis. This avoids spending an extra oversized full-report request. Keep editorial provenance honest and review synthesis for unsupported cross-episode claims.
 - If Codex requests approval because transcript/evidence will be sent to Gemini, ask/accept explicit user approval and do not bypass a rejection.
 - After generation, run the Gemini review checker with `data/gemini_inputs/<run_id>/episode-manifest.json` as the manifest whenever that file exists; it contains the Spotify episode URLs used in the report. Do not use the raw run manifest for this check when it lacks `spotify_episode_url`.
 - If review says `需修改`, fix concrete findings and rerun review until `通过`.
@@ -93,6 +94,7 @@
   - `关键金句 / 结论` exists for every episode including episode 1, with meaningful source-language original quotes plus italicized unlabeled translation/explanation. `转述结论` is allowed only after transcript-level verification proves no meaningful quote exists.
   - Evidence anchors are substantive and do not contain low-value greetings/thanks/housekeeping as final anchors.
   - Every English evidence anchor is followed immediately by an unlabeled italic Chinese translation; Chinese-source anchors are not duplicated. This must pass both the Markdown checker and the final DOCX audit.
+  - Verify source/translation semantic alignment after normalization and again in the PDF. If a long English anchor needs trimming, select a shorter meaningful original and update its Chinese translation together; preserving the old translation after source-only trimming is not acceptable.
   - Pagination quality: if a heading or subtitle-like bold heading and the following body begin in the bottom quarter of a page, insert `<!-- pagebreak -->` before that heading and rerender. Do not force all major sections onto new pages; apply the break only when the heading position is too low.
   - Line-breaking quality: punctuation must stay attached to the end of the preceding line in the final PDF. Do not accept punctuation as the first character on a new line; fix and rerender before delivery.
   - PDF page count is plausible.

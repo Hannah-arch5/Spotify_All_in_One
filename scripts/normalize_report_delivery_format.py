@@ -58,7 +58,7 @@ def normalize(path: Path) -> bool:
     keep_times: set[str] | None = None
     skip_translation = False
     changed = False
-    for line in lines:
+    for line_index, line in enumerate(lines):
         episode_match = EPISODE_RE.match(line)
         if episode_match:
             episode_title = line.split("：", 1)[-1].strip()
@@ -120,7 +120,16 @@ def normalize(path: Path) -> bool:
                 skip_translation = True
                 changed = True
                 continue
-            new_line = shorten_anchor(line)
+            paired_translation = (
+                line_index + 1 < len(lines)
+                and re.match(r"^\s*\*[^*]*[\u4e00-\u9fff][^*]*\*\s*$", lines[line_index + 1])
+            )
+            # A source sentence and its reviewed translation are one unit.
+            # Trimming only the source silently changes what the pair says.
+            if paired_translation:
+                new_line = re.sub(r"(\]\s*)(?:Speaker|发言者)\s*\d+\s*:\s*", r"\1", line, flags=re.IGNORECASE)
+            else:
+                new_line = shorten_anchor(line)
             changed |= new_line != line
             out.append(new_line)
         else:
