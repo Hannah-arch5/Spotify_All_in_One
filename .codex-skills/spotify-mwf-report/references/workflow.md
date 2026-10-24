@@ -12,6 +12,7 @@
 
 ## 2. Determine Window And Manifest
 
+- Enumerate all pending scheduled reports before collection. If more than one report is pending, create separate dated manifests for the entire backlog and prepare all their transcripts before generating any report. This is the default workflow, not an exception that needs renewed permission.
 - Prefer the project scripts and schedule logic already in the repo.
 - For fixed windows, avoid overlapping reports. If a prior report included post-cutoff episodes, dedupe before generating the next report.
 - Keep the manifest path explicit in all later commands.
@@ -23,6 +24,7 @@
 
 ## 3. Transcript Collection
 
+- For multiple pending reports, finish collection and complete Chinese backfill across every manifest first. Reuse already verified archives rather than downloading them again; do not merge windows or mark reports seen during preparation. Require each manifest's identity checks, language audit and `audit_transcript_archive_integrity.py --require-clean` to pass before entering report generation. A collection/translation blocker pauses batch generation until resolved or explicitly waived by Hannah.
 - First run the project pipeline/evidence step to learn exactly which transcripts are missing.
 - Preferred CDP native transcript workflow:
   - Use the user's logged-in Comet/Chrome session with a local DevTools port when available.
@@ -48,16 +50,17 @@
   - Reject `_zh_INCOMPLETE` and any Chinese file containing an untranslated non-empty segment.
 - Rerun evidence/language audit and confirm required transcript coverage.
 - For late-arriving RSS backfills, transcript coverage must be checked exactly like a normal run: original/English transcript first, then Chinese archive completeness or a recorded blocker. The final report should include the backfilled item at the end of 第二部分 unless Hannah explicitly asks to rebuild the older report.
-- Chinese transcript gaps must be handled promptly. English/original transcript coverage is still the main generation gate unless the user explicitly requires Chinese, and Chinese transcripts must not be used as the report-generation source by default. However, Chinese transcripts are required archive/completeness artifacts: if any are missing, immediately start or queue backfill and keep retrying until complete or explicitly recorded as a temporary external-service/plugin blocker.
+- Chinese transcript gaps must be handled promptly. For multiple pending reports, full original and Chinese coverage across the backlog is the generation gate. For a single report, original coverage remains the main generation gate unless Hannah requires Chinese first. Chinese must not be used as the report-generation source by default. If any Chinese archives are missing, immediately start or queue backfill and follow through until complete or explicitly recorded as a temporary external-service/plugin blocker.
 - After English/original coverage is complete, start or record a resumable Chinese backfill:
   - Use `scripts/translate_spotify_transcripts_to_zh.py --evidence-pack <evidence-pack> --status-json data/background_jobs/<run_id>-zh-translation-status.json`.
   - If command-line translation/proxy access is blocked but the user's logged-in Comet browser can reach the Google Translate-style endpoint, use `scripts/translate_spotify_transcripts_to_zh_cdp.js --evidence-pack <evidence-pack> --status-json data/background_jobs/<run_id>-zh-cdp-translation-status.json --port 9223` as a non-Gemini backfill route.
   - Source must be the exact archived original transcript JSON referenced by the evidence pack.
   - The translator writes `sourceTranscriptSha256`, provider metadata, and complete segment translations; it must skip already complete Chinese files.
-  - If Google Translate is rate-limited, paused, or blocked, record the completed/missing Chinese count in `PROJECT_MEMORY.md`, create/retain a resumable status file under `data/background_jobs/`, and resume as soon as the blocker clears. Do not let Chinese gaps silently persist across runs. Do not delay Gemini/report delivery after original/English coverage is complete.
+  - If Google Translate is rate-limited, paused, or blocked, record the completed/missing Chinese count in `PROJECT_MEMORY.md`, create/retain a resumable status file under `data/background_jobs/`, and resume as soon as the blocker clears. Do not let Chinese gaps silently persist across runs. The multiple-report batch gate requires resolving these gaps before generation; for a single report, original coverage can permit generation while backfill continues unless Hannah requires otherwise.
 
 ## 4. Gemini Report
 
+- When multiple reports were pending, confirm that every dated manifest has passed transcript preparation before generating the oldest report. Then make and review/deliver each report separately in date order; advance collection does not waive the PDF review boundary or the per-report completion gates.
 - Use the repo's pipeline scripts, usually chunked Gemini mode.
 - If Codex requests approval because transcript/evidence will be sent to Gemini, ask/accept explicit user approval and do not bypass a rejection.
 - After generation, run the Gemini review checker with `data/gemini_inputs/<run_id>/episode-manifest.json` as the manifest whenever that file exists; it contains the Spotify episode URLs used in the report. Do not use the raw run manifest for this check when it lacks `spotify_episode_url`.
