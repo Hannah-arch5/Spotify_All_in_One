@@ -74,6 +74,7 @@
 - If Codex requests approval because transcript/evidence will be sent to Gemini, ask/accept explicit user approval and do not bypass a rejection.
 - After generation, run the Gemini review checker with `data/gemini_inputs/<run_id>/episode-manifest.json` as the manifest whenever that file exists; it contains the Spotify episode URLs used in the report. Do not use the raw run manifest for this check when it lacks `spotify_episode_url`.
 - If review says `需修改`, fix concrete findings and rerun review until `通过`.
+- If native Word Save/Export is unexpectedly disabled while the desktop is available, cancel the export dialog, use Word's Window -> Bring All to Front, then retry the same local PDF destination. This restored saving on 2026-10-25; AX `noWindowsAvailable` alone does not prove the Mac is locked. Do not change browser permissions or substitute a lower-fidelity PDF.
 - Convert suspicious non-verbatim quote blocks to explicit paraphrased conclusions rather than keeping them in quotation marks.
 - Before rendering, manually inspect the Markdown for the following hard gates:
   - Main title is constructive and thesis-led: it should tell the user what this report is really about, not merely repeat the date/run/window. It must include an English translation.
