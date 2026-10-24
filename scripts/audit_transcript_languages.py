@@ -72,6 +72,7 @@ def _zh_transcripts(chinese_dir: Path) -> list[dict[str, object]]:
             {
                 "path": str(path),
                 "spotify_episode_id": data.get("spotifyEpisodeId"),
+                "source_episode_id": data.get("sourceEpisodeId"),
                 "episode_url": data.get("episodeUrl"),
                 "podcast_name": data.get("podcastName"),
                 "episode_title": data.get("episodeTitle"),
@@ -87,13 +88,13 @@ def _zh_transcripts(chinese_dir: Path) -> list[dict[str, object]]:
 
 
 def _score(episode: dict[str, object], transcript: dict[str, object]) -> float:
-    episode_id = None
     transcript_meta = episode.get("transcript")
     if isinstance(transcript_meta, dict):
-        episode_id = transcript_meta.get("spotify_episode_id")
-    transcript_id = transcript.get("spotify_episode_id")
-    if episode_id and transcript_id:
-        return 1.0 if episode_id == transcript_id else 0.0
+        for identity_key in ("spotify_episode_id", "source_episode_id"):
+            episode_id = transcript_meta.get(identity_key)
+            transcript_id = transcript.get(identity_key)
+            if episode_id and transcript_id:
+                return 1.0 if episode_id == transcript_id else 0.0
     title_score = _similarity(str(episode.get("episode_title") or ""), str(transcript.get("episode_title") or ""))
     podcast_score = _similarity(str(episode.get("podcast_title") or ""), str(transcript.get("podcast_name") or ""))
     return title_score * 0.78 + podcast_score * 0.22

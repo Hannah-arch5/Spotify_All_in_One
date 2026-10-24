@@ -106,6 +106,21 @@ def _match_transcript(
     transcripts: list[dict[str, object]],
     used_paths: set[str],
 ) -> dict[str, object] | None:
+    for identity_key in ("spotify_episode_id", "source_episode_id"):
+        verified_id = str(episode.get(identity_key) or "").strip()
+        if not verified_id:
+            continue
+        exact = [
+            row for row in transcripts
+            if str(row.get(identity_key) or "") == verified_id
+        ]
+        if len(exact) != 1 or str(exact[0]["path"]) in used_paths:
+            return None
+        transcript = exact[0]
+        used_paths.add(str(transcript["path"]))
+        method = "verified_spotify_id" if identity_key == "spotify_episode_id" else "verified_source_id"
+        return {"match_score": 1.0, "match_method": method, **transcript}
+
     candidates: list[tuple[float, dict[str, float], dict[str, object]]] = []
     for transcript in transcripts:
         path = str(transcript["path"])

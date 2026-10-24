@@ -36,6 +36,9 @@
   - Click the native Spotify `Transcript` tab.
   - Do not decide "no transcript" from the first partial DOM render. Reload the verified episode detail URL and wait about `6.5` seconds for Spotify's Description/Transcript/Chapters tab list; only declare missing after that tab list is available and no `Transcript` tab appears.
   - Wait for STD to download JSON files into `/Users/hannah/Downloads/Spotify Transcript Collector/`.
+  - Verify where the file actually landed. If STD instead produces `/Users/hannah/Downloads/download.json`, validate its target `spotifyEpisodeId` and metadata, move only that file into the original archive under a descriptive name, and compare SHA-256 before continuing. Do not import unrelated JSON or retain retry copies.
+  - If the Spotify title has changed, retain the manifest's RSS title and record the manually verified Spotify identity in `spotify_episode_id` / `spotify_episode_url`; the evidence builder uses the exact ID and fails closed on missing or duplicate identities.
+  - Perform collection through a permitted installed-plugin workflow rather than assigning the full queue to Hannah. Do not disable security controls or treat a blocked debugging interface as repaired merely because a separate permitted STD workflow succeeds.
   - Use one tab sequentially if Spotify complains about too many open tabs.
 - Import transcripts:
   - `scripts/import_spotify_transcripts.py`

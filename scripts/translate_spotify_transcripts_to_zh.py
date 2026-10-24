@@ -50,7 +50,7 @@ def _target_path(source_data: dict[str, Any], chinese_dir: Path) -> Path:
     date = str(source_data.get("publishedDate") or "unknown")[:10]
     podcast = _clean(source_data.get("podcastName"))
     title = _clean(f"{source_data.get('episodeTitle') or 'unknown'}_zh")
-    episode_id = _clean(source_data.get("spotifyEpisodeId"))
+    episode_id = _clean(source_data.get("spotifyEpisodeId") or source_data.get("sourceEpisodeId"))
     return chinese_dir / f"{date} - {podcast} - {title} - {episode_id}.json"
 
 

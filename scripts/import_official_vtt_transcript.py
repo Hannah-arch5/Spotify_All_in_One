@@ -104,12 +104,14 @@ def main() -> None:
         raise SystemExit("Official VTT contained no parseable transcript cues.")
 
     guid = str(episode.get("guid") or "").strip()
-    identity = guid or f"rss-vtt-{args.index}"
+    identity = guid or str(episode.get("episode_url") or "").strip()
+    if not identity:
+        raise SystemExit("Official transcript requires a stable RSS GUID or episode URL.")
     identity_suffix = identity.split(":", 1)[-1]
     published_date = str(episode.get("published_at") or "")[:10]
     payload = {
         "source": "official_rss_vtt",
-        "spotifyEpisodeId": identity,
+        "sourceEpisodeId": identity,
         "episodeUrl": episode.get("episode_url"),
         "transcriptUrl": source_url,
         "podcastName": episode.get("podcast_title"),

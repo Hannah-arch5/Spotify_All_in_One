@@ -92,6 +92,7 @@ def _load_transcript(transcript_meta: dict[str, Any] | None) -> dict[str, Any] |
         "source": data.get("source"),
         "captured_at": data.get("capturedAt"),
         "spotify_episode_id": data.get("spotifyEpisodeId"),
+        "source_episode_id": data.get("sourceEpisodeId"),
         "episode_url": data.get("episodeUrl"),
         "podcast_name": data.get("podcastName"),
         "episode_title": data.get("episodeTitle"),
