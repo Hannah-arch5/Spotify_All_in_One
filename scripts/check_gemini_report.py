@@ -135,7 +135,7 @@ def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> li
         quote = raw_quote.strip()
         # Only police likely direct English transcript quotes. Chinese translations and short labels are too noisy.
         ascii_words = re.findall(r"[A-Za-z][A-Za-z']+", quote)
-        if len(ascii_words) < 4:
+        if len(ascii_words) < 4 or len(re.findall(r"[\u4e00-\u9fff]", quote)) > len(ascii_words):
             continue
         normalized_quote = _normalize(quote)
         if not normalized_quote:
@@ -171,6 +171,9 @@ def _evidence_translation_findings(section: dict[str, Any]) -> list[Finding]:
     for index in range(start, len(lines)):
         match = EVIDENCE_ANCHOR_RE.match(lines[index].strip())
         if not match or len(re.findall(r"[A-Za-z][A-Za-z']+", match.group(1))) < 4:
+            continue
+        body = match.group(1)
+        if len(re.findall(r"[\u4e00-\u9fff]", body)) > len(re.findall(r"[A-Za-z][A-Za-z']+", body)):
             continue
         next_index = index + 1
         while next_index < len(lines) and not lines[next_index].strip():

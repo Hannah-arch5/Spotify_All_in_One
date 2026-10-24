@@ -28,6 +28,7 @@ def _strip_code_fences(text: str) -> str:
 def _compact_brief(brief: str) -> str:
     heading = re.search(r"^####\s+情报\s+\d+[：:].*$", brief, re.MULTILINE)
     title = re.search(r"^- 原始标题[：:]\s*(.+)$", brief, re.MULTILINE)
+    summary = re.search(r"^- 核心内容摘要[：:]\s*(.*?)(?=\n-\s+情报价值点|\Z)", brief, re.DOTALL | re.MULTILINE)
     value = re.search(r"^- 情报价值点[：:]\s*(.*?)(?=\n-\s+关键金句|\Z)", brief, re.DOTALL | re.MULTILINE)
     quote = re.search(r"^- 关键金句\s*/\s*结论[：:]\s*(.*?)(?=\n-\s+证据锚点|\Z)", brief, re.DOTALL | re.MULTILINE)
     parts = []
@@ -35,6 +36,8 @@ def _compact_brief(brief: str) -> str:
         parts.append(heading.group(0).strip())
     if title:
         parts.append(f"原始标题：{title.group(1).strip()}")
+    if summary:
+        parts.append("核心内容摘要：" + re.sub(r"\s+", " ", summary.group(1)).strip()[:1600])
     if value:
         parts.append("情报价值点：" + re.sub(r"\s+", " ", value.group(1)).strip()[:900])
     if quote:
@@ -52,10 +55,12 @@ def _synthesis_prompt(run_id: str, report_date: str, report_window: dict, compac
 - 必须输出且只输出这些部分：一级标题、`## 第一部分：摘要 (Summary)`、`## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)`、`## 第四部分：第二层思维 (Second-Order Thinking)`、`## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)`。
 - 不要输出第二部分；第二部分会由系统用已审核的逐集 brief 原文拼接。
 - 第一部分约 700-900 字，必须给出本窗口整体重点。
+- 第一部分以三至四个跨节目判断组织，禁止逐集回顾。主标题用一个可操作的完整判断概括重点，避免“价值重塑”“深度洞察”等抽象词堆叠。
 - 第三部分必须做真正的跨节目专题分析，抽出贯穿多集的结构性主题，不要按 episode 逐个总结。
 - 第四部分必须提出跨节目抽象判断和背后机制，不要复述单集内容。
 - 第五部分必须形成统一战略判断，不要写成泛泛建议清单。
 - 第三、四、五部分各展开至少三个主题，每个主题至少两段，分别讲清证据关联、作用机制、边界条件及决策含义；不能以几个抽象词或一句话建议代替分析。第五部分还必须写出行动先后顺序、资源约束和可衡量的验证指标。
+- 深度要求：第三部分约2000-2600汉字、第四部分约1600-2000汉字、第五部分约1800-2200汉字。用材料里的具体机制和相反观点支撑推论，不用重复和空泛口号凑字数。不要把开放必胜、技术进步必然改善福利、私人分配等同公共问责等未经证明的判断写成事实。
 - 小标题和正文中的关键判断使用加粗，不能把小标题写成斜体。分清受访者主张、个案与研报推论，争议性叙述不得写成已验证的事实；不能凭空补充数据或把不同集的背景拼成一个事实。
 - 所有日期和语境以 Report Date / Report Window 为准，不要使用当前生成时间。
 
