@@ -257,7 +257,20 @@ def archive_pdf_direct(
 ) -> str:
     existing = _existing_item_id(connection, title, collection_id, ITEM_TYPE_ATTACHMENT)
     if existing and not replace_existing:
-        return f"skipped_existing={existing} title={title}"
+        current_tags = {row[0] for row in connection.execute(
+            'select t.name from tags t join itemTags it using(tagID) where it.itemID=?', (existing,))}
+        added = []
+        for tag in tags:
+            normalized = tag if tag.startswith('/') else f'/{tag}'
+            if normalized == '/unread' and current_tags.intersection({'/read', '/reading'}):
+                continue
+            if normalized not in current_tags:
+                connection.execute('insert or ignore into itemTags(itemID,tagID,type) values(?,?,0)',
+                                   (existing, _tag_id(connection, normalized)))
+                added.append(normalized)
+        if added:
+            connection.execute("update items set synced=0,dateModified=datetime('now'),clientDateModified=datetime('now') where itemID=?", (existing,))
+        return f"skipped_existing={existing} repaired_tags={added} title={title}"
     while existing:
         _delete_item_tree(connection, existing)
         existing = _existing_item_id(connection, title, collection_id, ITEM_TYPE_ATTACHMENT)

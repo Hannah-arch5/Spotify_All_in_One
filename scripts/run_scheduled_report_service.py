@@ -138,7 +138,7 @@ def archive_to_zotero(report_path: Path, pdf_path: Path) -> dict[str, Any]:
             month_tag,
         ]
     )
-    verify_stdout = run_command([PYTHON, "scripts/verify_zotero_report_pdfs.py", str(pdf_path)])
+    verify_stdout = run_command([PYTHON, "scripts/verify_zotero_report_pdfs.py", '--require-tags', str(pdf_path)])
     verification = json.loads(verify_stdout)
     results = verification.get("results") or []
     if not results or not all(item.get("all_zotero_matches_local") for item in results):

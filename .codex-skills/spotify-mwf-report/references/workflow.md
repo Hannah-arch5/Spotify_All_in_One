@@ -108,7 +108,9 @@
 
 - If local Zotero DB writes are used, quit Zotero first when configured or when a lock is likely.
 - Archive as direct PDF with `/unread` and month tag such as `/2606`.
-- Verify local PDF hash matches active Zotero storage PDF with `scripts/verify_zotero_report_pdfs.py`.
+- If an exact-title item already exists, repair missing required tags rather than treating a blind skip as success. Preserve intentional `/read` or `/reading`; never reset either state to `/unread`.
+- Verify the local PDF hash and required tags together with `scripts/verify_zotero_report_pdfs.py --require-tags <pdf>`. Delivery is incomplete if either `/unread` or the scheduled month tag is missing.
+- For a collection-wide unread repair, scope only to `1.Spotify情报汇总` and its descendants, exclude deleted and unrelated items, quit Zotero normally, back up the SQLite database, preserve every existing tag, and run `scripts/audit_zotero_report_tags.py --repair --require-clean --receipt <path>`. Reopen Zotero only after the clean receipt is saved.
 - Record Zotero storage path and hash in memory.
 
 ## 7. External Delivery
@@ -135,6 +137,7 @@
 - Run `scripts/audit_transcript_archive_integrity.py <evidence-pack> --require-clean`; it must confirm one original and one complete Chinese transcript per episode, with zero missing, duplicate, or incomplete IDs.
 - Rerun `scripts/backup_spotify_transcripts_to_drive.py --evidence-pack <evidence-pack>` if any subtitle changed during backfill/cleanup. Require its verified cloud receipt before mark-seen; the approved report uploads remain separate.
 - Rerun the late-arriving RSS audit after cleanup and before mark-seen. A clean result is required for completion.
+- Require the Zotero PDF hash and tag verification to pass before mark-seen. A successful file copy with missing `/unread` or month tag is not complete.
 - Mark manifests seen only after delivery gates pass:
   - `scripts/mark_manifest_seen.py <manifest>`
 - If any required external delivery is blocked and not skipped by the user, or transcript archive deduplication fails, do not mark seen.

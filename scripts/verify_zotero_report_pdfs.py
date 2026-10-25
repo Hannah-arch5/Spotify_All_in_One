@@ -47,6 +47,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Verify Zotero direct-PDF report items against local generated PDFs.")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB)
     parser.add_argument("--storage-dir", type=Path, default=DEFAULT_STORAGE)
+    parser.add_argument('--require-tags', action='store_true', help='Require unread and the scheduled month tag on each current report.')
     parser.add_argument("pdfs", nargs="*", type=Path, default=[
         ROOT / "reports" / "pdf" / "260523-Spotify播客情报研报.pdf",
         ROOT / "reports" / "pdf" / "260525-Spotify播客情报研报.pdf",
@@ -69,6 +70,23 @@ def main() -> None:
                     "matches_local": zotero_path.exists() and local_hash == sha256(zotero_path),
                 }
             )
+        with sqlite3.connect(f'{args.db.resolve().as_uri()}?mode=ro', uri=True) as connection:
+            tag_rows = connection.execute('''
+                select i.itemID,t.name from items i
+                join itemData d on d.itemID=i.itemID and d.fieldID=1
+                join itemDataValues v on v.valueID=d.valueID
+                left join itemTags it on it.itemID=i.itemID
+                left join tags t on t.tagID=it.tagID
+                where i.itemTypeID=3 and v.value=?
+                  and not exists(select 1 from deletedItems x where x.itemID=i.itemID)
+            ''', (title,)).fetchall()
+        by_item = {}
+        for item_id, tag in tag_rows:
+            by_item.setdefault(item_id, set())
+            if tag:
+                by_item[item_id].add(tag)
+        required_tags = {'/unread', f'/{title[:4]}'}
+        tags_valid = bool(by_item) and all(required_tags.issubset(tags) for tags in by_item.values())
         results.append(
             {
                 "title": title,
@@ -77,9 +95,14 @@ def main() -> None:
                 "local_sha256": local_hash,
                 "zotero_matches": matches,
                 "all_zotero_matches_local": bool(matches) and all(item["matches_local"] for item in matches),
+                'required_tags': sorted(required_tags),
+                'item_tags': {str(item_id): sorted(tags) for item_id,tags in by_item.items()},
+                'all_zotero_tags_valid': tags_valid,
             }
         )
     print(json.dumps({"results": results}, ensure_ascii=False, indent=2))
+    if args.require_tags and not all(row['all_zotero_matches_local'] and row['all_zotero_tags_valid'] for row in results):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
