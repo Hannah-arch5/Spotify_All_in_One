@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import time
 
 from env_utils import load_project_env
 from translate_spotify_transcripts_to_zh import _source_is_already_chinese
@@ -114,6 +115,17 @@ def verify_remote(records: list[dict], remote_rows: list[dict]) -> None:
             raise ValueError(f"Remote size/MD5 mismatch: {record['name']}")
 
 
+def list_remote_with_backoff(command: list[str], delays: tuple[int, ...] = (15, 30, 60)) -> subprocess.CompletedProcess:
+    for attempt in range(len(delays) + 1):
+        try:
+            return subprocess.run(command, check=True, capture_output=True, text=True, timeout=600)
+        except subprocess.CalledProcessError:
+            if attempt == len(delays):
+                raise
+            time.sleep(delays[attempt])
+    raise AssertionError("unreachable")
+
+
 def transfer(paths: list[Path], directory: Path, folder_id: str, remote: str,
              receipt_dir: Path, language: str, transfers: int = 4) -> dict:
     if not folder_id or not remote.endswith(":"):
@@ -124,16 +136,18 @@ def transfer(paths: list[Path], directory: Path, folder_id: str, remote: str,
     if any("\n" in path.name or "\r" in path.name for path in paths):
         raise ValueError("Transcript filenames must not contain newlines")
     flags = ["--drive-root-folder-id", folder_id, "--contimeout", "20s", "--timeout", "120s",
-             "--retries", "3", "--low-level-retries", "5"]
+             "--retries", "3", "--low-level-retries", "5", "--tpslimit", "8",
+             "--tpslimit-burst", "1"]
     if paths:
         command = ["rclone", "copy", str(directory), remote, "--files-from-raw", str(listing),
                    "--checksum", "--transfers", str(transfers), "--checkers", "8",
                    "--stats", "30s", "--stats-log-level", "NOTICE", *flags]
         with (receipt_dir / f"{language}-transfer.log").open("a", encoding="utf-8") as log:
             subprocess.run(command, check=True, stdout=log, stderr=log, timeout=14400)
-    result = subprocess.run(["rclone", "lsjson", remote, "--files-only", "--max-depth", "1",
-                             "--hash", "--hash-type", "MD5", *flags], check=True,
-                            capture_output=True, text=True, timeout=600)
+    result = list_remote_with_backoff(
+        ["rclone", "lsjson", remote, "--files-only", "--max-depth", "1",
+         "--hash", "--hash-type", "MD5", *flags]
+    )
     remote_rows = json.loads(result.stdout)
     (receipt_dir / f"{language}-remote.json").write_text(result.stdout, encoding="utf-8")
     verify_remote(records, remote_rows)

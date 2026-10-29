@@ -4,15 +4,43 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from audit_transcript_languages import _score
 from build_gemini_input_package import _load_transcript
 from translate_spotify_transcripts_to_zh import _target_path
+from import_official_vtt_transcript import read_vtt
 
 
 class OfficialTranscriptIdentityTests(unittest.TestCase):
+    def test_remote_vtt_request_uses_browser_headers(self):
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return None
+
+            def read(self):
+                return b"WEBVTT\n"
+
+        captured = {}
+
+        def fake_urlopen(request, timeout):
+            captured["request"] = request
+            captured["timeout"] = timeout
+            return Response()
+
+        with patch("import_official_vtt_transcript.urllib.request.urlopen", side_effect=fake_urlopen):
+            content, source = read_vtt({"transcript_url": "https://example.com/source.vtt"}, None)
+
+        self.assertEqual(content, "WEBVTT\n")
+        self.assertEqual(source, "https://example.com/source.vtt")
+        self.assertEqual(captured["timeout"], 120)
+        self.assertIn("Mozilla/5.0", captured["request"].get_header("User-agent"))
+
     def test_vtt_import_and_package_preserve_source_identity(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

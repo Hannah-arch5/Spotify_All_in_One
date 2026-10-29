@@ -7,7 +7,13 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from backup_spotify_transcripts_to_drive import file_record, inventory, transfer, verify_remote
+from backup_spotify_transcripts_to_drive import (
+    file_record,
+    inventory,
+    list_remote_with_backoff,
+    transfer,
+    verify_remote,
+)
 
 
 class TranscriptDriveBackupTests(unittest.TestCase):
@@ -100,7 +106,18 @@ class TranscriptDriveBackupTests(unittest.TestCase):
             self.assertEqual(copy_command[1], "copy")
             self.assertIn("--checksum", copy_command)
             self.assertEqual(copy_command[copy_command.index("--drive-root-folder-id") + 1], "pinned-folder")
+            self.assertEqual(copy_command[copy_command.index("--tpslimit") + 1], "8")
             self.assertFalse(any("delete" in part or part == "sync" for part in copy_command))
+
+    def test_remote_listing_retries_after_transient_failure(self):
+        success = SimpleNamespace(stdout="[]")
+        error = __import__("subprocess").CalledProcessError(1, ["rclone"])
+        with patch("backup_spotify_transcripts_to_drive.subprocess.run", side_effect=[error, success]) as run:
+            with patch("backup_spotify_transcripts_to_drive.time.sleep") as sleep:
+                result = list_remote_with_backoff(["rclone", "lsjson", "gdrive:"], delays=(2,))
+        self.assertIs(result, success)
+        self.assertEqual(run.call_count, 2)
+        sleep.assert_called_once_with(2)
 
 
 if __name__ == "__main__":

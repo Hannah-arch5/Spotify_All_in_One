@@ -16,6 +16,13 @@ TIMING_RE = re.compile(
     r"(?P<end>\d{1,2}:\d{2}(?::\d{2})?[.,]\d{3})"
 )
 TAG_RE = re.compile(r"<[^>]+>")
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36"
+    ),
+    "Accept": "text/vtt,text/plain;q=0.9,*/*;q=0.8",
+}
 
 
 def clean_filename(value: object) -> str:
@@ -80,7 +87,8 @@ def read_vtt(episode: dict[str, object], vtt_file: Path | None) -> tuple[str, st
         return vtt_file.read_text(encoding="utf-8-sig"), transcript_url or str(vtt_file)
     if not transcript_url:
         raise SystemExit("Selected manifest episode has no transcript_url; pass --vtt-file.")
-    with urllib.request.urlopen(transcript_url, timeout=120) as response:
+    request = urllib.request.Request(transcript_url, headers=REQUEST_HEADERS)
+    with urllib.request.urlopen(request, timeout=120) as response:
         return response.read().decode("utf-8-sig"), transcript_url
 
 
