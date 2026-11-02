@@ -56,9 +56,13 @@ def _synthesis_prompt(run_id: str, report_date: str, report_window: dict, compac
 - 不要输出第二部分；第二部分会由系统用已审核的逐集 brief 原文拼接。
 - 第一部分约 700-900 字，必须给出本窗口整体重点。
 - 第一部分以三至四个跨节目判断组织，禁止逐集回顾。主标题用一个可操作的完整判断概括重点，避免“价值重塑”“深度洞察”等抽象词堆叠。
+- 不要从本期节目数量或共现关系推断“AI 正在重塑一切”。非 AI 节目只在有明确共同机制时作比较，不得硬塞进 AI 主题。
 - 第三部分必须做真正的跨节目专题分析，抽出贯穿多集的结构性主题，不要按 episode 逐个总结。
 - 第四部分必须提出跨节目抽象判断和背后机制，不要复述单集内容。
 - 第五部分必须形成统一战略判断，不要写成泛泛建议清单。
+- 每个主题先指出两集以上材料中可核对的具体动作、成本、约束或反例，再解释跨集机制和什么证据会推翻该判断。不要反复使用“深刻重塑”“范式转移”“核心竞争力”“积极拥抱”等空泛语句。
+- 明确区分技术演示、公司自述、受访者预测、未经独立核验的数字和研报自己的推论。不得把个人推测写成既成事实；例如融资、药物、模型安全、就业和地缘政治判断均需要范围或条件。
+- 第五部分只给能够指定负责人、先后依赖、退出条件和可测指标的行动。不要编造 6-12 个月/1-3 年/3-5 年等统一时间表，也不要建议所有企业自建数据中心或所有国家设立同一种机构。
 - 第三、四、五部分各展开至少三个主题，每个主题至少两段，分别讲清证据关联、作用机制、边界条件及决策含义；不能以几个抽象词或一句话建议代替分析。第五部分还必须写出行动先后顺序、资源约束和可衡量的验证指标。
 - 深度要求：第三部分约2000-2600汉字、第四部分约1600-2000汉字、第五部分约1800-2200汉字。用材料里的具体机制和相反观点支撑推论，不用重复和空泛口号凑字数。不要把开放必胜、技术进步必然改善福利、私人分配等同公共问责等未经证明的判断写成事实。
 - 小标题和正文中的关键判断使用加粗，不能把小标题写成斜体。分清受访者主张、个案与研报推论，争议性叙述不得写成已验证的事实；不能凭空补充数据或把不同集的背景拼成一个事实。
@@ -96,7 +100,7 @@ def _split_synthesis(text: str) -> tuple[str, str, str, str, str]:
     return title, first, third, fourth, fifth
 
 
-def assemble(package_dir: Path, *, model: str, timeout: int) -> Path:
+def assemble(package_dir: Path, *, model: str, timeout: int, synthesis_file: Path | None = None) -> Path:
     evidence = _read_json(package_dir / "transcript-evidence-full.json")
     manifest = _read_json(package_dir / "episode-manifest.json")
     run_id = evidence["run_id"]
@@ -111,12 +115,16 @@ def assemble(package_dir: Path, *, model: str, timeout: int) -> Path:
     report_window = evidence.get("report_window") or manifest.get("report_window") or {}
     report_date = evidence.get("report_date") or manifest.get("report_date") or ""
     compact_briefs = [_compact_brief(brief) for brief in briefs]
-    synthesis = _generate_text(
-        _synthesis_prompt(run_id, report_date, report_window, compact_briefs),
-        model=model,
-        max_output_tokens=24576,
-        temperature=0.2,
-        timeout=timeout,
+    synthesis = (
+        synthesis_file.read_text(encoding="utf-8")
+        if synthesis_file
+        else _generate_text(
+            _synthesis_prompt(run_id, report_date, report_window, compact_briefs),
+            model=model,
+            max_output_tokens=24576,
+            temperature=0.2,
+            timeout=timeout,
+        )
     )
     title, first, third, fourth, fifth = _split_synthesis(synthesis)
 
@@ -138,7 +146,7 @@ def assemble(package_dir: Path, *, model: str, timeout: int) -> Path:
         f"<!-- gemini_model: {model} -->",
         f"<!-- source_package: {package_dir.resolve()} -->",
         f"<!-- chunk_dir: {chunk_dir} -->",
-        "<!-- assembly_mode: synthesis-plus-briefs -->",
+        f"<!-- assembly_mode: {'editorial-synthesis-plus-briefs' if synthesis_file else 'synthesis-plus-briefs'} -->",
         "",
     ]
     final_path.write_text("\n".join(header) + body.strip() + "\n", encoding="utf-8")
@@ -151,8 +159,9 @@ def main() -> None:
     parser.add_argument("--package-dir", type=Path, required=True)
     parser.add_argument("--model", default="gemini-2.5-flash")
     parser.add_argument("--timeout", type=int, default=600)
+    parser.add_argument("--synthesis-file", type=Path)
     args = parser.parse_args()
-    assemble(args.package_dir, model=args.model, timeout=args.timeout)
+    assemble(args.package_dir, model=args.model, timeout=args.timeout, synthesis_file=args.synthesis_file)
 
 
 if __name__ == "__main__":

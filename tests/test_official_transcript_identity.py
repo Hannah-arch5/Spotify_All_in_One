@@ -12,9 +12,44 @@ from audit_transcript_languages import _score
 from build_gemini_input_package import _load_transcript
 from translate_spotify_transcripts_to_zh import _target_path
 from import_official_vtt_transcript import read_vtt
+from import_official_txt_transcript import parse_txt
 
 
 class OfficialTranscriptIdentityTests(unittest.TestCase):
+    def test_official_txt_preserves_speaker_without_inventing_timestamps(self):
+        segments = parse_txt("John Collison\r\nA question.\r\n\r\nSam Altman\r\nAn answer.\r\n")
+        self.assertEqual(len(segments), 2)
+        self.assertEqual(segments[1]["speaker"], "Sam Altman")
+        self.assertEqual(segments[1]["text"], "An answer.")
+        self.assertIsNone(segments[1]["timestamp"])
+
+    def test_generic_std_download_requires_exact_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"new_episodes": [{
+                "podcast_title": "The AI Daily Brief", "episode_title": "The New Model",
+                "published_at": "2026-10-30T00:00:00+00:00",
+            }]}))
+            download = root / "download.json"
+            download.write_text(json.dumps({
+                "spotifyEpisodeId": "correct-id", "podcastName": "The AI Daily Brief: Artificial Intelligence News and Analysis",
+                "episodeTitle": "The New Model", "transcriptLanguage": "en-us",
+                "segments": [{"text": "A source sentence."}],
+            }))
+            command = [
+                sys.executable, str(ROOT / "scripts/ingest_verified_std_download.py"),
+                "--manifest", str(manifest), "--index", "1", "--spotify-id", "correct-id",
+                "--download", str(download), "--out-dir", str(root / "out"),
+            ]
+            rejected = subprocess.run(command[:-5] + ["wrong-id"] + command[-4:], capture_output=True, text=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertTrue(download.exists())
+            accepted = subprocess.run(command, check=True, capture_output=True, text=True)
+            self.assertIn("download_removed=true", accepted.stdout)
+            self.assertFalse(download.exists())
+            self.assertEqual(len(list((root / "out").glob("*.json"))), 1)
+
     def test_remote_vtt_request_uses_browser_headers(self):
         class Response:
             def __enter__(self):

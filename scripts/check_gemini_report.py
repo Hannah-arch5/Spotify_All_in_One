@@ -35,7 +35,9 @@ KEY_QUOTE_FORBIDDEN_RE = re.compile(
     re.IGNORECASE,
 )
 EVIDENCE_LABEL_RE = re.compile(r"^-\s*证据锚点[：:]\s*$")
-EVIDENCE_ANCHOR_RE = re.compile(r"^-\s*\[[0-9:]+\]\s*(.+)$")
+EVIDENCE_ANCHOR_RE = re.compile(r"^-\s*\[(?:[0-9:]+|原文段落\s+\d+)\]\s*(.+)$")
+UNTIMED_ANCHOR_RE = re.compile(r"^\s*-\s*\[原文段落\s+\d+\]", re.MULTILINE)
+TIMED_ANCHOR_RE = re.compile(r"^\s*-\s*\[[0-9:]+\]", re.MULTILINE)
 ITALIC_CHINESE_RE = re.compile(r"^\s+\*[^*]*[\u4e00-\u9fff][^*]*\*\s*$")
 
 
@@ -112,6 +114,25 @@ def _episode_transcript_text(evidence: dict[str, Any] | None, index: int) -> str
                     return " ".join(str(segment.get("text") or "") for segment in segments)
         return str(transcript.get("plain_text") or "")
     return ""
+
+
+def _episode_transcript_is_untimed(evidence: dict[str, Any] | None, index: int) -> bool:
+    if not evidence:
+        return False
+    for episode in evidence.get("episodes", []):
+        if episode.get("index") != index:
+            continue
+        source_value = (episode.get("transcript") or {}).get("path")
+        if not source_value:
+            return False
+        source_path = Path(source_value)
+        if not source_path.is_absolute():
+            source_path = ROOT / source_path
+        if not source_path.is_file():
+            return False
+        segments = _read_json(source_path).get("segments")
+        return bool(segments) and all(not segment.get("timestamp") for segment in segments)
+    return False
 
 
 def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> list[Finding]:
@@ -235,6 +256,17 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
             str(episode.get("episode_url") or ""),
             str(episode.get("audio_url") or ""),
         }
+        evidence_episodes = (evidence or {}).get("episodes", [])
+        evidence_episode = evidence_episodes[expected_index - 1] if len(evidence_episodes) >= expected_index else {}
+        transcript = (
+            evidence_episode.get("transcript") or {}
+            if evidence_episode.get("guid") == episode.get("guid")
+            else {}
+        )
+        transcript_url = str(transcript.get("episode_url") or "")
+        transcript_id = str(transcript.get("spotify_episode_id") or "")
+        if transcript_url and (not transcript_id or transcript_url.rstrip("/").endswith("/" + transcript_id)):
+            allowed_links.add(transcript_url)
         allowed_links.discard("")
         if not report_link:
             findings.append(Finding("error", f"情报 {expected_index} 缺少原始链接。"))
@@ -244,9 +276,16 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
         if not _extract_field(TRANSCRIPT_SOURCE_RE, section["body"]):
             findings.append(Finding("error", f"情报 {expected_index} 缺少 Transcript 来源。"))
 
-        timestamps = TIMESTAMP_RE.findall(section["body"])
-        if len(timestamps) < 3:
-            findings.append(Finding("warning", f"情报 {expected_index} 时间戳证据少于 3 个：{len(timestamps)} 个。"))
+        if _episode_transcript_is_untimed(evidence, expected_index):
+            if TIMED_ANCHOR_RE.search(section["body"]):
+                findings.append(Finding("error", f"情报 {expected_index} 的原文没有时间戳，不得编造时间码证据。"))
+            paragraph_anchors = UNTIMED_ANCHOR_RE.findall(section["body"])
+            if len(paragraph_anchors) < 3:
+                findings.append(Finding("warning", f"情报 {expected_index} 原文段落证据少于 3 个：{len(paragraph_anchors)} 个。"))
+        else:
+            timestamps = TIMESTAMP_RE.findall(section["body"])
+            if len(timestamps) < 3:
+                findings.append(Finding("warning", f"情报 {expected_index} 时间戳证据少于 3 个：{len(timestamps)} 个。"))
 
         transcript_text = _episode_transcript_text(evidence, expected_index)
         findings.extend(_quote_support_findings(section, transcript_text))

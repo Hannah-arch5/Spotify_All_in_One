@@ -1,10 +1,12 @@
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from assemble_gemini_report_from_briefs import _compact_brief
-from check_gemini_report import _evidence_translation_findings
+from check_gemini_report import _evidence_translation_findings, check
 
 
 class CompactSynthesisReviewTests(unittest.TestCase):
@@ -23,6 +25,36 @@ class CompactSynthesisReviewTests(unittest.TestCase):
         self.assertEqual(1, len(_evidence_translation_findings(section)))
         section['body'] += '\n    *你不能自动化一个不存在的流程。*'
         self.assertEqual([], _evidence_translation_findings(section))
+
+    def test_untimed_official_source_rejects_fabricated_timestamps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source.json'
+            source.write_text(json.dumps({'segments': [{'timestamp': None, 'text': 'A meaningful source sentence.'}]}))
+            evidence = root / 'evidence.json'
+            evidence.write_text(json.dumps({'episodes': [{'index': 1, 'transcript': {'path': str(source)}}]}))
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({'episodes': [{'episode_title': 'Episode', 'episode_url': 'https://example.com/episode'}]}))
+            report = root / 'report.md'
+            report.write_text('''## 第一部分：摘要
+## 第二部分：详情
+#### 情报 1：主题
+- 原始标题：Episode
+- 原始链接：https://example.com/episode
+- Transcript 来源：官方 TXT
+- 关键金句 / 结论：
+- 证据锚点：
+  - [3:03] A meaningful source sentence.
+    *有意义的原文句子。*
+## 第三部分：分析
+## 第四部分：思考
+## 第五部分：结论
+''')
+            result = check(report, manifest, evidence)
+            self.assertTrue(any('不得编造时间码' in finding['message'] for finding in result['findings']))
+            report.write_text(report.read_text().replace('[3:03]', '[原文段落 1]'))
+            result = check(report, manifest, evidence)
+            self.assertFalse(any('不得编造时间码' in finding['message'] for finding in result['findings']))
 
 
 if __name__ == '__main__':
