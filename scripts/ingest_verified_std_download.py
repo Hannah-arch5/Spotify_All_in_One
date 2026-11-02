@@ -21,6 +21,14 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def same_show_name(rss_show: str, spotify_show: str) -> bool:
+    if rss_show == spotify_show or spotify_show.startswith(f"{rss_show} "):
+        return True
+    rss_words = rss_show.split()
+    spotify_words = spotify_show.split()
+    return len(rss_words) >= 4 and sorted(rss_words) == sorted(spotify_words)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Verify one generic STD download before archiving it.")
     parser.add_argument("--manifest", type=Path, required=True)
@@ -42,7 +50,7 @@ def main() -> None:
         raise SystemExit("STD download title does not match this manifest episode; review manually.")
     rss_show = normalized(episode.get("podcast_title"))
     spotify_show = normalized(data.get("podcastName"))
-    if rss_show != spotify_show and not spotify_show.startswith(f"{rss_show} "):
+    if not same_show_name(rss_show, spotify_show):
         raise SystemExit("STD download podcast does not match this manifest episode; review manually.")
     segments = data.get("segments")
     if not isinstance(segments, list) or not segments:

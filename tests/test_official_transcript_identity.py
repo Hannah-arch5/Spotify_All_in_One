@@ -13,9 +13,15 @@ from build_gemini_input_package import _load_transcript
 from translate_spotify_transcripts_to_zh import _target_path
 from import_official_vtt_transcript import read_vtt
 from import_official_txt_transcript import parse_txt
+from ingest_verified_std_download import normalized, same_show_name
 
 
 class OfficialTranscriptIdentityTests(unittest.TestCase):
+    def test_show_name_allows_only_exact_token_reordering(self):
+        rss = normalized("Lenny's Podcast: Product | Growth | Career")
+        self.assertTrue(same_show_name(rss, normalized("Lenny's Podcast: Product | Career | Growth")))
+        self.assertFalse(same_show_name(rss, normalized("Another Podcast: Product | Career | Growth")))
+
     def test_official_txt_preserves_speaker_without_inventing_timestamps(self):
         segments = parse_txt("John Collison\r\nA question.\r\n\r\nSam Altman\r\nAn answer.\r\n")
         self.assertEqual(len(segments), 2)
