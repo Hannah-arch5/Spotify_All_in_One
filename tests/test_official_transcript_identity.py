@@ -13,6 +13,7 @@ from build_gemini_input_package import _load_transcript
 from translate_spotify_transcripts_to_zh import _target_path
 from import_official_vtt_transcript import read_vtt
 from import_official_txt_transcript import parse_txt
+from import_castbox_transcript import parse_transcription
 from ingest_verified_std_download import normalized, same_show_name
 
 
@@ -107,6 +108,45 @@ class OfficialTranscriptIdentityTests(unittest.TestCase):
             package = _load_transcript({"path": str(path)})
             self.assertEqual(package["source_episode_id"], "rss-guid")
             self.assertIsNone(package["spotify_episode_id"])
+
+    def test_castbox_import_preserves_non_spotify_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"episodes": [{
+                "guid": "rss-guid",
+                "podcast_title": "Show",
+                "episode_title": "Title",
+                "published_at": "2026-11-03T00:00:00+00:00",
+                "episode_url": "https://example.com/episode/rss-guid",
+            }]}))
+            source = root / "castbox.json"
+            source.write_text(json.dumps({
+                "result": {"language": "en-US"},
+                "transcription": [
+                    {
+                        "text": f"Meaningful sentence {index}.",
+                        "offsets": {"from": index * 1000, "to": (index + 1) * 1000},
+                    }
+                    for index in range(20)
+                ],
+            }))
+            subprocess.run([
+                sys.executable,
+                str(ROOT / "scripts/import_castbox_transcript.py"),
+                "--manifest", str(manifest),
+                "--index", "1",
+                "--transcript-file", str(source),
+                "--castbox-eid", "12345",
+                "--transcript-url", "https://example.com/castbox/12345",
+                "--out-dir", str(root / "out"),
+            ], check=True, capture_output=True, text=True)
+            path = next((root / "out").glob("*.json"))
+            transcript = json.loads(path.read_text())
+            self.assertEqual(transcript["sourceEpisodeId"], "castbox:12345")
+            self.assertNotIn("spotifyEpisodeId", transcript)
+            self.assertEqual(transcript["source"], "castbox_public_asr")
+            self.assertEqual(len(parse_transcription(json.loads(source.read_text()))), 20)
 
     def test_language_audit_uses_source_identity_even_when_title_changes(self):
         episode = {"episode_title": "Old title", "transcript": {"source_episode_id": "rss-guid"}}

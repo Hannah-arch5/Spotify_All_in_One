@@ -47,7 +47,7 @@ function targetPath(sourceData, chineseDir) {
   const date = String(sourceData.publishedDate || "unknown").slice(0, 10);
   const podcast = clean(sourceData.podcastName);
   const title = clean(`${sourceData.episodeTitle || "unknown"}_zh`);
-  const episodeId = clean(sourceData.spotifyEpisodeId);
+  const episodeId = clean(sourceData.spotifyEpisodeId || sourceData.sourceEpisodeId);
   return path.join(chineseDir, `${date} - ${podcast} - ${title} - ${episodeId}.json`);
 }
 

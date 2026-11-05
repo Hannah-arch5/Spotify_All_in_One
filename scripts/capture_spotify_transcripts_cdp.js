@@ -167,6 +167,17 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
       await page.close();
       continue;
     }
+    // STD's translation toggle is page-scoped and defaults to enabled. Always
+    // disable it before exposing Spotify's transcript so this capture remains
+    // the untouched original-language source.
+    try {
+      const autoTranslate = page.getByRole("checkbox", { name: "Auto-Translate to Chinese" });
+      if (await autoTranslate.isChecked({ timeout: 3000 })) {
+        await autoTranslate.uncheck({ timeout: 3000 });
+      }
+    } catch (error) {
+      process.stderr.write(`TRANSLATE_TOGGLE_UNAVAILABLE ${row.index} ${error.message}\n`);
+    }
     try {
       await page.getByText("Transcript", { exact: true }).first().click({ timeout: 10000 });
     } catch (error) {
