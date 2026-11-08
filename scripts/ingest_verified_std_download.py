@@ -59,6 +59,10 @@ def main() -> None:
         raise SystemExit("STD download includes translations; this importer only accepts original speech.")
 
     published_date = str(episode.get("published_at") or "")[:10]
+    data["episodeTitle"] = episode.get("episode_title")
+    data["podcastName"] = episode.get("podcast_title")
+    data["publishedDate"] = published_date
+    data["episodeUrl"] = f"https://open.spotify.com/episode/{args.spotify_id}"
     target = args.out_dir / (
         f"{published_date} - {clean_filename(episode.get('podcast_title'))} - "
         f"{clean_filename(episode.get('episode_title'))} - {args.spotify_id}.json"
@@ -67,16 +71,19 @@ def main() -> None:
     existing = [path for path in args.out_dir.glob(f"* - {args.spotify_id}.json") if path != target]
     if existing:
         raise SystemExit(f"An archive for this Spotify episode ID already exists: {existing[0]}")
+    raw_sha256 = sha256(args.download)
     if target.exists():
-        if sha256(target) != sha256(args.download):
-            raise SystemExit("An archive with this identity already exists but has different content.")
-    else:
-        shutil.copy2(args.download, target)
-    if sha256(target) != sha256(args.download):
+        raise SystemExit("An archive with this identity already exists; refusing to overwrite it.")
+    shutil.copy2(args.download, target)
+    if sha256(target) != raw_sha256:
         raise SystemExit("Archive copy failed SHA-256 verification; download was retained.")
+    target.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     args.download.unlink()
     print(f"path={target}")
-    print(f"spotify_id={args.spotify_id} segments={len(segments)} sha256={sha256(target)} download_removed=true")
+    print(
+        f"spotify_id={args.spotify_id} segments={len(segments)} raw_sha256={raw_sha256} "
+        f"sha256={sha256(target)} download_removed=true"
+    )
 
 
 if __name__ == "__main__":

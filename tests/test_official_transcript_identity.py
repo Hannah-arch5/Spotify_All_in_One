@@ -1,4 +1,5 @@
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -14,7 +15,9 @@ from translate_spotify_transcripts_to_zh import _target_path
 from import_official_vtt_transcript import read_vtt
 from import_official_txt_transcript import parse_txt
 from import_castbox_transcript import parse_transcription
+from import_youtube_transcript_txt import parse_transcript as parse_youtube_transcript, youtube_id
 from ingest_verified_std_download import normalized, same_show_name
+from check_pdf_heading_positions import _plain
 
 
 class OfficialTranscriptIdentityTests(unittest.TestCase):
@@ -55,7 +58,98 @@ class OfficialTranscriptIdentityTests(unittest.TestCase):
             accepted = subprocess.run(command, check=True, capture_output=True, text=True)
             self.assertIn("download_removed=true", accepted.stdout)
             self.assertFalse(download.exists())
-            self.assertEqual(len(list((root / "out").glob("*.json"))), 1)
+            archived_path = next((root / "out").glob("*.json"))
+            archived = json.loads(archived_path.read_text())
+            self.assertEqual(archived["episodeTitle"], "The New Model")
+            self.assertEqual(archived["podcastName"], "The AI Daily Brief")
+            self.assertEqual(archived["publishedDate"], "2026-10-30")
+            self.assertEqual(archived["episodeUrl"], "https://open.spotify.com/episode/correct-id")
+
+    def test_youtube_transcript_preserves_verified_non_spotify_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            manifest.write_text(json.dumps({"episodes": [{
+                "guid": "rss-guid",
+                "podcast_title": "Show",
+                "episode_title": "Title",
+                "published_at": "2026-11-04T00:00:00+00:00",
+                "episode_url": "https://example.com/rss-guid",
+            }]}))
+            transcript = root / "youtube.txt"
+            transcript.write_text(
+                "Video ID: abc123\n" + "\n".join(
+                    f"[00:{index:02d}] Meaningful source sentence {index}." for index in range(20)
+                )
+            )
+            subprocess.run([
+                sys.executable,
+                str(ROOT / "scripts/import_youtube_transcript_txt.py"),
+                "--manifest", str(manifest),
+                "--index", "1",
+                "--transcript-file", str(transcript),
+                "--source-url", "https://www.youtube.com/watch?v=abc123",
+                "--out-dir", str(root / "out"),
+            ], check=True, capture_output=True, text=True)
+            archived = json.loads(next((root / "out").glob("*.json")).read_text())
+            self.assertEqual(archived["sourceEpisodeId"], "youtube:abc123")
+            self.assertNotIn("spotifyEpisodeId", archived)
+            self.assertEqual(archived["transcriptUrl"], "https://www.youtube.com/watch?v=abc123")
+            self.assertEqual(len(archived["segments"]), 20)
+
+    def test_youtube_helpers_parse_time_and_common_urls(self):
+        segments = parse_youtube_transcript("[00:01] First line.\ncontinued\n[01:02:03] Second line.\n")
+        self.assertEqual(segments[0]["text"], "First line. continued")
+        self.assertEqual(segments[0]["end"], 3723.0)
+        self.assertEqual(youtube_id("https://youtu.be/abc123"), "abc123")
+        self.assertEqual(youtube_id("https://www.youtube.com/watch?v=abc123"), "abc123")
+
+    def test_heading_match_normalizes_word_compatibility_glyphs(self):
+        self.assertEqual(_plain("跨节⽬专题分析"), _plain("跨节目专题分析"))
+
+    def test_manifest_metadata_normalizer_updates_original_and_chinese_pair(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = root / "original.json"
+            original.write_text(json.dumps({
+                "spotifyEpisodeId": "episode-id",
+                "episodeTitle": "Wrong title",
+                "podcastName": "Wrong show",
+                "publishedDate": "2026-01-01",
+                "segments": [{"text": "Source sentence."}],
+            }))
+            chinese_dir = root / "zh"
+            chinese_dir.mkdir()
+            chinese = chinese_dir / "old-name.json"
+            chinese.write_text(json.dumps({
+                "spotifyEpisodeId": "episode-id",
+                "segments": [{"text": "Source sentence.", "translation": "来源句子。"}],
+            }))
+            evidence = root / "evidence.json"
+            evidence.write_text(json.dumps({"episodes": [{
+                "episode_title": "Canonical title",
+                "podcast_title": "Canonical show",
+                "published_at": "2026-11-04T18:00:00+00:00",
+                "transcript": {"path": str(original)},
+            }]}))
+            subprocess.run([
+                sys.executable,
+                str(ROOT / "scripts/normalize_transcript_manifest_metadata.py"),
+                str(evidence),
+                "--chinese-dir", str(chinese_dir),
+            ], check=True, capture_output=True, text=True)
+            normalized_original = json.loads(original.read_text())
+            self.assertEqual(normalized_original["episodeTitle"], "Canonical title")
+            self.assertEqual(normalized_original["podcastName"], "Canonical show")
+            self.assertEqual(normalized_original["publishedDate"], "2026-11-04")
+            normalized_chinese_path = next(chinese_dir.glob("*.json"))
+            normalized_chinese = json.loads(normalized_chinese_path.read_text())
+            self.assertIn("2026-11-04", normalized_chinese_path.name)
+            self.assertEqual(normalized_chinese["episodeTitle"], "Canonical title")
+            self.assertEqual(
+                normalized_chinese["sourceTranscriptSha256"],
+                hashlib.sha256(original.read_bytes()).hexdigest(),
+            )
 
     def test_remote_vtt_request_uses_browser_headers(self):
         class Response:

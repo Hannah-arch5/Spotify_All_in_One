@@ -6,6 +6,7 @@ import html
 import re
 import subprocess
 import tempfile
+import unicodedata
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -17,7 +18,8 @@ if not PDFTOTEXT.exists():
 
 
 def _plain(value: str) -> str:
-    return re.sub(r"\s+", "", html.unescape(value or ""))
+    normalized = unicodedata.normalize("NFKC", html.unescape(value or ""))
+    return re.sub(r"\s+", "", normalized)
 
 
 def main() -> None:
