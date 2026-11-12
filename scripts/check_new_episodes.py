@@ -8,6 +8,8 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import time
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -65,6 +67,24 @@ def _parse_datetime(value: str | None) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def _fetch_and_parse_with_retry(
+    podcast: Podcast,
+    *,
+    attempts: int = 3,
+) -> tuple[bytes, list[Episode]]:
+    last_error: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            xml_bytes = fetch_feed(podcast.rss_url, attempts=1)
+            episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
+            return xml_bytes, episodes
+        except (RuntimeError, ET.ParseError) as exc:
+            last_error = exc
+            if attempt < attempts:
+                time.sleep(min(2 ** (attempt - 1), 4))
+    raise RuntimeError(f"Feed failed after {attempts} complete-fetch attempts: {last_error}") from last_error
+
+
 def run(args: argparse.Namespace) -> Path:
     podcasts = load_podcasts(ROOT / "config" / "podcasts.yaml")
     connection = connect(ROOT / "data" / "state.sqlite")
@@ -91,9 +111,8 @@ def run(args: argparse.Namespace) -> Path:
             continue
 
         try:
-            xml_bytes = fetch_feed(podcast.rss_url)
+            xml_bytes, episodes = _fetch_and_parse_with_retry(podcast)
             cache_feed(ROOT / "data" / "feeds" / _safe_name(podcast.rss_url), xml_bytes)
-            episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
         except Exception as exc:
             failures += 1
             statuses.append(_podcast_status(podcast, "feed_error", error=str(exc)))

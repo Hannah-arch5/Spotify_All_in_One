@@ -11,6 +11,7 @@ from http.client import IncompleteRead
 import re
 import signal
 import socket
+import time
 import xml.etree.ElementTree as ET
 
 
@@ -34,30 +35,35 @@ class Episode:
     transcript_type: str | None
 
 
-def fetch_feed(url: str, timeout: int = 300) -> bytes:
-    request = Request(url, headers={"User-Agent": "Spotify-All-in-One/0.1"})
-    previous_timeout = socket.getdefaulttimeout()
+def fetch_feed(url: str, timeout: int = 300, attempts: int = 3) -> bytes:
+    if attempts < 1:
+        raise ValueError("attempts must be at least 1")
 
     def _timeout_handler(signum: int, frame: object) -> None:
         raise TimeoutError(f"Timed out reading feed after {timeout}s")
 
-    previous_handler = signal.getsignal(signal.SIGALRM)
-    try:
-        socket.setdefaulttimeout(timeout)
-        signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(timeout)
-        with urlopen(request, timeout=timeout) as response:
-            return response.read()
-    except IncompleteRead as exc:
-        if exc.partial:
-            return exc.partial
-        raise RuntimeError(f"Cannot fetch feed: {exc}") from exc
-    except (TimeoutError, socket.timeout, URLError) as exc:
-        raise RuntimeError(f"Cannot fetch feed: {exc}") from exc
-    finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, previous_handler)
-        socket.setdefaulttimeout(previous_timeout)
+    last_error: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        request = Request(url, headers={"User-Agent": "Spotify-All-in-One/0.1"})
+        previous_timeout = socket.getdefaulttimeout()
+        previous_handler = signal.getsignal(signal.SIGALRM)
+        try:
+            socket.setdefaulttimeout(timeout)
+            signal.signal(signal.SIGALRM, _timeout_handler)
+            signal.alarm(timeout)
+            with urlopen(request, timeout=timeout) as response:
+                return response.read()
+        except (IncompleteRead, TimeoutError, socket.timeout, URLError) as exc:
+            last_error = exc
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, previous_handler)
+            socket.setdefaulttimeout(previous_timeout)
+
+        if attempt < attempts:
+            time.sleep(min(2 ** (attempt - 1), 4))
+
+    raise RuntimeError(f"Cannot fetch feed after {attempts} attempts: {last_error}") from last_error
 
 
 def _text(element: ET.Element, tag: str) -> str | None:
