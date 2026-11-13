@@ -223,6 +223,36 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
     for part in missing_parts:
         findings.append(Finding("error", f"研报缺少必要结构：{part}。"))
 
+    h2_headings = re.findall(r"^##\s+(.+)$", report, re.MULTILINE)
+    unexpected_h2 = [
+        heading
+        for heading in h2_headings
+        if not any(heading.startswith(part) for part in REQUIRED_PARTS)
+    ]
+    if len(h2_headings) != len(REQUIRED_PARTS) or unexpected_h2:
+        findings.append(
+            Finding(
+                "error",
+                f"研报必须且只能有五个二级主部分；当前 {len(h2_headings)} 个，额外标题：{unexpected_h2}。",
+            )
+        )
+
+    stray_completion_headings = re.findall(
+        r"^#{1,6}\s*第[一二三四五六七八九十]+部分(?:完成|完|结束)\s*$",
+        report,
+        re.MULTILINE,
+    )
+    for heading in stray_completion_headings:
+        findings.append(Finding("error", f"研报包含无意义的重复收尾标题：{heading}。"))
+
+    internal_metadata = re.findall(
+        r"^(?:Run ID|Report Date|Word Count)[：:]|^\(Word Count[：:]",
+        report,
+        re.MULTILINE | re.IGNORECASE,
+    )
+    if internal_metadata:
+        findings.append(Finding("error", "研报正文包含 Gemini 内部运行或字数自检元数据。"))
+
     expected_count = len(expected_episodes)
     actual_count = len(sections)
     if actual_count != expected_count:

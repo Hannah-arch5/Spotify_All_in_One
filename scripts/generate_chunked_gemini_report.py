@@ -6,6 +6,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import time
 import urllib.error
@@ -71,6 +72,13 @@ def _generate_text(
             body = exc.read().decode("utf-8", errors="replace")
             if exc.code == 429:
                 raise GeminiQuotaError(f"Gemini API quota exhausted: {body}") from exc
+            if (
+                exc.code == 400
+                and "User location is not supported for the API use" in body
+                and attempt < max_retries
+            ):
+                time.sleep(30 * (attempt + 1))
+                continue
             if exc.code in {500, 502, 503, 504} and attempt < max_retries:
                 time.sleep(45 * (attempt + 1))
                 continue
@@ -123,8 +131,8 @@ def _episode_prompt(run_id: str, episode: dict[str, Any]) -> str:
 - 来源与发布者：Spotify | {episode['podcast_title']} | 核心主讲人及职位；如 transcript 中无法确认，写“未在 transcript 中明确”
 - 原始链接：{episode.get('spotify_episode_url') or episode.get('rss_episode_url') or episode.get('audio_url') or 'unknown'}
 - Transcript 来源：Spotify transcript
-- 核心内容摘要：约 600 字，必须来自 transcript。
-- 情报价值点：约 150-250 字。
+- 核心内容摘要：必须写成 6-8 个自然段、合计 2000-2400 个中文字符，不能只写一段概述。必须只基于 transcript，依次覆盖：节目问题与背景、主要论点链条、至少两个具体案例/数字/行动、背后的因果机制、重要分歧或限制条件、最终结论。不要把证据锚点原句简单重复成摘要，不要用空泛形容词凑字数。若 transcript 很长，必须综合其主要阶段而不是只总结开头。输出前逐项自检段落数与字符数，不足时先扩充再回答。
+- 情报价值点：必须写 3 个自然段、合计 550-700 个中文字符，分别说明对企业/产品/投资或组织决策的意义、适用边界和可验证指标；不能只给一句泛泛建议。输出前自检段落数与字符数。
 - 关键金句 / 结论：2 条有实质意义、可逐字核验的来源原句；如 transcript 为英文，每条英文原句下一行直接写对应的斜体中文翻译。译文不能写成“这句话说明……”之类的解释。如 transcript 为中文，不重复翻译成中文。不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。必须先通读原文寻找可核验金句，确实没有时才写成 `转述结论`，不要伪装成直接引语；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
 - 证据锚点：至少 3 个 timestamp + 可核验的来源原句。英文锚点下一行必须直接写无标签的斜体中文翻译，例如 `*这是对应的中文翻译。*`；中文原生锚点不重复翻译。证据必须有信息价值，能支撑具体观点、机制、数字、例子、分歧或战略判断。不要使用寒暄、感谢、广告、片头片尾、泛泛介绍、互相称赞或结束语作为证据锚点。
 
@@ -140,6 +148,55 @@ Transcript:
 {transcript_text}
 ```
 """
+
+
+def _section(brief: str, label: str, next_label: str) -> str:
+    match = re.search(rf"- {re.escape(label)}[：:]\s*(.*?)(?=\n- {re.escape(next_label)}[：:])", brief, re.S)
+    return match.group(1).strip() if match else ""
+
+
+def _brief_issues(brief: str) -> list[str]:
+    issues: list[str] = []
+    summary = _section(brief, "核心内容摘要", "情报价值点")
+    value = _section(brief, "情报价值点", "关键金句 / 结论")
+    summary_paragraphs = [part for part in re.split(r"\n\s*\n", summary) if part.strip()]
+    value_paragraphs = [part for part in re.split(r"\n\s*\n", value) if part.strip()]
+    if len(summary) < 1100 or not 4 <= len(summary_paragraphs) <= 9:
+        issues.append(f"核心内容摘要当前 {len(summary)} 字、{len(summary_paragraphs)} 段，必须至少 1100 字且 4-9 段")
+    if len(value) < 300 or len(value_paragraphs) < 2:
+        issues.append(f"情报价值点当前 {len(value)} 字、{len(value_paragraphs)} 段，必须至少 300 字且至少 2 段")
+    anchor_block = brief.split("- 证据锚点：", 1)[-1] if "- 证据锚点：" in brief else ""
+    anchors = re.findall(r"^\s*- \[[^\]]+\]\s+(.+)$", anchor_block, re.M)
+    if not 3 <= len(anchors) <= 8:
+        issues.append(f"证据锚点当前 {len(anchors)} 条，必须 3-8 条")
+    for anchor in anchors:
+        words = re.findall(r"[A-Za-z]+|[\u4e00-\u9fff]", anchor)
+        if len(words) < 7:
+            issues.append(f"证据锚点过短且缺乏独立信息：{anchor[:80]}")
+    return issues
+
+
+def _drop_low_value_anchors(brief: str) -> str:
+    if "- 证据锚点：" not in brief:
+        return brief
+    head, anchor_block = brief.split("- 证据锚点：", 1)
+    lines = anchor_block.splitlines()
+    keep: list[str] = []
+    index = 0
+    kept_anchors = 0
+    while index < len(lines):
+        match = re.match(r"^(\s*- \[[^\]]+\]\s+)(.+)$", lines[index])
+        if match:
+            words = re.findall(r"[A-Za-z]+|[\u4e00-\u9fff]", match.group(2))
+            if len(words) < 7 or kept_anchors >= 8:
+                index += 1
+                if index < len(lines) and re.match(r"^\s+\*.+\*\s*$", lines[index]):
+                    index += 1
+                continue
+            kept_anchors += 1
+        keep.append(lines[index])
+        index += 1
+    return head + "- 证据锚点：" + "\n".join(keep)
 
 
 def _final_prompt(run_id: str, episode_briefs: list[str]) -> str:
@@ -180,6 +237,9 @@ def generate_chunked(
     resume: bool,
     timeout: int,
     briefs_only: bool = False,
+    only_index: int | None = None,
+    start_index: int | None = None,
+    failed_only: bool = False,
 ) -> Path:
     evidence_path = package_dir / "transcript-evidence-full.json"
     evidence = _read_json(evidence_path)
@@ -189,6 +249,26 @@ def generate_chunked(
 
     briefs: list[str] = []
     episodes = evidence["episodes"]
+    if only_index is not None:
+        episodes = [episode for episode in episodes if int(episode["index"]) == only_index]
+        if not episodes:
+            raise SystemExit(f"Episode index {only_index} does not exist in {evidence_path}.")
+    elif start_index is not None:
+        episodes = [episode for episode in episodes if int(episode["index"]) >= start_index]
+        if not episodes:
+            raise SystemExit(f"No episodes at or after index {start_index} exist in {evidence_path}.")
+    if failed_only:
+        episodes = [
+            episode
+            for episode in episodes
+            if not (chunk_dir / f"{int(episode['index']):02d}-episode-brief.md").exists()
+            or _brief_issues(
+                (chunk_dir / f"{int(episode['index']):02d}-episode-brief.md").read_text(encoding="utf-8")
+            )
+        ]
+        if not episodes:
+            print(f"all episode briefs already pass quality gates: {chunk_dir}")
+            return chunk_dir
     for offset, episode in enumerate(episodes):
         index = int(episode["index"])
         brief_path = chunk_dir / f"{index:02d}-episode-brief.md"
@@ -199,13 +279,32 @@ def generate_chunked(
         else:
             print(f"generate {index}/{len(episodes)} {episode['episode_title']}")
             try:
-                brief = _generate_text(
-                    _episode_prompt(run_id, episode),
-                    model=model,
-                    max_output_tokens=8192,
-                    temperature=0.2,
-                    timeout=timeout,
-                )
+                base_prompt = _episode_prompt(run_id, episode)
+                brief = ""
+                issues: list[str] = []
+                for quality_attempt in range(2):
+                    quality_prompt = base_prompt
+                    if issues:
+                        quality_prompt += (
+                            "\n\n你上一版未通过硬性质量门槛，必须从原 transcript 重新生成完整 brief，"
+                            "不要只补一句或解释原因。未通过项：\n- " + "\n- ".join(issues)
+                        )
+                    brief = _generate_text(
+                        quality_prompt,
+                        model=model,
+                        max_output_tokens=12288,
+                        temperature=0.2,
+                        timeout=timeout,
+                    )
+                    brief = _drop_low_value_anchors(brief)
+                    issues = _brief_issues(brief)
+                    if not issues:
+                        break
+                    print(f"quality retry {index}: {'; '.join(issues)}")
+                if issues:
+                    raise RuntimeError(
+                        f"Episode {index} failed brief quality gates after retry: {'; '.join(issues)}"
+                    )
             except GeminiQuotaError as exc:
                 status_path = chunk_dir / "STATUS.json"
                 _write_json(
@@ -291,6 +390,9 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--no-resume", action="store_true")
     parser.add_argument("--briefs-only", action="store_true")
+    parser.add_argument("--only-index", type=int, help="Generate only one episode brief by manifest index.")
+    parser.add_argument("--start-index", type=int, help="Generate manifest episodes starting at this index.")
+    parser.add_argument("--failed-only", action="store_true", help="Generate only missing or quality-failing briefs.")
     args = parser.parse_args()
     generate_chunked(
         args.package_dir,
@@ -299,6 +401,9 @@ def main() -> None:
         resume=not args.no_resume,
         timeout=args.timeout,
         briefs_only=args.briefs_only,
+        only_index=args.only_index,
+        start_index=args.start_index,
+        failed_only=args.failed_only,
     )
 
 

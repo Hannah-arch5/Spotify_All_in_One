@@ -56,6 +56,56 @@ class CompactSynthesisReviewTests(unittest.TestCase):
             result = check(report, manifest, evidence)
             self.assertFalse(any('不得编造时间码' in finding['message'] for finding in result['findings']))
 
+    def test_rejects_stray_part_completion_heading(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({'episodes': []}))
+            report = root / 'report.md'
+            report.write_text('''## 第一部分：摘要
+## 第二部分：详情
+## 第三部分：分析
+## 第四部分：思考
+## 第四部分完
+## 第五部分：结论
+''')
+            result = check(report, manifest)
+            self.assertTrue(any('重复收尾标题' in finding['message'] for finding in result['findings']))
+
+    def test_rejects_internal_generation_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({'episodes': []}))
+            report = root / 'report.md'
+            report.write_text('''## 第一部分：摘要
+## 第二部分：详情
+## 第三部分：分析
+## 第四部分：思考
+Run ID: internal-run
+Report Date: 2026-11-11
+(Word Count: 2500 Chinese Characters)
+## 第五部分：结论
+''')
+            result = check(report, manifest)
+            self.assertTrue(any('内部运行或字数自检元数据' in finding['message'] for finding in result['findings']))
+
+    def test_rejects_extra_h2_inside_integrated_sections(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({'episodes': []}))
+            report = root / 'report.md'
+            report.write_text('''## 第一部分：摘要
+## 第二部分：详情
+## 第三部分：分析
+## 主题一：不应与五大部分同级
+## 第四部分：思考
+## 第五部分：结论
+''')
+            result = check(report, manifest)
+            self.assertTrue(any('只能有五个二级主部分' in finding['message'] for finding in result['findings']))
+
 
 if __name__ == '__main__':
     unittest.main()
