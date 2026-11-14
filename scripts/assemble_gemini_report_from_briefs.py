@@ -147,12 +147,74 @@ def _synthesis_issues(parts: tuple[str, str, str, str, str]) -> list[str]:
     return issues
 
 
+def _extract_targeted_section(text: str, section_key: str) -> tuple[str | None, str]:
+    text = _strip_code_fences(text)
+    if section_key == "title_first":
+        title_match = re.search(r"^#\s+.+$", text, re.MULTILINE)
+        section_match = re.search(r"^##\s+第一部分.*\Z", text, re.DOTALL | re.MULTILINE)
+        if not title_match or not section_match:
+            raise SystemExit("Targeted title/first-section output is incomplete.")
+        return title_match.group(0).strip(), section_match.group(0).strip()
+    label = {"third": "第三部分", "fourth": "第四部分", "fifth": "第五部分"}[section_key]
+    section_match = re.search(rf"^##\s+{label}.*\Z", text, re.DOTALL | re.MULTILINE)
+    if not section_match:
+        raise SystemExit(f"Targeted {label} output is incomplete.")
+    return None, section_match.group(0).strip()
+
+
+def _repair_synthesis_parts(
+    parts: tuple[str, str, str, str, str],
+    issues: list[str],
+    *,
+    run_id: str,
+    report_date: str,
+    report_window: dict,
+    compact_briefs: list[str],
+    chunk_dir: Path,
+    model: str,
+    timeout: int,
+) -> tuple[str, str, str, str, str]:
+    title, first, third, fourth, fifth = parts
+    section_map = {
+        "第一部分": "title_first",
+        "第三部分": "third",
+        "第四部分": "fourth",
+        "第五部分": "fifth",
+    }
+    for label, section_key in section_map.items():
+        if not any(issue.startswith(label) for issue in issues):
+            continue
+        targeted = _generate_text(
+            _section_prompt(run_id, report_date, report_window, compact_briefs, section_key),
+            model=model,
+            max_output_tokens=6144,
+            temperature=0.2,
+            timeout=timeout,
+        )
+        (chunk_dir / f"synthesis-{section_key}-latest.md").write_text(targeted, encoding="utf-8")
+        new_title, section = _extract_targeted_section(targeted, section_key)
+        if section_key == "title_first":
+            title, first = new_title or title, section
+        elif section_key == "third":
+            third = section
+        elif section_key == "fourth":
+            fourth = section
+        else:
+            fifth = section
+    return title, first, third, fourth, fifth
+
+
 def _title_issues(title: str) -> list[str]:
     issues: list[str] = []
     if re.search(r"20\d{2}|\b\d{6}\b|11月|岁末", title):
         issues.append("主标题含日期或时间标签")
-    if any(term in title for term in ["范式", "重塑", "价值重塑", "深度洞察"]):
+    if any(term in title for term in ["范式", "重塑", "重构", "价值重塑", "深度洞察"]):
         issues.append("主标题含抽象拼词")
+    chinese_title = title.split("(", 1)[0]
+    if "：" in chinese_title or ":" in chinese_title:
+        issues.append("主标题使用冒号拼接概念")
+    if not re.search(r"应|必须|需要|先.+再", chinese_title):
+        issues.append("主标题不是明确的行动判断句")
     if not re.search(r"\([A-Za-z][^()]{8,}\)\s*$", title):
         issues.append("主标题缺少括号内英文翻译")
     return issues
@@ -168,7 +230,7 @@ def rewrite_title_only(package_dir: Path, *, model: str, timeout: int) -> Path:
         raise SystemExit("Existing report is missing the first section.")
     prompt = f"""你是播客情报研报主编。请只输出一个 Markdown 一级标题，不要解释。
 
-标题必须是建设性、可执行的完整判断句，让读者一眼抓住本期最重要的行动方向与核心矛盾，并在末尾用括号给出自然英文翻译。禁止日期、月份、run id、窗口信息、“Spotify 播客情报研报”，也禁止使用“范式”“重塑”“价值重塑”“深度洞察”等抽象拼词。格式严格为：`# 中文完整判断 (Natural English Translation)`。
+标题必须是建设性、可执行的完整判断句，让读者一眼抓住本期最重要的行动方向与核心矛盾，并在末尾用括号给出自然英文翻译。中文标题必须自然包含“应”“必须”“需要”或“先……再……”中的一种行动表达，不能使用冒号连接名词短语。禁止日期、月份、run id、窗口信息、“Spotify 播客情报研报”，也禁止使用“范式”“重塑”“重构”“价值重塑”“深度洞察”等抽象拼词。不要堆叠“基座、脚本、霸权、系统性”等概念。格式严格为：`# 中文完整判断 (Natural English Translation)`。
 
 本期第一部分：
 {first_match.group(0)}
@@ -287,8 +349,22 @@ def assemble(package_dir: Path, *, model: str, timeout: int, synthesis_file: Pat
             temperature=0.2,
             timeout=timeout,
         )
+        (chunk_dir / "synthesis-combined-latest.md").write_text(synthesis, encoding="utf-8")
         parts = _split_synthesis(synthesis)
         issues = _synthesis_issues(parts)
+        if issues:
+            parts = _repair_synthesis_parts(
+                parts,
+                issues,
+                run_id=run_id,
+                report_date=report_date,
+                report_window=report_window,
+                compact_briefs=compact_briefs,
+                chunk_dir=chunk_dir,
+                model=model,
+                timeout=timeout,
+            )
+            issues = _synthesis_issues(parts)
     if issues:
         raise SystemExit("Synthesis failed quality gates: " + "; ".join(issues))
     title, first, third, fourth, fifth = parts
