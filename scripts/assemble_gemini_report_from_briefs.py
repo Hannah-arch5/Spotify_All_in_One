@@ -213,8 +213,8 @@ def _title_issues(title: str) -> list[str]:
     chinese_title = title.split("(", 1)[0]
     if "：" in chinese_title or ":" in chinese_title:
         issues.append("主标题使用冒号拼接概念")
-    if not re.search(r"应|必须|需要|先.+再", chinese_title):
-        issues.append("主标题不是明确的行动判断句")
+    if re.search(r"(?:开发者|企业|组织|决策者|投资者)(?:应|必须|需要)", chinese_title):
+        issues.append("主标题写成了面向读者的行动指令")
     if not re.search(r"\([A-Za-z][^()]{8,}\)\s*$", title):
         issues.append("主标题缺少括号内英文翻译")
     return issues
@@ -230,7 +230,7 @@ def rewrite_title_only(package_dir: Path, *, model: str, timeout: int) -> Path:
         raise SystemExit("Existing report is missing the first section.")
     prompt = f"""你是播客情报研报主编。请只输出一个 Markdown 一级标题，不要解释。
 
-标题必须是建设性、可执行的完整判断句，让读者一眼抓住本期最重要的行动方向与核心矛盾，并在末尾用括号给出自然英文翻译。中文标题必须自然包含“应”“必须”“需要”或“先……再……”中的一种行动表达，不能使用冒号连接名词短语。禁止日期、月份、run id、窗口信息、“Spotify 播客情报研报”，也禁止使用“范式”“重塑”“重构”“价值重塑”“深度洞察”等抽象拼词。不要堆叠“基座、脚本、霸权、系统性”等概念。格式严格为：`# 中文完整判断 (Natural English Translation)`。
+标题必须用一句自然、完整的总结性判断概括本期最重要的共同发现，让读者一眼抓住研报重点，并在末尾用括号给出自然英文翻译。标题可以有明确观点，但不能写成“开发者/企业/组织/决策者/投资者应当、必须、需要……”之类面向读者的行动指令，也不能使用冒号连接名词短语。禁止日期、月份、run id、窗口信息、“Spotify 播客情报研报”，也禁止使用“范式”“重塑”“重构”“价值重塑”“深度洞察”等抽象拼词。不要堆叠“基座、脚本、霸权、系统性”等概念。格式严格为：`# 中文总结性判断 (Natural English Translation)`。
 
 本期第一部分：
 {first_match.group(0)}
