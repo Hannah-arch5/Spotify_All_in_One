@@ -11,6 +11,18 @@ from generate_chunked_gemini_report import _generate_text
 
 
 ROOT = Path(__file__).resolve().parents[1]
+EPISODE_BLOCK_RE = re.compile(
+    r"^####\s+情报\s+(\d+)[：:].*?(?=^####\s+情报\s+\d+[：:]|^##\s+第三部分)",
+    re.DOTALL | re.MULTILINE,
+)
+SUMMARY_BLOCK_RE = re.compile(
+    r"(^-\s*核心内容摘要[：:]\s*)(.*?)(?=^-\s*情报价值点[：:])",
+    re.DOTALL | re.MULTILINE,
+)
+VALUE_BLOCK_RE = re.compile(
+    r"(^-\s*情报价值点[：:]\s*)(.*?)(?=^-\s*关键金句\s*/\s*结论[：:])",
+    re.DOTALL | re.MULTILINE,
+)
 
 
 def _read_json(path: Path) -> dict:
@@ -258,6 +270,165 @@ def rewrite_title_only(package_dir: Path, *, model: str, timeout: int) -> Path:
     return report_path
 
 
+def _episode_prose_prompt(items: dict[int, tuple[str, str]]) -> str:
+    joined = "\n\n---\n\n".join(
+        f"### 情报 {index}\n\n- 核心内容摘要：\n{summary}\n\n- 情报价值点：\n{value}"
+        for index, (summary, value) in sorted(items.items())
+    )
+    return f"""你是播客情报研报编辑。请将下面已经由 Gemini 生成并通过事实核查的逐集内容编辑到指定字数范围；过长时压缩重复表达，过短时保留原文中更多具体信息。不得增加原文之外的事实，不得改变数字、节目归属、观点边界、限制条件和结论方向。
+
+硬性要求：
+- 只输出所提供的 `### 情报 N`、`- 核心内容摘要：`、`- 情报价值点：`，不得输出解释、标题、金句、证据锚点或其他字段。
+- 每集核心内容摘要必须为 850-1050 个中文字符（忽略空白），本次请写成 4-5 个自然段并以约 950 字为目标，避免贴近上下限。
+- 每集情报价值点必须为 350-500 个中文字符（忽略空白），本次请写成恰好 2 个自然段并以 430-470 字为目标，避免贴近上下限。两段之间只保留一个空行，不要把每句话拆成单独段落。
+- 保留重要案例、数字、因果机制、分歧、限制条件和可验证指标；删去重复铺陈与同义反复，不得用空话凑字数。
+- 不得改写或推断本输入之外的事实。输出前逐集计算两部分字数，超出范围时先自行调整再回答。
+
+待压缩内容：
+
+{joined}
+"""
+
+
+def _parse_compacted_episode_prose(text: str) -> dict[int, tuple[str, str]]:
+    text = _strip_code_fences(text)
+    matches = list(re.finditer(r"^###\s+情报\s+(\d+)\s*$", text, re.MULTILINE))
+    parsed: dict[int, tuple[str, str]] = {}
+    for position, match in enumerate(matches):
+        end = matches[position + 1].start() if position + 1 < len(matches) else len(text)
+        block = text[match.end() : end]
+        summary = re.search(
+            r"^-\s*核心内容摘要[：:]\s*(.*?)(?=^-\s*情报价值点[：:])",
+            block,
+            re.DOTALL | re.MULTILINE,
+        )
+        value = re.search(
+            r"^-\s*情报价值点[：:]\s*(.*?)\s*\Z",
+            block,
+            re.DOTALL | re.MULTILINE,
+        )
+        if summary and value:
+            cleaned_value = re.sub(r"(?:\n\s*---\s*)+\Z", "", value.group(1)).strip()
+            parsed[int(match.group(1))] = (summary.group(1).strip(), cleaned_value)
+    return parsed
+
+
+def _episode_prose_issues(
+    expected: set[int], parsed: dict[int, tuple[str, str]]
+) -> tuple[list[str], set[int]]:
+    issues: list[str] = []
+    failed: set[int] = set(expected - set(parsed))
+    for index in sorted(expected & set(parsed)):
+        summary, value = parsed[index]
+        summary_length = len(re.sub(r"\s+", "", summary))
+        value_length = len(re.sub(r"\s+", "", value))
+        summary_paragraphs = len([part for part in re.split(r"\n\s*\n", summary) if part.strip()])
+        value_paragraphs = len([part for part in re.split(r"\n\s*\n", value) if part.strip()])
+        if not 850 <= summary_length <= 1050 or not 4 <= summary_paragraphs <= 7:
+            failed.add(index)
+            issues.append(
+                f"情报 {index} 摘要 {summary_length} 字/{summary_paragraphs} 段，要求 850-1050 字/4-7 段"
+            )
+        if not 350 <= value_length <= 500 or not 2 <= value_paragraphs <= 3:
+            failed.add(index)
+            issues.append(
+                f"情报 {index} 价值点 {value_length} 字/{value_paragraphs} 段，要求 350-500 字/2-3 段"
+            )
+    for index in sorted(expected - set(parsed)):
+        issues.append(f"缺少情报 {index}")
+    return issues, failed
+
+
+def _replace_episode_prose(text: str, replacements: dict[int, tuple[str, str]]) -> str:
+    def replace_episode(match: re.Match[str]) -> str:
+        index = int(match.group(1))
+        block = match.group(0)
+        if index not in replacements:
+            return block
+        summary, value = replacements[index]
+        block = SUMMARY_BLOCK_RE.sub(lambda item: item.group(1) + summary + "\n", block, count=1)
+        block = VALUE_BLOCK_RE.sub(lambda item: item.group(1) + value + "\n", block, count=1)
+        return block
+
+    return EPISODE_BLOCK_RE.sub(replace_episode, text)
+
+
+def _lock_non_prose(text: str) -> str:
+    text = SUMMARY_BLOCK_RE.sub(lambda item: item.group(1) + "<LOCKED_SUMMARY>\n", text)
+    return VALUE_BLOCK_RE.sub(lambda item: item.group(1) + "<LOCKED_VALUE>\n", text)
+
+
+def compact_episode_prose(package_dir: Path, *, model: str, timeout: int, resume: bool = False) -> Path:
+    evidence = _read_json(package_dir / "transcript-evidence-full.json")
+    run_id = evidence["run_id"]
+    report_path = ROOT / "reports" / "markdown" / f"{run_id}-gemini-report.md"
+    report = report_path.read_text(encoding="utf-8")
+    current: dict[int, tuple[str, str]] = {}
+    for match in EPISODE_BLOCK_RE.finditer(report):
+        summary = SUMMARY_BLOCK_RE.search(match.group(0))
+        value = VALUE_BLOCK_RE.search(match.group(0))
+        if not summary or not value:
+            raise SystemExit(f"情报 {match.group(1)} 缺少摘要或价值点。")
+        current[int(match.group(1))] = (summary.group(2).strip(), value.group(2).strip())
+    expected = {int(episode["index"]) for episode in evidence["episodes"]}
+    if set(current) != expected:
+        raise SystemExit(f"研报情报编号与 evidence 不一致：{sorted(set(current) ^ expected)}")
+
+    chunk_dir = ROOT / "data" / "gemini_chunks" / run_id
+    response_path = chunk_dir / "episode-prose-compacted-latest.md"
+    if resume and response_path.exists():
+        response = response_path.read_text(encoding="utf-8")
+    else:
+        response = _generate_text(
+            _episode_prose_prompt(current),
+            model=model,
+            max_output_tokens=24576,
+            temperature=0.1,
+            timeout=timeout,
+        )
+        response_path.write_text(response, encoding="utf-8")
+    replacements = _parse_compacted_episode_prose(response)
+    retry_path = chunk_dir / "episode-prose-compacted-retry.md"
+    if resume and retry_path.exists():
+        replacements.update(_parse_compacted_episode_prose(retry_path.read_text(encoding="utf-8")))
+    issues, failed = _episode_prose_issues(expected, replacements)
+    if failed:
+        retry_input = {index: current[index] for index in sorted(failed)}
+        retry = _generate_text(
+            _episode_prose_prompt(retry_input)
+            + "\n\n上一版未通过项：\n- "
+            + "\n- ".join(issues),
+            model=model,
+            max_output_tokens=12288,
+            temperature=0.1,
+            timeout=timeout,
+        )
+        retry_path.write_text(retry, encoding="utf-8")
+        replacements.update(_parse_compacted_episode_prose(retry))
+        issues, failed = _episode_prose_issues(expected, replacements)
+    if issues:
+        raise SystemExit("逐集压缩未通过硬性字数门槛：" + "；".join(issues))
+
+    updated_report = _replace_episode_prose(report, replacements)
+    if _lock_non_prose(updated_report) != _lock_non_prose(report):
+        raise SystemExit("压缩操作触及了摘要/价值点之外的锁定内容。")
+
+    brief_updates: dict[Path, str] = {}
+    for index, replacement in replacements.items():
+        brief_path = chunk_dir / f"{index:02d}-episode-brief.md"
+        original = brief_path.read_text(encoding="utf-8")
+        updated = _replace_episode_prose(original, {index: replacement})
+        if _lock_non_prose(updated) != _lock_non_prose(original):
+            raise SystemExit(f"情报 {index} brief 的锁定内容发生变化。")
+        brief_updates[brief_path] = updated
+
+    report_path.write_text(updated_report, encoding="utf-8")
+    for brief_path, updated in brief_updates.items():
+        brief_path.write_text(updated, encoding="utf-8")
+    print(report_path)
+    return report_path
+
+
 def compact_existing_report(package_dir: Path, *, model: str, timeout: int) -> Path:
     evidence = _read_json(package_dir / "transcript-evidence-full.json")
     run_id = evidence["run_id"]
@@ -403,8 +574,25 @@ def main() -> None:
     parser.add_argument("--synthesis-file", type=Path)
     parser.add_argument("--title-only", action="store_true", help="Rewrite only the existing report title with Gemini.")
     parser.add_argument("--compact-existing", action="store_true", help="Ask Gemini to compact only the existing integrated sections.")
+    parser.add_argument(
+        "--compact-episode-prose",
+        action="store_true",
+        help="Ask Gemini to compact only episode summaries and value sections to the locked ranges.",
+    )
+    parser.add_argument(
+        "--resume-episode-compaction",
+        action="store_true",
+        help="Reuse the saved batch response and ask Gemini only for episode prose that failed the locked ranges.",
+    )
     args = parser.parse_args()
-    if args.compact_existing:
+    if args.compact_episode_prose:
+        compact_episode_prose(
+            args.package_dir,
+            model=args.model,
+            timeout=args.timeout,
+            resume=args.resume_episode_compaction,
+        )
+    elif args.compact_existing:
         compact_existing_report(args.package_dir, model=args.model, timeout=args.timeout)
     elif args.title_only:
         rewrite_title_only(args.package_dir, model=args.model, timeout=args.timeout)

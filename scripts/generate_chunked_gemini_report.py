@@ -131,7 +131,9 @@ def _episode_prompt(run_id: str, episode: dict[str, Any]) -> str:
 - 来源与发布者：Spotify | {episode['podcast_title']} | 核心主讲人及职位；如 transcript 中无法确认，写“未在 transcript 中明确”
 - 原始链接：{episode.get('spotify_episode_url') or episode.get('rss_episode_url') or episode.get('audio_url') or 'unknown'}
 - Transcript 来源：Spotify transcript
-- 核心内容摘要：写成 4-7 个自然段、合计 1200-1600 个中文字符，不能只写一段概述。必须只基于 transcript，依次覆盖：节目问题与背景、主要论点链条、至少两个具体案例/数字/行动、背后的因果机制、重要分歧或限制条件、最终结论。不要把证据锚点原句简单重复成摘要，不要用空泛形容词凑字数。若 transcript 很长，必须综合其主要阶段而不是只总结开头。
+- 情报价值点：写 2-3 个自然段、合计 350-500 个中文字符，分别说明对企业/产品/投资或组织决策的意义、适用边界和可验证指标；不能只给一句泛泛建议。每个自然段之间必须保留一个完整空行，不能把两段连成同一个 Markdown 段落。
+- 核心内容摘要：写成 4-7 个自然段、合计 850-1050 个中文字符，不能只写一段概述。必须只基于 transcript，依次覆盖：节目问题与背景、主要论点链条、至少两个具体案例/数字/行动、背后的因果机制、重要分歧或限制条件、最终结论。不要把证据锚点原句简单重复成摘要，不要用空泛形容词凑字数。若 transcript 很长，必须综合其主要阶段而不是只总结开头。
+- 情报价值点：写 2-3 个自然段、合计 350-500 个中文字符，分别说明对企业/产品/投资或组织决策的意义、适用边界和可验证指标；不能只给一句泛泛建议。每个自然段之间必须保留一个完整空行，不能把两段连成同一个 Markdown 段落。
 - 情报价值点：写 2-3 个自然段、合计 350-500 个中文字符，分别说明对企业/产品/投资或组织决策的意义、适用边界和可验证指标；不能只给一句泛泛建议。每个自然段之间必须保留一个完整空行，不能把两段连成同一个 Markdown 段落。
 - 关键金句 / 结论：2 条有实质意义、可逐字核验的来源原句；如 transcript 为英文，每条英文原句下一行直接写对应的斜体中文翻译。译文不能写成“这句话说明……”之类的解释。如 transcript 为中文，不重复翻译成中文。不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。必须先通读原文寻找可核验金句，确实没有时才写成 `转述结论`，不要伪装成直接引语；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
 - 证据锚点：至少 3 个 timestamp + 可核验的来源原句。英文锚点下一行必须直接写无标签的斜体中文翻译，例如 `*这是对应的中文翻译。*`；中文原生锚点不重复翻译。证据必须有信息价值，能支撑具体观点、机制、数字、例子、分歧或战略判断。不要使用寒暄、感谢、广告、片头片尾、泛泛介绍、互相称赞或结束语作为证据锚点。
@@ -161,10 +163,16 @@ def _brief_issues(brief: str) -> list[str]:
     value = _section(brief, "情报价值点", "关键金句 / 结论")
     summary_paragraphs = [part for part in re.split(r"\n\s*\n", summary) if part.strip()]
     value_paragraphs = [part for part in re.split(r"\n\s*\n", value) if part.strip()]
-    if len(summary) < 1100 or not 4 <= len(summary_paragraphs) <= 9:
-        issues.append(f"核心内容摘要当前 {len(summary)} 字、{len(summary_paragraphs)} 段，必须至少 1100 字且 4-9 段")
-    if len(value) < 300 or len(value_paragraphs) < 2:
-        issues.append(f"情报价值点当前 {len(value)} 字、{len(value_paragraphs)} 段，必须至少 300 字且至少 2 段")
+    summary_length = len(re.sub(r"\s+", "", summary))
+    value_length = len(re.sub(r"\s+", "", value))
+    if not 850 <= summary_length <= 1050 or not 4 <= len(summary_paragraphs) <= 7:
+        issues.append(
+            f"核心内容摘要当前 {summary_length} 字、{len(summary_paragraphs)} 段，必须 850-1050 字且 4-7 段"
+        )
+    if not 350 <= value_length <= 500 or not 2 <= len(value_paragraphs) <= 3:
+        issues.append(
+            f"情报价值点当前 {value_length} 字、{len(value_paragraphs)} 段，必须 350-500 字且 2-3 段"
+        )
     anchor_block = brief.split("- 证据锚点：", 1)[-1] if "- 证据锚点：" in brief else ""
     anchors = re.findall(r"^\s*- \[[^\]]+\]\s+(.+)$", anchor_block, re.M)
     if not 3 <= len(anchors) <= 8:

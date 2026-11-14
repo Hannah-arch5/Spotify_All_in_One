@@ -106,6 +106,41 @@ Report Date: 2026-11-11
             result = check(report, manifest)
             self.assertTrue(any('只能有五个二级主部分' in finding['message'] for finding in result['findings']))
 
+    def test_enforces_locked_episode_prose_ranges(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({
+                'episodes': [{'episode_title': 'Episode', 'episode_url': 'https://example.com/episode'}]
+            }))
+            report = root / 'report.md'
+
+            def report_text(summary_length, value_length):
+                return f'''## 第一部分：摘要
+## 第二部分：详情
+#### 情报 1：主题
+- 原始标题：Episode
+- 原始链接：https://example.com/episode
+- Transcript 来源：官方 TXT
+- 核心内容摘要：{'摘' * summary_length}
+- 情报价值点：{'值' * value_length}
+- 关键金句 / 结论：
+- 证据锚点：
+## 第三部分：分析
+## 第四部分：思考
+## 第五部分：结论
+'''
+
+            report.write_text(report_text(900, 400))
+            result = check(report, manifest)
+            self.assertFalse(any('硬性范围' in finding['message'] for finding in result['findings']))
+
+            report.write_text(report_text(849, 501))
+            result = check(report, manifest)
+            messages = [finding['message'] for finding in result['findings']]
+            self.assertTrue(any('核心内容摘要为 849 字' in message for message in messages))
+            self.assertTrue(any('情报价值点为 501 字' in message for message in messages))
+
 
 if __name__ == '__main__':
     unittest.main()

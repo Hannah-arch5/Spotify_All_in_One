@@ -18,6 +18,14 @@ SECTION_RE = re.compile(r"^####\s+情报\s*(\d+)[：:](.*)$", re.MULTILINE)
 TITLE_RE = re.compile(r"原始标题[：:]\s*(.+)")
 LINK_RE = re.compile(r"原始链接[：:]\s*(.+)")
 TRANSCRIPT_SOURCE_RE = re.compile(r"Transcript\s*来源[：:]\s*(.+)", re.IGNORECASE)
+SUMMARY_BLOCK_RE = re.compile(
+    r"^-\s*核心内容摘要[：:]\s*(.*?)(?=^-\s*情报价值点[：:])",
+    re.DOTALL | re.MULTILINE,
+)
+VALUE_BLOCK_RE = re.compile(
+    r"^-\s*情报价值点[：:]\s*(.*?)(?=^-\s*关键金句\s*/\s*结论[：:])",
+    re.DOTALL | re.MULTILINE,
+)
 REQUIRED_PARTS = [
     "第一部分",
     "第二部分",
@@ -305,6 +313,25 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
 
         if not _extract_field(TRANSCRIPT_SOURCE_RE, section["body"]):
             findings.append(Finding("error", f"情报 {expected_index} 缺少 Transcript 来源。"))
+
+        summary_match = SUMMARY_BLOCK_RE.search(section["body"])
+        value_match = VALUE_BLOCK_RE.search(section["body"])
+        summary_length = len(re.sub(r"\s+", "", summary_match.group(1))) if summary_match else 0
+        value_length = len(re.sub(r"\s+", "", value_match.group(1))) if value_match else 0
+        if not 850 <= summary_length <= 1050:
+            findings.append(
+                Finding(
+                    "error",
+                    f"情报 {expected_index} 核心内容摘要为 {summary_length} 字，硬性范围是 850-1050 字。",
+                )
+            )
+        if not 350 <= value_length <= 500:
+            findings.append(
+                Finding(
+                    "error",
+                    f"情报 {expected_index} 情报价值点为 {value_length} 字，硬性范围是 350-500 字。",
+                )
+            )
 
         if _episode_transcript_is_untimed(evidence, expected_index):
             if TIMED_ANCHOR_RE.search(section["body"]):
