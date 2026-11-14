@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import re
+from urllib.parse import urlparse
+
+from import_official_vtt_transcript import ROOT, clean_filename
+
+
+def parse_duration(value: object) -> float | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    if text.isdigit():
+        return float(text)
+    parts = text.split(":")
+    if not all(part.isdigit() for part in parts) or len(parts) not in {2, 3}:
+        return None
+    numbers = [int(part) for part in parts]
+    if len(numbers) == 2:
+        return float(numbers[0] * 60 + numbers[1])
+    return float(numbers[0] * 3600 + numbers[1] * 60 + numbers[2])
+
+
+def xiaoyuzhou_id(url: str) -> str | None:
+    match = re.search(r"/episode/([0-9a-f]{24})(?:/|$)", urlparse(url).path, flags=re.IGNORECASE)
+    return match.group(1).lower() if match else None
+
+
+def timestamp(seconds: float) -> str:
+    total = max(0, int(seconds))
+    return f"{total // 3600:02d}:{(total % 3600) // 60:02d}:{total % 60:02d}"
+
+
+def normalize_segments(payload: dict, expected_duration: float | None) -> list[dict[str, object]]:
+    raw_segments = payload.get("segments")
+    if not isinstance(raw_segments, list):
+        raise ValueError("Whisper JSON has no segments list.")
+    segments: list[dict[str, object]] = []
+    previous_start = -1.0
+    for row in raw_segments:
+        if not isinstance(row, dict):
+            continue
+        text = str(row.get("text") or "").strip()
+        if not text:
+            continue
+        start = float(row.get("start") or 0.0)
+        end = float(row.get("end") or start)
+        if start < previous_start or end < start:
+            raise ValueError("Whisper segment timestamps are not monotonic.")
+        previous_start = start
+        segments.append(
+            {
+                "start": round(start, 3),
+                "end": round(end, 3),
+                "timestamp": timestamp(start),
+                "speaker": None,
+                "text": text,
+            }
+        )
+    character_count = sum(len(str(row["text"])) for row in segments)
+    if len(segments) < 20 or character_count < 500:
+        raise ValueError(f"Whisper transcript is too small: {len(segments)} segments, {character_count} characters.")
+    if expected_duration and float(segments[-1]["end"]) < expected_duration * 0.95:
+        raise ValueError(
+            f"Whisper transcript ends at {segments[-1]['end']}s, below 95% of the {expected_duration}s episode."
+        )
+    return segments
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Import a local Whisper transcript for a Xiaoyuzhou episode.")
+    parser.add_argument("--manifest", type=Path, required=True)
+    parser.add_argument("--index", type=int, required=True)
+    parser.add_argument("--whisper-json", type=Path, required=True)
+    parser.add_argument("--source-url", required=True)
+    parser.add_argument("--model", default="mlx-community/whisper-small-mlx-8bit")
+    parser.add_argument("--out-dir", type=Path, default=ROOT / "data" / "transcripts" / "spotify_en")
+    args = parser.parse_args()
+
+    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    episodes = manifest.get("new_episodes") or manifest.get("episodes") or []
+    if not 1 <= args.index <= len(episodes):
+        raise SystemExit(f"Episode index {args.index} is outside 1..{len(episodes)}.")
+    episode = episodes[args.index - 1]
+    source_id = xiaoyuzhou_id(args.source_url)
+    manifest_id = xiaoyuzhou_id(str(episode.get("episode_url") or ""))
+    if not source_id or source_id != manifest_id:
+        raise SystemExit(f"Xiaoyuzhou identity mismatch: manifest={manifest_id} source={source_id}")
+
+    whisper_payload = json.loads(args.whisper_json.read_text(encoding="utf-8"))
+    language = str(whisper_payload.get("language") or "").casefold()
+    if language not in {"zh", "chinese", "mandarin"}:
+        raise SystemExit(f"Expected Chinese Whisper output, got language={language or 'missing'}.")
+    expected_duration = parse_duration(episode.get("duration"))
+    try:
+        segments = normalize_segments(whisper_payload, expected_duration)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    published_date = str(episode.get("published_at") or "")[:10]
+    stable_id = f"xiaoyuzhou:{source_id}"
+    payload = {
+        "source": "xiaoyuzhou_official_audio+mlx_whisper_local",
+        "sourceEpisodeId": stable_id,
+        "episodeUrl": str(episode.get("episode_url") or args.source_url),
+        "transcriptUrl": args.source_url,
+        "audioUrl": episode.get("audio_url"),
+        "podcastName": episode.get("podcast_title"),
+        "episodeTitle": episode.get("episode_title"),
+        "publishedDate": published_date,
+        "duration": episode.get("duration"),
+        "transcriptLanguage": "zh",
+        "isAutoGenerated": True,
+        "segments": segments,
+        "debugLogs": [
+            f"Transcribed locally from the official Xiaoyuzhou audio with {args.model}; no external LLM used."
+        ],
+    }
+    filename = (
+        f"{published_date} - {clean_filename(episode.get('podcast_title'))} - "
+        f"{clean_filename(episode.get('episode_title'))} - {source_id}.json"
+    )
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    output_path = args.out_dir / filename
+    rendered = json.dumps(payload, ensure_ascii=False, indent=2)
+    if output_path.exists() and output_path.read_text(encoding="utf-8") != rendered:
+        raise SystemExit(f"Archive target already exists with different content: {output_path}")
+    output_path.write_text(rendered, encoding="utf-8")
+    episode["source_episode_id"] = stable_id
+    args.manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"path={output_path}")
+    print(f"source_episode_id={stable_id} segments={len(segments)}")
+
+
+if __name__ == "__main__":
+    main()

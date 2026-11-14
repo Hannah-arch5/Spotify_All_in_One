@@ -11,6 +11,8 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DOWNLOAD = Path.home() / "Downloads" / "download.json"
 DEFAULT_ARCHIVE = ROOT / "data" / "transcripts" / "spotify_en"
+MIN_TRANSCRIPT_SEGMENTS = 20
+MIN_TRANSCRIPT_CHARACTERS = 500
 
 
 def clean_filename(value: object) -> str:
@@ -27,6 +29,31 @@ def sha256(path: Path) -> str:
 
 def normalized(value: object) -> str:
     return re.sub(r"\W+", "", str(value or "").casefold(), flags=re.UNICODE)
+
+
+def validate_segments(payload: object) -> list[dict[str, object]]:
+    if not isinstance(payload, dict):
+        raise ValueError("STD download is not a JSON object.")
+    segments = payload.get("segments")
+    if not isinstance(segments, list) or not segments:
+        raise ValueError("STD download contains no transcript segments.")
+    if any(not isinstance(row, dict) or not str(row.get("text") or "").strip() for row in segments):
+        raise ValueError("STD download contains an empty or malformed transcript segment.")
+    total_characters = sum(len(str(row.get("text") or "").strip()) for row in segments)
+    if len(segments) < MIN_TRANSCRIPT_SEGMENTS or total_characters < MIN_TRANSCRIPT_CHARACTERS:
+        raise ValueError(
+            "STD download is too small to be a complete transcript "
+            f"({len(segments)} segments, {total_characters} characters)."
+        )
+    return segments
+
+
+def existing_archive_is_invalid(path: Path) -> bool:
+    try:
+        validate_segments(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, json.JSONDecodeError, ValueError):
+        return True
+    return False
 
 
 def main() -> None:
@@ -56,11 +83,10 @@ def main() -> None:
     if normalized(expected_title) != normalized(actual_title):
         raise SystemExit(f"Episode title mismatch: manifest={expected_title!r} download={actual_title!r}")
 
-    segments = payload.get("segments")
-    if not isinstance(segments, list) or not segments:
-        raise SystemExit("STD download contains no transcript segments.")
-    if any(not isinstance(row, dict) or not str(row.get("text") or "").strip() for row in segments):
-        raise SystemExit("STD download contains an empty or malformed transcript segment.")
+    try:
+        segments = validate_segments(payload)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     published_date = str(episode.get("published_at") or "")[:10]
     if not published_date:
@@ -76,10 +102,14 @@ def main() -> None:
     args.archive.mkdir(parents=True, exist_ok=True)
     target = args.archive / filename
     rendered = json.dumps(payload, ensure_ascii=False, indent=2)
+    replaced_invalid_archive = False
     if target.exists():
         existing = target.read_text(encoding="utf-8")
         if existing != rendered:
-            raise SystemExit(f"Archive target already exists with different content; refusing overwrite: {target}")
+            if not existing_archive_is_invalid(target):
+                raise SystemExit(f"Archive target already exists with different content; refusing overwrite: {target}")
+            target.write_text(rendered, encoding="utf-8")
+            replaced_invalid_archive = True
     else:
         target.write_text(rendered, encoding="utf-8")
     target_hash = sha256(target)
@@ -99,6 +129,7 @@ def main() -> None:
                 "segments": len(segments),
                 "archive_path": str(target),
                 "archive_sha256": target_hash,
+                "replaced_invalid_archive": replaced_invalid_archive,
                 "download_removed": not args.download.exists(),
             },
             ensure_ascii=False,
