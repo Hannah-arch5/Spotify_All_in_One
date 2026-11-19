@@ -101,6 +101,28 @@ def _score_candidate(episode: dict[str, object], transcript: dict[str, object]) 
     return score, {"title": round(title_score, 3), "podcast": round(podcast_score, 3)}
 
 
+def _fuzzy_identity_conflict(episode: dict[str, object], transcript: dict[str, object]) -> bool:
+    episode_title = str(episode.get("episode_title") or "")
+    transcript_title = str(transcript.get("episode_title") or "")
+    episode_numbers = set(re.findall(r"#\s*(\d+)", episode_title))
+    transcript_numbers = set(re.findall(r"#\s*(\d+)", transcript_title))
+    if episode_numbers and transcript_numbers and episode_numbers != transcript_numbers:
+        return True
+
+    published_at = str(episode.get("published_at") or "")
+    transcript_date = str(transcript.get("published_date") or "")
+    if published_at and transcript_date:
+        try:
+            episode_day = datetime.fromisoformat(published_at.replace("Z", "+00:00")).date()
+            transcript_day = datetime.fromisoformat(transcript_date[:10]).date()
+        except ValueError:
+            pass
+        else:
+            if abs((episode_day - transcript_day).days) > 7:
+                return True
+    return False
+
+
 def _match_transcript(
     episode: dict[str, object],
     transcripts: list[dict[str, object]],
@@ -125,6 +147,8 @@ def _match_transcript(
     for transcript in transcripts:
         path = str(transcript["path"])
         if path in used_paths:
+            continue
+        if _fuzzy_identity_conflict(episode, transcript):
             continue
         score, components = _score_candidate(episode, transcript)
         candidates.append((score, components, transcript))

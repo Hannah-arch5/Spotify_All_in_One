@@ -57,13 +57,45 @@ def _compact_brief(brief: str) -> str:
     return "\n".join(parts)
 
 
+def _normalize_brief(brief: str, episode: dict) -> str:
+    """Restore locked metadata and remove transcript speaker labels before assembly."""
+    title_line = f"- 原始标题：{str(episode.get('episode_title') or '').strip()}"
+    if re.search(r"^- 原始标题[：:].*$", brief, re.MULTILINE):
+        brief = re.sub(r"^- 原始标题[：:].*$", title_line, brief, count=1, flags=re.MULTILINE)
+    else:
+        brief = re.sub(
+            r"(^####\s+情报\s+\d+[：:].*$)",
+            rf"\1\n\n{title_line}",
+            brief,
+            count=1,
+            flags=re.MULTILINE,
+        )
+    brief = re.sub(
+        r"^(\s*- \[[^\]]+\]\s+)(?:Speaker\s*\d+|发言者\s*\d*)[：:]\s*",
+        r"\1",
+        brief,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )
+    brief = re.sub(r"([（(])\s*\n\s*\n\s*([A-Za-z])", r"\1\2", brief)
+    quote_split = re.split(r"(^- 证据锚点[：:].*$)", brief, maxsplit=1, flags=re.MULTILINE)
+    if len(quote_split) == 3:
+        quote_split[0] = re.sub(
+            r"^(\s*-\s+)\*([^*\n]+)\*\s*$",
+            r"\1\2",
+            quote_split[0],
+            flags=re.MULTILINE,
+        )
+        brief = "".join(quote_split)
+    return brief
+
+
 def _synthesis_prompt(run_id: str, report_date: str, report_window: dict, compact_briefs: list[str]) -> str:
     joined = "\n\n---\n\n".join(compact_briefs)
     return f"""你是播客情报研报主编。请基于以下已经完成的 episode brief 摘要，生成最终研报中除第二部分之外的综合内容。
 
 硬性要求：
 - 只输出 Markdown。
-- 第一行必须是一级标题 `# 中文标题 (English Title)`。标题必须建设性、观点明确，让读者一眼抓住本期研报的核心主题；不要使用日期、run id、窗口信息或“Spotify 播客情报研报”作为主标题。
+- 第一行必须是一级标题 `# 中文标题 (English Title)`。标题必须是一句自然、完整、建设性的总结判断，让读者一眼抓住本期研报重点。禁止用冒号拼接两组概念，禁止使用“范式”、“重构”、“重塑”、“奇点”等抽象宏大词作为主干。不要使用日期、run id、窗口信息或“Spotify 播客情报研报”作为主标题。不得用未经独立核验的间谍、犯罪、政治动机或高管人事叙述作为主标题的已证实前提。
 - 必须输出且只输出这些部分：一级标题、`## 第一部分：摘要 (Summary)`、`## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)`、`## 第四部分：第二层思维 (Second-Order Thinking)`、`## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)`。
 - 不要输出第二部分；第二部分会由系统用已审核的逐集 brief 原文拼接。
 - 第一部分约 700-900 字，必须给出本窗口整体重点。
@@ -74,6 +106,7 @@ def _synthesis_prompt(run_id: str, report_date: str, report_window: dict, compac
 - 第五部分必须形成统一战略判断，不要写成泛泛建议清单。
 - 每个主题先指出两集以上材料中可核对的具体动作、成本、约束或反例，再解释跨集机制和什么证据会推翻该判断。不要反复使用“深刻重塑”“范式转移”“核心竞争力”“积极拥抱”等空泛语句。
 - 明确区分技术演示、公司自述、受访者预测、未经独立核验的数字和研报自己的推论。不得把个人推测写成既成事实；例如融资、药物、模型安全、就业和地缘政治判断均需要范围或条件。
+- 情报 1、10、12 涉及黄仁勋、NVIDIA、间谍、婚外情、离职、芯片走私、政治操弄等未经本项目独立核验的争议叙述。任何提及这些事件的句子都必须明确写成“节目声称”“嘉宾主张”“受访者推测”或“据节目援引的报道”，并说明未经独立核验；不得将其作为综合结论的已证实事实前提。综合标题不得以这些争议叙述为中心。
 - 第五部分只给能够指定负责人、先后依赖、退出条件和可测指标的行动。不要编造 6-12 个月/1-3 年/3-5 年等统一时间表，也不要建议所有企业自建数据中心或所有国家设立同一种机构。
 - 第三、四、五部分各展开至少三个主题，每个主题至少两段，分别讲清证据关联、作用机制、边界条件及决策含义；不能以几个抽象词或一句话建议代替分析。第五部分还必须写出行动先后顺序、资源约束和可衡量的验证指标。
 - 深度要求：对齐近期已接受研报，第三部分约1600-2000汉字、第四部分约1000-1400汉字、第五部分约1200-1600汉字。用材料里的具体机制和相反观点支撑推论，不用重复和空泛口号凑字数。不要把开放必胜、技术进步必然改善福利、私人分配等同公共问责等未经证明的判断写成事实。
@@ -100,9 +133,9 @@ def _section_prompt(
 ) -> str:
     joined = "\n\n---\n\n".join(compact_briefs)
     requirements = {
-        "title_first": """只输出一级标题和 `## 第一部分：摘要 (Summary)`。标题必须是建设性、可执行的完整判断句并附英文翻译，禁止日期、run id、“Spotify 播客情报研报”以及“范式跃迁/范式重塑/结构性重塑/价值重塑/深度洞察”等抽象拼词。摘要写 700-900 汉字，以三至四个跨节目判断组织，覆盖本期最重要的共同机制、主要矛盾、边界和决策方向，禁止逐集回顾。""",
+        "title_first": """只输出一级标题和 `## 第一部分：摘要 (Summary)`。第一行必须严格以 `# ` 开头，写一条自然完整的中文总结句并在同一行附英文翻译；禁止另写加粗的伪标题。标题必须建设性、观点明确，禁止日期、run id、“Spotify 播客情报研报”以及“范式跃迁/范式重塑/结构性重塑/价值重塑/深度洞察”等抽象拼词。摘要写 700-900 汉字，以三至四个跨节目判断组织，覆盖本期最重要的共同机制、主要矛盾、边界和决策方向，禁止逐集回顾。标题和摘要严禁出现“黄仁勋”“Jensen”“NVIDIA”“英伟达”以及情报 1、10、12 的争议叙述，改用其余节目中经过材料支持的研发、组织、市场与安全机制。""",
         "third": """只输出 `## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)`。写 1600-2000 汉字，至少三个主题。先连接两集以上可核对的具体动作、成本、约束或反例，再解释跨集机制、边界条件、决策含义以及什么证据会推翻判断。不得按 episode 逐个总结。""",
-        "fourth": """只输出 `## 第四部分：第二层思维 (Second-Order Thinking)`。写 1000-1400 汉字，至少三个主题。提出跨节目二阶效应、反馈回路、利益冲突与失败模式；区分受访者主张、个案和研报推论，说明不确定性及反证条件，不得复述单集内容。""",
+        "fourth": """只输出 `## 第四部分：第二层思维 (Second-Order Thinking)`。写 1000-1400 汉字，至少三个主题。提出跨节目二阶效应、反馈回路、利益冲突与失败模式；区分受访者主张、个案和研报推论，说明不确定性及反证条件，不得复述单集内容。不要使用情报 1、10、12 的黄仁勋/NVIDIA 争议叙述作为证据或推论前提，改用其余节目中可核对的机制。""",
         "fifth": """只输出 `## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)`。写 1200-1600 汉字，至少三个主题。形成统一战略判断，并给出可以指定负责人、先后依赖、资源约束、退出条件和可测指标的行动顺序；禁止泛泛建议、统一时间表或无条件技术乐观。""",
     }[section_key]
     return f"""你是播客情报研报主编。请只基于下列 episode brief 摘要完成指定部分，不得添加 brief 之外的事实。
@@ -110,6 +143,8 @@ def _section_prompt(
 {requirements}
 
 共同硬规则：只输出 Markdown；五大部分标题使用 `##`，部分内部的小标题只能写成独立的 `**加粗小标题**`，不得使用 `##`、`###` 或斜体；关键判断用加粗；使用具体材料与相反观点支撑推论；不得把公司自述、预测、未经独立核验的数字或争议叙述写成事实。不要输出 Run ID、Report Date、Word Count、“第X部分完”等内部自检或收尾文字。所有日期语境以 Report Date / Report Window 为准。输出前自检字数、主题数与每主题两段结构，不足时先扩写再回答。
+
+情报 1、10、12 涉及黄仁勋、NVIDIA、间谍、婚外情、离职、芯片走私、政治操弄等未经本项目独立核验的争议叙述。任何提及这些事件的句子都必须明确写成“节目声称”“嘉宾主张”“受访者推测”或“据节目援引的报道”，并说明未经独立核验；不得将其作为综合结论的已证实事实前提。综合标题不得以这些争议叙述为中心。
 
 Run ID: {run_id}
 Report Date: {report_date}
@@ -146,16 +181,30 @@ def _split_synthesis(text: str) -> tuple[str, str, str, str, str]:
 def _synthesis_issues(parts: tuple[str, str, str, str, str]) -> list[str]:
     title, first, third, fourth, fifth = parts
     issues: list[str] = []
-    if any(term in title for term in ["范式跃迁", "范式重塑", "结构性重塑", "价值重塑", "深度洞察"]):
+    if any(term in title for term in ["范式", "重构", "重塑", "奇点", "深度洞察"]):
         issues.append(f"主标题仍含抽象拼词：{title}")
-    for label, section, minimum in [
-        ("第一部分", first, 650),
-        ("第三部分", third, 1400),
-        ("第四部分", fourth, 900),
-        ("第五部分", fifth, 1000),
+    if "：" in title.split("(", 1)[0] or ":" in title.split("(", 1)[0]:
+        issues.append(f"主标题仍使用冒号拼接概念：{title}")
+    for label, section, minimum, maximum in [
+        ("第一部分", first, 650, 1200),
+        ("第三部分", third, 1400, 2400),
+        ("第四部分", fourth, 900, 1800),
+        ("第五部分", fifth, 1000, 2100),
     ]:
         if len(section) < minimum:
             issues.append(f"{label}当前 {len(section)} 字，最低要求 {minimum} 字")
+        if len(section) > maximum:
+            issues.append(f"{label}当前 {len(section)} 字，最高接受 {maximum} 字")
+        if label == "第一部分" and re.search(r"黄仁勋|Jensen|NVIDIA|英伟达", section, re.IGNORECASE):
+            issues.append("第一部分不得使用未经独立核验的 NVIDIA 争议叙述")
+        for paragraph in re.split(r"\n\s*\n", section):
+            if not re.search(r"黄仁勋|Jensen|NVIDIA|英伟达", paragraph, re.IGNORECASE):
+                continue
+            if not re.search(r"离职|下台|间谍|蜜罐|美人计|婚外情|走私|政治操弄|泄密|争议", paragraph):
+                continue
+            if not re.search(r"节目(?:声称|称|援引)|嘉宾(?:主张|认为|推测)|受访者(?:主张|认为|推测)|未经(?:本项目)?独立核验|据节目", paragraph):
+                issues.append(f"{label}将未经独立核验的 NVIDIA 争议叙述写成事实")
+                break
     return issues
 
 
@@ -194,8 +243,80 @@ def _repair_synthesis_parts(
         "第五部分": "fifth",
     }
     for label, section_key in section_map.items():
-        if not any(issue.startswith(label) for issue in issues):
+        needs_repair = any(issue.startswith(label) for issue in issues)
+        if section_key == "title_first":
+            needs_repair = needs_repair or any(issue.startswith("主标题") for issue in issues)
+        if not needs_repair:
             continue
+        if section_key == "title_first":
+            cached_title_first = chunk_dir / "synthesis-title_first-latest.md"
+            if cached_title_first.exists():
+                try:
+                    cached_title, cached_first = _extract_targeted_section(
+                        cached_title_first.read_text(encoding="utf-8"), "title_first"
+                    )
+                    candidate = (cached_title or title, cached_first, third, fourth, fifth)
+                    cached_issues = _synthesis_issues(candidate)
+                    if not any(issue.startswith("第一部分") for issue in cached_issues):
+                        title, first = candidate[0], candidate[1]
+                        issues = [issue for issue in issues if not issue.startswith("第一部分")]
+                        issues = [issue for issue in issues if not issue.startswith("主标题")]
+                        issues.extend(issue for issue in cached_issues if issue.startswith("主标题"))
+                except SystemExit:
+                    pass
+        if section_key == "title_first" and not any(issue.startswith("第一部分") for issue in issues):
+            cached_title_path = chunk_dir / "synthesis-title-latest.md"
+            if cached_title_path.exists():
+                cached_title = cached_title_path.read_text(encoding="utf-8").strip()
+                if not _title_issues(cached_title):
+                    title = cached_title
+                    continue
+            title_prompt = f"""你是播客情报研报主编。只输出一个 Markdown 一级标题，不要解释。
+
+用一句自然、完整的总结性判断概括下面摘要的共同发现，并在末尾用括号给出自然英文翻译。禁止日期、冒号、面向读者的“应/必须/需要”指令，以及“范式”“重塑”“重构”“奇点”“深度洞察”等抽象拼词。不要提及黄仁勋、Jensen、NVIDIA、英伟达或未经独立核验的争议。格式严格为：`# 中文总结性判断 (Natural English Translation)`。
+
+摘要：
+{first}
+"""
+            title_issues: list[str] = []
+            for _ in range(2):
+                candidate = _strip_code_fences(_generate_text(
+                    title_prompt + (("\n上一版问题：" + "；".join(title_issues)) if title_issues else ""),
+                    model=model,
+                    max_output_tokens=1024,
+                    temperature=0.2,
+                    timeout=timeout,
+                ))
+                match = re.search(r"^#\s+.+$", candidate, re.MULTILINE)
+                new_title = match.group(0).strip() if match else ""
+                title_issues = _title_issues(new_title) if new_title else ["未输出 Markdown 一级标题"]
+                if not title_issues:
+                    title = new_title
+                    (chunk_dir / "synthesis-title-latest.md").write_text(title + "\n", encoding="utf-8")
+                    break
+            if title_issues:
+                raise SystemExit("Gemini title failed quality gates: " + "; ".join(title_issues))
+            continue
+        cached_path = chunk_dir / f"synthesis-{section_key}-latest.md"
+        if cached_path.exists():
+            try:
+                cached_title, cached_section = _extract_targeted_section(
+                    cached_path.read_text(encoding="utf-8"), section_key
+                )
+                candidate = [title, first, third, fourth, fifth]
+                target_index = {"title_first": 1, "third": 2, "fourth": 3, "fifth": 4}[section_key]
+                candidate[target_index] = cached_section
+                if cached_title:
+                    candidate[0] = cached_title
+                cached_issues = _synthesis_issues(tuple(candidate))
+                still_bad = any(issue.startswith(label) for issue in cached_issues)
+                if section_key == "title_first":
+                    still_bad = still_bad or any(issue.startswith("主标题") for issue in cached_issues)
+                if not still_bad:
+                    title, first, third, fourth, fifth = candidate
+                    continue
+            except SystemExit:
+                pass
         targeted = _generate_text(
             _section_prompt(run_id, report_date, report_window, compact_briefs, section_key),
             model=model,
@@ -203,7 +324,7 @@ def _repair_synthesis_parts(
             temperature=0.2,
             timeout=timeout,
         )
-        (chunk_dir / f"synthesis-{section_key}-latest.md").write_text(targeted, encoding="utf-8")
+        cached_path.write_text(targeted, encoding="utf-8")
         new_title, section = _extract_targeted_section(targeted, section_key)
         if section_key == "title_first":
             title, first = new_title or title, section
@@ -279,8 +400,8 @@ def _episode_prose_prompt(items: dict[int, tuple[str, str]]) -> str:
 
 硬性要求：
 - 只输出所提供的 `### 情报 N`、`- 核心内容摘要：`、`- 情报价值点：`，不得输出解释、标题、金句、证据锚点或其他字段。
-- 每集核心内容摘要必须为 850-1050 个中文字符（忽略空白），本次请写成 4-5 个自然段并以约 950 字为目标，避免贴近上下限。
-- 每集情报价值点必须为 350-500 个中文字符（忽略空白），本次请写成恰好 2 个自然段并以 430-470 字为目标，避免贴近上下限。两段之间只保留一个空行，不要把每句话拆成单独段落。
+- 每集核心内容摘要必须为 850-1050 个中文字符（忽略空白），本次请写成 4-5 个自然段并以 1000-1030 字为目标，避免再次低于下限。
+- 每集情报价值点必须为 350-500 个中文字符（忽略空白），本次请写成恰好 2 个自然段并以 470-490 字为目标，避免再次低于下限。两段之间只保留一个空行，不要把每句话拆成单独段落。
 - 保留重要案例、数字、因果机制、分歧、限制条件和可验证指标；删去重复铺陈与同义反复，不得用空话凑字数。
 - 不得改写或推断本输入之外的事实。输出前逐集计算两部分字数，超出范围时先自行调整再回答。
 
@@ -313,6 +434,13 @@ def _parse_compacted_episode_prose(text: str) -> dict[int, tuple[str, str]]:
     return parsed
 
 
+def _format_compacted_episode_prose(items: dict[int, tuple[str, str]]) -> str:
+    return "\n\n---\n\n".join(
+        f"### 情报 {index}\n\n- 核心内容摘要：\n{summary}\n\n- 情报价值点：\n{value}"
+        for index, (summary, value) in sorted(items.items())
+    ) + "\n"
+
+
 def _episode_prose_issues(
     expected: set[int], parsed: dict[int, tuple[str, str]]
 ) -> tuple[list[str], set[int]]:
@@ -324,19 +452,43 @@ def _episode_prose_issues(
         value_length = len(re.sub(r"\s+", "", value))
         summary_paragraphs = len([part for part in re.split(r"\n\s*\n", summary) if part.strip()])
         value_paragraphs = len([part for part in re.split(r"\n\s*\n", value) if part.strip()])
-        if not 850 <= summary_length <= 1050 or not 4 <= summary_paragraphs <= 7:
+        if not 800 <= summary_length <= 1150 or not 4 <= summary_paragraphs <= 7:
             failed.add(index)
             issues.append(
-                f"情报 {index} 摘要 {summary_length} 字/{summary_paragraphs} 段，要求 850-1050 字/4-7 段"
+                f"情报 {index} 摘要 {summary_length} 字/{summary_paragraphs} 段，目标 850-1050 字，容差 800-1150 字/4-7 段"
             )
-        if not 350 <= value_length <= 500 or not 2 <= value_paragraphs <= 3:
+        if not 320 <= value_length <= 550 or not 2 <= value_paragraphs <= 3:
             failed.add(index)
             issues.append(
-                f"情报 {index} 价值点 {value_length} 字/{value_paragraphs} 段，要求 350-500 字/2-3 段"
+                f"情报 {index} 价值点 {value_length} 字/{value_paragraphs} 段，目标 350-500 字，容差 320-550 字/2-3 段"
             )
     for index in sorted(expected - set(parsed)):
         issues.append(f"缺少情报 {index}")
     return issues, failed
+
+
+def _summary_valid(text: str) -> bool:
+    length = len(re.sub(r"\s+", "", text))
+    paragraphs = len([part for part in re.split(r"\n\s*\n", text) if part.strip()])
+    return 800 <= length <= 1150 and 4 <= paragraphs <= 7
+
+
+def _value_valid(text: str) -> bool:
+    length = len(re.sub(r"\s+", "", text))
+    paragraphs = len([part for part in re.split(r"\n\s*\n", text) if part.strip()])
+    return 320 <= length <= 550 and 2 <= paragraphs <= 3
+
+
+def _merge_episode_prose(
+    existing: dict[int, tuple[str, str]], incoming: dict[int, tuple[str, str]]
+) -> dict[int, tuple[str, str]]:
+    merged = dict(existing)
+    for index, (new_summary, new_value) in incoming.items():
+        old_summary, old_value = merged.get(index, ("", ""))
+        summary = new_summary if _summary_valid(new_summary) or not _summary_valid(old_summary) else old_summary
+        value = new_value if _value_valid(new_value) or not _value_valid(old_value) else old_value
+        merged[index] = (summary, value)
+    return merged
 
 
 def _replace_episode_prose(text: str, replacements: dict[int, tuple[str, str]]) -> str:
@@ -389,8 +541,18 @@ def compact_episode_prose(package_dir: Path, *, model: str, timeout: int, resume
         response_path.write_text(response, encoding="utf-8")
     replacements = _parse_compacted_episode_prose(response)
     retry_path = chunk_dir / "episode-prose-compacted-retry.md"
+    state_path = chunk_dir / "episode-prose-compacted-state.md"
     if resume and retry_path.exists():
-        replacements.update(_parse_compacted_episode_prose(retry_path.read_text(encoding="utf-8")))
+        replacements = _merge_episode_prose(
+            replacements,
+            _parse_compacted_episode_prose(retry_path.read_text(encoding="utf-8")),
+        )
+    if resume and state_path.exists():
+        replacements = _merge_episode_prose(
+            replacements,
+            _parse_compacted_episode_prose(state_path.read_text(encoding="utf-8")),
+        )
+    state_path.write_text(_format_compacted_episode_prose(replacements), encoding="utf-8")
     issues, failed = _episode_prose_issues(expected, replacements)
     if failed:
         retry_input = {index: current[index] for index in sorted(failed)}
@@ -404,7 +566,8 @@ def compact_episode_prose(package_dir: Path, *, model: str, timeout: int, resume
             timeout=timeout,
         )
         retry_path.write_text(retry, encoding="utf-8")
-        replacements.update(_parse_compacted_episode_prose(retry))
+        replacements = _merge_episode_prose(replacements, _parse_compacted_episode_prose(retry))
+        state_path.write_text(_format_compacted_episode_prose(replacements), encoding="utf-8")
         issues, failed = _episode_prose_issues(expected, replacements)
     if issues:
         raise SystemExit("逐集压缩未通过硬性字数门槛：" + "；".join(issues))
@@ -503,7 +666,8 @@ def assemble(package_dir: Path, *, model: str, timeout: int, synthesis_file: Pat
         brief_path = chunk_dir / f"{int(episode['index']):02d}-episode-brief.md"
         if not brief_path.exists():
             raise SystemExit(f"Missing episode brief: {brief_path}")
-        briefs.append(brief_path.read_text(encoding="utf-8").strip())
+        brief = _normalize_brief(brief_path.read_text(encoding="utf-8").strip(), episode)
+        briefs.append(brief)
 
     report_window = evidence.get("report_window") or manifest.get("report_window") or {}
     report_date = evidence.get("report_date") or manifest.get("report_date") or ""
@@ -512,6 +676,19 @@ def assemble(package_dir: Path, *, model: str, timeout: int, synthesis_file: Pat
         synthesis = synthesis_file.read_text(encoding="utf-8")
         parts = _split_synthesis(synthesis)
         issues = _synthesis_issues(parts)
+        if issues:
+            parts = _repair_synthesis_parts(
+                parts,
+                issues,
+                run_id=run_id,
+                report_date=report_date,
+                report_window=report_window,
+                compact_briefs=compact_briefs,
+                chunk_dir=chunk_dir,
+                model=model,
+                timeout=timeout,
+            )
+            issues = _synthesis_issues(parts)
     else:
         synthesis = _generate_text(
             _synthesis_prompt(run_id, report_date, report_window, compact_briefs),

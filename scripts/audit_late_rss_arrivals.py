@@ -106,7 +106,7 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
         if podcast.priority == "exclude" or not podcast.rss_url:
             continue
         try:
-            xml_bytes = fetch_feed(podcast.rss_url)
+            xml_bytes = fetch_feed(podcast.rss_url, timeout=45)
             episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
         except Exception as exc:
             cache_path = ROOT / "data" / "feeds" / _safe_name(podcast.rss_url)

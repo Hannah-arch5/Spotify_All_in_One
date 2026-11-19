@@ -47,6 +47,34 @@ class EvidenceIdentityTests(unittest.TestCase):
         episode = {"episode_title": "RSS title", "podcast_title": "Show"}
         self.assertEqual(_match_transcript(episode, self.rows, set())["path"], "b")
 
+    def test_unverified_numbered_series_rejects_a_different_episode_number(self):
+        episode = {
+            "episode_title": "#2581 - Protect Our Parks 18",
+            "podcast_title": "The Joe Rogan Experience",
+            "published_at": "2026-11-13T18:30:00+00:00",
+        }
+        rows = [{
+            "path": "old",
+            "episode_title": "#2539 - Protect Our Parks 17",
+            "podcast_name": "The Joe Rogan Experience",
+            "published_date": "2026-08-13",
+        }]
+        self.assertIsNone(_match_transcript(episode, rows, set()))
+
+    def test_unverified_title_match_rejects_a_distant_publication_date(self):
+        episode = {
+            "episode_title": "Same recurring title",
+            "podcast_title": "Show",
+            "published_at": "2026-11-13T18:30:00+00:00",
+        }
+        rows = [{
+            "path": "old",
+            "episode_title": "Same recurring title",
+            "podcast_name": "Show",
+            "published_date": "2026-08-13",
+        }]
+        self.assertIsNone(_match_transcript(episode, rows, set()))
+
 
 if __name__ == "__main__":
     unittest.main()

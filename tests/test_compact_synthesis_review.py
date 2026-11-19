@@ -5,11 +5,29 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from assemble_gemini_report_from_briefs import _compact_brief
+from assemble_gemini_report_from_briefs import _compact_brief, _normalize_brief, _synthesis_issues
 from check_gemini_report import _evidence_translation_findings, check
 
 
 class CompactSynthesisReviewTests(unittest.TestCase):
+    def test_normalize_brief_restores_title_and_source_quote_style(self):
+        brief = '''#### 情报 1：主题
+
+- 核心内容摘要：术语（
+
+earnestness）不应断开。
+- 关键金句 / 结论：
+  - *Original source sentence.*
+    *原句翻译。*
+- 证据锚点：
+  - [1:00] Speaker 1: Original source sentence.
+    *原句翻译。*'''
+        normalized = _normalize_brief(brief, {'episode_title': 'Original | Title'})
+        self.assertIn('- 原始标题：Original | Title', normalized)
+        self.assertIn('（earnestness）', normalized)
+        self.assertIn('  - Original source sentence.', normalized)
+        self.assertIn('  - [1:00] Original source sentence.', normalized)
+
     def test_compact_brief_preserves_core_mechanism(self):
         result = _compact_brief('#### 情报 1：工作流\n- 原始标题：Workflow\n- 核心内容摘要：先确认权限，再执行任务。\n- 情报价值点：衡量返工成本。\n- 关键金句 / 结论：真实原句\n- 证据锚点：\n  - [1:00] source')
         self.assertIn('先确认权限，再执行任务。', result)
@@ -106,7 +124,7 @@ Report Date: 2026-11-11
             result = check(report, manifest)
             self.assertTrue(any('只能有五个二级主部分' in finding['message'] for finding in result['findings']))
 
-    def test_enforces_locked_episode_prose_ranges(self):
+    def test_enforces_episode_prose_targets_with_authorized_tolerance(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             manifest = root / 'manifest.json'
@@ -133,13 +151,41 @@ Report Date: 2026-11-11
 
             report.write_text(report_text(900, 400))
             result = check(report, manifest)
-            self.assertFalse(any('硬性范围' in finding['message'] for finding in result['findings']))
+            self.assertFalse(any('允许容差' in finding['message'] for finding in result['findings']))
 
             report.write_text(report_text(849, 501))
             result = check(report, manifest)
+            self.assertFalse(any('允许容差' in finding['message'] for finding in result['findings']))
+
+            report.write_text(report_text(799, 551))
+            result = check(report, manifest)
             messages = [finding['message'] for finding in result['findings']]
-            self.assertTrue(any('核心内容摘要为 849 字' in message for message in messages))
-            self.assertTrue(any('情报价值点为 501 字' in message for message in messages))
+            self.assertTrue(any('核心内容摘要为 799 字' in message for message in messages))
+            self.assertTrue(any('情报价值点为 551 字' in message for message in messages))
+
+    def test_rejects_unqualified_nvidia_allegation(self):
+        parts = (
+            '# AI 研发自动化正在改变科技企业增长逻辑 (AI R&D Automation Is Changing Growth)',
+            '## 第一部分：摘要 (Summary)\n\n' + '黄仁勋因间谍丑闻下台。' + '甲' * 700,
+            '## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)\n\n' + '甲' * 1500,
+            '## 第四部分：第二层思维 (Second-Order Thinking)\n\n' + '甲' * 1000,
+            '## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)\n\n' + '甲' * 1100,
+        )
+        issues = _synthesis_issues(parts)
+        self.assertTrue(any('未经独立核验' in issue for issue in issues))
+
+    def test_first_section_omits_even_attributed_nvidia_allegation(self):
+        parts = (
+            '# AI 研发自动化正在改变科技企业增长逻辑 (AI R&D Automation Is Changing Growth)',
+            '## 第一部分：摘要 (Summary)\n\n'
+            + '节目声称黄仁勋因间谍丑闻下台，但该叙述未经本项目独立核验。'
+            + '甲' * 700,
+            '## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)\n\n' + '甲' * 1500,
+            '## 第四部分：第二层思维 (Second-Order Thinking)\n\n' + '甲' * 1000,
+            '## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)\n\n' + '甲' * 1100,
+        )
+        issues = _synthesis_issues(parts)
+        self.assertTrue(any('未经独立核验' in issue for issue in issues))
 
 
 if __name__ == '__main__':

@@ -71,11 +71,12 @@ def _fetch_and_parse_with_retry(
     podcast: Podcast,
     *,
     attempts: int = 3,
+    timeout: int = 45,
 ) -> tuple[bytes, list[Episode]]:
     last_error: Exception | None = None
     for attempt in range(1, attempts + 1):
         try:
-            xml_bytes = fetch_feed(podcast.rss_url, attempts=1)
+            xml_bytes = fetch_feed(podcast.rss_url, timeout=timeout, attempts=1)
             episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
             return xml_bytes, episodes
         except (RuntimeError, ET.ParseError) as exc:

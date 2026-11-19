@@ -3,7 +3,7 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-09-21 CST
+Updated: 2026-11-19 CST
 
 ## 2026-10-03 CST - Fixed Report-Window Routing Rule (Clarified)
 
@@ -4181,3 +4181,14 @@ Monday batch notes:
 - The 261113 candidate remains rejected and must not be delivered. Compared with accepted 261106, its pre-revision episode summaries averaged 1205 characters versus 944, while value sections averaged 480 versus 448. The current DOCX/PDF still contain the rejected longer episode prose because all partial Gemini compaction attempts correctly failed closed and were not applied.
 - `scripts/generate_chunked_gemini_report.py` now generates and validates the locked episode ranges; `scripts/check_gemini_report.py` independently rejects final reports outside them. `scripts/assemble_gemini_report_from_briefs.py --compact-episode-prose` sends only existing summary/value fields to Gemini, locks every other byte, validates all episodes before writing and supports failed-only resume from saved responses.
 - Gemini 3, 2.5 Flash and 3.1 Pro API quotas are exhausted until approximately 2026-11-15 15:30 Asia/Shanghai; 2.5 Pro is retired. Resumable compaction responses are preserved under `data/gemini_chunks/20261114-190732-417947/`. After quota recovery, retry only the remaining failing episodes, rerun content and layout QA, and present a new local PDF/DOCX for review. Do not use Codex-authored prose, relax the locked ranges, upload the rejected candidate or mark the manifest seen.
+
+### 2026-11-19 261116 Gemini Report Ready For Review
+
+- Fixed report run `20261117-224125-195311` covers `2026-11-13T07:00:00Z` through `2026-11-16T07:00:00Z`, with 15 episodes in `published_at desc` order. Original/source coverage is 15/15 and complete Chinese coverage is 15/15; archive integrity reports no missing, duplicate or incomplete identities.
+- Private subtitle backup is complete. English originals were previously verified by `data/service_logs/20261118-201735-849072-transcript-drive-backup/receipt.json`; all 15 complete Chinese JSON files were verified remotely by size and MD5 in `data/service_logs/20261119-095335-165643-transcript-drive-backup/receipt.json`. Report files were not uploaded.
+- Gemini generated all 15 episode briefs and the integrated sections. The final assembler reuses successful briefs/section responses, retries only failing fields, restores locked manifest titles, removes transcript speaker prefixes, keeps source quotes upright and translations italic, and repairs accidental blank-line word splits. One repeated `情报价值点` prompt block was removed to prevent systematic overgeneration.
+- Locked prose targets remain `核心内容摘要` 850-1050 non-whitespace characters in 4-7 natural paragraphs and `情报价值点` 350-500 in 2-3 paragraphs. Hannah explicitly allows modest variation rather than exact-edge retries; validators use only the bounded acceptance tolerance 800-1150 / 320-550. This is not permission to reduce the target, pad thin content, or change any other locked report rule.
+- Synthesis now enforces a natural constructive bilingual title, bounded accepted-report section scale, and explicit attribution for unverified allegations. Controversial program/guest claims may not be promoted into verified facts or used as the title premise. The first section omits the current NVIDIA allegation cluster entirely; any later mention must be identified as a program/guest claim and marked not independently verified.
+- Final Markdown `reports/markdown/20261117-224125-195311-gemini-report.md` passes the exact manifest/evidence review with 15/15 episodes, five required parts and zero findings. Word-native deliverables are `reports/word/261116-Spotify播客情报研报.docx` and `reports/pdf/261116-Spotify播客情报研报.pdf` (36 pages). SHA-256: Markdown `2557c61322d38e07b970de083d09325aaefb7f27425325520321a601d4b7eec8`; DOCX `811028533244beeb68ff511fab6b0fe4957cc770239c576687897181769c47ec`; PDF `ffaa92aecb84b3a82dccf7fef6080022758d67d2f70f17d6f4190ac59b17d01b`.
+- DOCX/PDF format audit reports zero issues. All 36 native Word PDF pages and the full DOCX render were visually inspected. Part 3 begins on PDF page 32 at zone 0.677, Part 4 page 34 at 0.116 and Part 5 page 35 at 0.222; none begins in the bottom quarter. Page 36 is a natural continuation with more than one quarter page of body content, not a forced blank-page break. Line-start punctuation violations are 0.
+- **REVIEW GATE: 261113 and 261116 are local review candidates. Do not upload either report to Zotero, the report Google Drive destination or Discord, and do not mark either manifest seen until Hannah reviews both PDFs and explicitly approves them.**

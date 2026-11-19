@@ -12,6 +12,40 @@ import generate_chunked_gemini_report as generator
 
 
 class BriefsOnlyTests(unittest.TestCase):
+    def test_episode_prompt_contains_each_prose_field_once_in_locked_order(self):
+        prompt = generator._episode_prompt("fixture", {
+            "index": 1,
+            "podcast_title": "Fixture Podcast",
+            "episode_title": "Fixture Episode",
+            "published_at": "2026-11-16T06:00:00+00:00",
+            "transcript": {"plain_text": "A complete source transcript."},
+        })
+
+        summary_label = "- 核心内容摘要："
+        value_label = "- 情报价值点："
+        self.assertEqual(prompt.count(summary_label), 1)
+        self.assertEqual(prompt.count(value_label), 1)
+        self.assertLess(prompt.index(summary_label), prompt.index(value_label))
+
+    def test_targeted_prose_retry_replaces_only_requested_field(self):
+        original = """- 核心内容摘要：原摘要
+- 情报价值点：原价值
+- 关键金句 / 结论：必须保留的原句
+- 证据锚点：
+  - [1:00] Verifiable source sentence."""
+        response = """- 情报价值点：修正后第一段。
+
+修正后第二段。"""
+        replacement = generator._standalone_field(response, "情报价值点")
+        updated = generator._replace_section(
+            original, "情报价值点", "关键金句 / 结论", replacement
+        )
+
+        self.assertIn("修正后第一段", updated)
+        self.assertNotIn("原价值", updated)
+        self.assertIn("必须保留的原句", updated)
+        self.assertIn("[1:00] Verifiable source sentence.", updated)
+
     def test_preserves_briefs_without_final_request(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

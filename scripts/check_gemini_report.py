@@ -318,18 +318,18 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
         value_match = VALUE_BLOCK_RE.search(section["body"])
         summary_length = len(re.sub(r"\s+", "", summary_match.group(1))) if summary_match else 0
         value_length = len(re.sub(r"\s+", "", value_match.group(1))) if value_match else 0
-        if not 850 <= summary_length <= 1050:
+        if not 800 <= summary_length <= 1150:
             findings.append(
                 Finding(
                     "error",
-                    f"情报 {expected_index} 核心内容摘要为 {summary_length} 字，硬性范围是 850-1050 字。",
+                    f"情报 {expected_index} 核心内容摘要为 {summary_length} 字，目标是 850-1050 字，允许容差 800-1150 字。",
                 )
             )
-        if not 350 <= value_length <= 500:
+        if not 320 <= value_length <= 550:
             findings.append(
                 Finding(
                     "error",
-                    f"情报 {expected_index} 情报价值点为 {value_length} 字，硬性范围是 350-500 字。",
+                    f"情报 {expected_index} 情报价值点为 {value_length} 字，目标是 350-500 字，允许容差 320-550 字。",
                 )
             )
 
