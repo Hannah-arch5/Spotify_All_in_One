@@ -187,6 +187,36 @@ Report Date: 2026-11-11
         issues = _synthesis_issues(parts)
         self.assertTrue(any('未经独立核验' in issue for issue in issues))
 
+    def test_fifth_section_rejects_missing_themes_and_invented_schedule(self):
+        parts = (
+            '# AI 协作能力决定经济价值兑现速度 (AI Coordination Determines Value Realization)',
+            '## 第一部分：摘要 (Summary)\n\n' + '甲' * 700,
+            '## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)\n\n' + '甲' * 1500,
+            '## 第四部分：第二层思维 (Second-Order Thinking)\n\n' + '甲' * 1000,
+            '## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)\n\n'
+            + '**主题一：测试**\n\n未来6-12个月投入预算的30%。'
+            + '甲' * 1050,
+        )
+        issues = _synthesis_issues(parts)
+        self.assertTrue(any('独立主题仅' in issue for issue in issues))
+        self.assertTrue(any('统一未来时间表' in issue for issue in issues))
+        self.assertTrue(any('固定预算或绩效百分比' in issue for issue in issues))
+
+    def test_fifth_section_accepts_three_complete_bounded_themes(self):
+        fifth = '## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)\n\n'
+        fifth += '\n\n'.join(
+            f'**主题{name}：测试**\n\n' + ('判断与行动。' * 75)
+            for name in ['一', '二', '三']
+        )
+        parts = (
+            '# AI 协作能力决定经济价值兑现速度 (AI Coordination Determines Value Realization)',
+            '## 第一部分：摘要 (Summary)\n\n' + '甲' * 700,
+            '## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)\n\n' + '甲' * 1500,
+            '## 第四部分：第二层思维 (Second-Order Thinking)\n\n' + '甲' * 1000,
+            fifth,
+        )
+        self.assertFalse(any(issue.startswith('第五部分') for issue in _synthesis_issues(parts)))
+
 
 if __name__ == '__main__':
     unittest.main()

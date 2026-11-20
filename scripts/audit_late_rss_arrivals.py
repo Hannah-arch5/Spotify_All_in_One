@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.config import load_podcasts
-from src.rss import Episode, fetch_feed, parse_feed
+from src.rss import Episode, cache_feed, fetch_feed, fetch_xiaoyuzhou_feed, parse_feed
 from src.schedule import previous_report_cutoff
 from src.state import connect, seen_guids
 
@@ -99,6 +99,7 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
 
     failures: list[dict[str, str]] = []
     cached_fallbacks: list[dict[str, str]] = []
+    source_fallbacks: list[dict[str, str]] = []
     late_unprocessed: list[dict[str, object]] = []
     all_windowed = 0
 
@@ -109,31 +110,52 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
             xml_bytes = fetch_feed(podcast.rss_url, timeout=45)
             episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
         except Exception as exc:
-            cache_path = ROOT / "data" / "feeds" / _safe_name(podcast.rss_url)
-            try:
-                age_seconds = datetime.now(timezone.utc).timestamp() - cache_path.stat().st_mtime
-                if age_seconds > 3600:
-                    raise RuntimeError(f"cached feed is stale: age_seconds={age_seconds:.0f}")
-                episodes = parse_feed(cache_path.read_bytes(), podcast.title, podcast.publisher)
-                cached_fallbacks.append(
-                    {
-                        "podcast": podcast.title,
-                        "rss_url": podcast.rss_url,
-                        "cache_path": str(cache_path),
-                        "live_error": str(exc),
-                        "cache_age_seconds": f"{age_seconds:.0f}",
-                    }
-                )
-            except Exception as cache_exc:
-                failures.append(
-                    {
-                        "podcast": podcast.title,
-                        "rss_url": podcast.rss_url,
-                        "error": str(exc),
-                        "cache_error": str(cache_exc),
-                    }
-                )
-                continue
+            fallback_error: Exception | None = None
+            episodes = []
+            if podcast.xiaoyuzhou_url:
+                try:
+                    xml_bytes = fetch_xiaoyuzhou_feed(podcast.xiaoyuzhou_url, timeout=45)
+                    episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
+                    if not episodes:
+                        raise RuntimeError("Xiaoyuzhou fallback returned no episodes")
+                    cache_feed(ROOT / "data" / "feeds" / _safe_name(podcast.rss_url), xml_bytes)
+                    source_fallbacks.append(
+                        {
+                            "podcast": podcast.title,
+                            "rss_url": podcast.rss_url,
+                            "fallback_url": podcast.xiaoyuzhou_url,
+                            "live_error": str(exc),
+                        }
+                    )
+                except Exception as fallback_exc:
+                    fallback_error = fallback_exc
+            if not episodes:
+                cache_path = ROOT / "data" / "feeds" / _safe_name(podcast.rss_url)
+                try:
+                    age_seconds = datetime.now(timezone.utc).timestamp() - cache_path.stat().st_mtime
+                    if age_seconds > 3600:
+                        raise RuntimeError(f"cached feed is stale: age_seconds={age_seconds:.0f}")
+                    episodes = parse_feed(cache_path.read_bytes(), podcast.title, podcast.publisher)
+                    cached_fallbacks.append(
+                        {
+                            "podcast": podcast.title,
+                            "rss_url": podcast.rss_url,
+                            "cache_path": str(cache_path),
+                            "live_error": str(exc),
+                            "cache_age_seconds": f"{age_seconds:.0f}",
+                        }
+                    )
+                except Exception as cache_exc:
+                    failures.append(
+                        {
+                            "podcast": podcast.title,
+                            "rss_url": podcast.rss_url,
+                            "error": str(exc),
+                            "fallback_error": str(fallback_error) if fallback_error else "not configured",
+                            "cache_error": str(cache_exc),
+                        }
+                    )
+                    continue
 
         for episode in episodes:
             if episode.published_at is None:
@@ -165,10 +187,12 @@ def audit(args: argparse.Namespace) -> tuple[Path, Path, dict[str, object]]:
             "windowed_current_rss_episode_count": all_windowed,
             "feed_failures": len(failures),
             "feed_cached_fallbacks": len(cached_fallbacks),
+            "official_source_fallbacks": len(source_fallbacks),
             "late_unprocessed_count": len(late_unprocessed),
         },
         "feed_failures": failures,
         "feed_cached_fallbacks": cached_fallbacks,
+        "official_source_fallbacks": source_fallbacks,
         "late_unprocessed": late_unprocessed,
     }
 

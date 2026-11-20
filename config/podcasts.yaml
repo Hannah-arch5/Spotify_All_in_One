@@ -218,6 +218,7 @@ podcasts:
     language: "zh"
     priority: "medium"
     rss_url: "https://feed.xyzfm.space/dk4yh3pkpjp3"
+    xiaoyuzhou_url: "https://www.xiaoyuzhoufm.com/podcast/626b46ea9cbbf0451cf5a962"
     spotify_url: null
     notes: "截图显示为 张小珺Jùn | 商业访..."
 
@@ -245,5 +246,6 @@ podcasts:
     language: "zh"
     priority: "medium"
     rss_url: "https://feed.xyzfm.space/mkkxu98dm89e"
+    xiaoyuzhou_url: "https://www.xiaoyuzhoufm.com/podcast/665ff98194977a26ef5490e8"
     spotify_url: null
     notes: "来自截图 2"

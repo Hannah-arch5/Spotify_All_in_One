@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.config import Podcast, load_podcasts
-from src.rss import Episode, cache_feed, fetch_feed, parse_feed
+from src.rss import Episode, cache_feed, fetch_feed, fetch_xiaoyuzhou_feed, parse_feed
 from src.schedule import current_report_window
 from src.state import connect, mark_seen, seen_guids
 
@@ -83,6 +83,12 @@ def _fetch_and_parse_with_retry(
             last_error = exc
             if attempt < attempts:
                 time.sleep(min(2 ** (attempt - 1), 4))
+    if podcast.xiaoyuzhou_url:
+        xml_bytes = fetch_xiaoyuzhou_feed(podcast.xiaoyuzhou_url, timeout=timeout)
+        episodes = parse_feed(xml_bytes, podcast.title, podcast.publisher)
+        if not episodes:
+            raise RuntimeError("Xiaoyuzhou fallback returned no episodes")
+        return xml_bytes, episodes
     raise RuntimeError(f"Feed failed after {attempts} complete-fetch attempts: {last_error}") from last_error
 
 

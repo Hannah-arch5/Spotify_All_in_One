@@ -10,6 +10,7 @@ EPISODE_RE = re.compile(r"^#### 情报 \d+：")
 ANCHOR_RE = re.compile(r"^(?P<prefix>\s*-\s*`?\[[^\]]+\]`?\s*)(?P<body>.+)$")
 SENTENCE_END_RE = re.compile(r"[.!?。！？](?=\s|$|[\"'”’`)）])")
 MAX_ANCHORS_PER_EPISODE = 8
+CJK_SPACING_CHARS = r"\u3400-\u9fff，。！？；：、“”‘’（）《》"
 
 # These windows deliberately cover mechanisms, constraints, and strategic
 # implications instead of retaining every timestamp produced by synthesis.
@@ -48,6 +49,15 @@ def shorten_anchor(line: str) -> str:
     return match.group("prefix").replace("`", "") + body
 
 
+def normalize_cjk_spacing(text: str) -> str:
+    """Remove transcript-tokenization spaces without joining Latin terms."""
+    return re.sub(
+        rf"(?<=[{CJK_SPACING_CHARS}])[ \t]+(?=[{CJK_SPACING_CHARS}])",
+        "",
+        text,
+    )
+
+
 def normalize(path: Path) -> bool:
     lines = path.read_text(encoding="utf-8").splitlines()
     out: list[str] = []
@@ -59,6 +69,9 @@ def normalize(path: Path) -> bool:
     skip_translation = False
     changed = False
     for line_index, line in enumerate(lines):
+        compact_line = normalize_cjk_spacing(line)
+        changed |= compact_line != line
+        line = compact_line
         episode_match = EPISODE_RE.match(line)
         if episode_match:
             episode_title = line.split("：", 1)[-1].strip()

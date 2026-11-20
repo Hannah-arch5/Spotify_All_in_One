@@ -14,6 +14,7 @@ class Podcast:
     rss_url: str | None
     spotify_url: str | None
     notes: str
+    xiaoyuzhou_url: str | None = None
 
     @property
     def enabled(self) -> bool:
@@ -70,6 +71,7 @@ def load_podcasts(path: Path) -> list[Podcast]:
                 rss_url=item.get("rss_url") if item.get("rss_url") else None,
                 spotify_url=item.get("spotify_url") if item.get("spotify_url") else None,
                 notes=str(item.get("notes") or ""),
+                xiaoyuzhou_url=item.get("xiaoyuzhou_url") if item.get("xiaoyuzhou_url") else None,
             )
         )
     return podcasts

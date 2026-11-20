@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from email.utils import format_datetime
 from html import unescape
+from html.parser import HTMLParser
+import json
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -18,6 +21,26 @@ import xml.etree.ElementTree as ET
 ITUNES_NS = "{http://www.itunes.com/dtds/podcast-1.0.dtd}"
 CONTENT_NS = "{http://purl.org/rss/1.0/modules/content/}"
 PODCAST_NS = "{https://podcastindex.org/namespace/1.0}"
+
+
+class _NextDataParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.in_next_data = False
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        if tag == "script" and attributes.get("id") == "__NEXT_DATA__":
+            self.in_next_data = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "script" and self.in_next_data:
+            self.in_next_data = False
+
+    def handle_data(self, data: str) -> None:
+        if self.in_next_data:
+            self.parts.append(data)
 
 
 @dataclass(frozen=True)
@@ -64,6 +87,61 @@ def fetch_feed(url: str, timeout: int = 300, attempts: int = 3) -> bytes:
             time.sleep(min(2 ** (attempt - 1), 4))
 
     raise RuntimeError(f"Cannot fetch feed after {attempts} attempts: {last_error}") from last_error
+
+
+def fetch_xiaoyuzhou_feed(url: str, timeout: int = 120) -> bytes:
+    request = Request(
+        url,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 Chrome/140 Safari/537.36"
+            )
+        },
+    )
+    with urlopen(request, timeout=timeout) as response:
+        page = response.read().decode("utf-8")
+
+    parser = _NextDataParser()
+    parser.feed(page)
+    if not parser.parts:
+        raise RuntimeError("Xiaoyuzhou page did not contain __NEXT_DATA__")
+    payload = json.loads("".join(parser.parts))
+    podcast = payload["props"]["pageProps"]["podcast"]
+
+    ET.register_namespace("itunes", "http://www.itunes.com/dtds/podcast-1.0.dtd")
+    rss = ET.Element("rss", {"version": "2.0"})
+    channel = ET.SubElement(rss, "channel")
+    ET.SubElement(channel, "title").text = str(podcast.get("title") or "Xiaoyuzhou podcast")
+    ET.SubElement(channel, "link").text = url
+    ET.SubElement(channel, "description").text = str(podcast.get("description") or "")
+
+    for episode in podcast.get("episodes") or []:
+        eid = str(episode.get("eid") or "").strip()
+        if not eid:
+            continue
+        item = ET.SubElement(channel, "item")
+        # The native xyzfm RSS uses the bare Xiaoyuzhou episode ID as its GUID.
+        # Preserve that identity so switching sources cannot create a phantom late episode.
+        ET.SubElement(item, "guid").text = eid
+        ET.SubElement(item, "title").text = str(episode.get("title") or "Untitled episode")
+        episode_url = f"https://www.xiaoyuzhoufm.com/episode/{eid}"
+        ET.SubElement(item, "link").text = episode_url
+        published = episode.get("pubDate")
+        if published:
+            parsed = datetime.fromisoformat(str(published).replace("Z", "+00:00"))
+            ET.SubElement(item, "pubDate").text = format_datetime(parsed)
+        description = episode.get("shownotes") or episode.get("description") or ""
+        ET.SubElement(item, "description").text = str(description)
+        enclosure = episode.get("enclosure") or {}
+        audio_url = enclosure.get("url") if isinstance(enclosure, dict) else None
+        if audio_url:
+            ET.SubElement(item, "enclosure", {"url": str(audio_url), "type": "audio/m4a"})
+        duration = episode.get("duration")
+        if duration is not None:
+            ET.SubElement(item, f"{ITUNES_NS}duration").text = str(duration)
+
+    return ET.tostring(rss, encoding="utf-8", xml_declaration=True)
 
 
 def _text(element: ET.Element, tag: str) -> str | None:

@@ -134,9 +134,9 @@ def _section_prompt(
     joined = "\n\n---\n\n".join(compact_briefs)
     requirements = {
         "title_first": """只输出一级标题和 `## 第一部分：摘要 (Summary)`。第一行必须严格以 `# ` 开头，写一条自然完整的中文总结句并在同一行附英文翻译；禁止另写加粗的伪标题。标题必须建设性、观点明确，禁止日期、run id、“Spotify 播客情报研报”以及“范式跃迁/范式重塑/结构性重塑/价值重塑/深度洞察”等抽象拼词。摘要写 700-900 汉字，以三至四个跨节目判断组织，覆盖本期最重要的共同机制、主要矛盾、边界和决策方向，禁止逐集回顾。标题和摘要严禁出现“黄仁勋”“Jensen”“NVIDIA”“英伟达”以及情报 1、10、12 的争议叙述，改用其余节目中经过材料支持的研发、组织、市场与安全机制。""",
-        "third": """只输出 `## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)`。写 1600-2000 汉字，至少三个主题。先连接两集以上可核对的具体动作、成本、约束或反例，再解释跨集机制、边界条件、决策含义以及什么证据会推翻判断。不得按 episode 逐个总结。""",
+        "third": """只输出 `## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)`。写 1600-2000 汉字，绝对不得超过 2000 汉字，至少三个主题。先连接两集以上可核对的具体动作、成本、约束或反例，再解释跨集机制、边界条件、决策含义以及什么证据会推翻判断。不得按 episode 逐个总结。完全不要提及黄仁勋、Jensen、NVIDIA、英伟达或相关争议。输出前计算本部分字数；若超过 2000 汉字，必须先压缩再回答。""",
         "fourth": """只输出 `## 第四部分：第二层思维 (Second-Order Thinking)`。写 1000-1400 汉字，至少三个主题。提出跨节目二阶效应、反馈回路、利益冲突与失败模式；区分受访者主张、个案和研报推论，说明不确定性及反证条件，不得复述单集内容。不要使用情报 1、10、12 的黄仁勋/NVIDIA 争议叙述作为证据或推论前提，改用其余节目中可核对的机制。""",
-        "fifth": """只输出 `## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)`。写 1200-1600 汉字，至少三个主题。形成统一战略判断，并给出可以指定负责人、先后依赖、资源约束、退出条件和可测指标的行动顺序；禁止泛泛建议、统一时间表或无条件技术乐观。""",
+        "fifth": """只输出 `## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)`。写 1200-1600 汉字，绝对不得超过 1600 汉字。必须恰好写三个独立主题，依次使用一行 `**主题一：自然小标题**`、`**主题二：自然小标题**`、`**主题三：自然小标题**`，禁止阿拉伯数字主题编号。每个主题正文总计不得超过约 450 汉字，并且恰好两个紧凑段落：第一段形成跨节目战略判断；第二段把负责人、先后依赖、资源约束、退出条件和可测指标整合成连贯 prose，禁止另列“负责人：”“先后依赖：”“行动顺序：”等清单。禁止编造固定阶段、6-12个月/12-24个月等统一时间表、预算百分比分配、留存率或效率提升阈值；材料没有数字时使用可观察的趋势或比较指标。禁止泛泛建议或无条件技术乐观。完全不要提及黄仁勋、Jensen、NVIDIA、英伟达或相关争议。输出前确认三个主题齐全且最后一句完整结束；若超过 1600 汉字，必须先压缩再回答。""",
     }[section_key]
     return f"""你是播客情报研报主编。请只基于下列 episode brief 摘要完成指定部分，不得添加 brief 之外的事实。
 
@@ -205,6 +205,15 @@ def _synthesis_issues(parts: tuple[str, str, str, str, str]) -> list[str]:
             if not re.search(r"节目(?:声称|称|援引)|嘉宾(?:主张|认为|推测)|受访者(?:主张|认为|推测)|未经(?:本项目)?独立核验|据节目", paragraph):
                 issues.append(f"{label}将未经独立核验的 NVIDIA 争议叙述写成事实")
                 break
+    fifth_theme_count = len(re.findall(r"(?m)^\*\*主题(?:[一二三四五六]+|\d+)[：:][^*\n]+\*\*\s*$", fifth))
+    if fifth_theme_count < 3:
+        issues.append(f"第五部分独立主题仅 {fifth_theme_count} 个，至少需要 3 个")
+    if re.search(r"未来\s*\d+\s*[–—-]\s*\d+\s*(?:个?月|年)", fifth):
+        issues.append("第五部分包含无材料依据的统一未来时间表")
+    if re.search(r"预算的?\s*\d+%|留存率[^。；\n]{0,20}\d+%|效率提升[^。；\n]{0,20}\d+%", fifth):
+        issues.append("第五部分包含无材料依据的固定预算或绩效百分比")
+    if not re.search(r"[。！？.!?][*）)]*\s*$", fifth):
+        issues.append("第五部分结尾不完整，疑似被截断")
     return issues
 
 
@@ -317,10 +326,16 @@ def _repair_synthesis_parts(
                     continue
             except SystemExit:
                 pass
+        section_token_limits = {
+            "title_first": 2048,
+            "third": 1400,
+            "fourth": 2400,
+            "fifth": 1400,
+        }
         targeted = _generate_text(
             _section_prompt(run_id, report_date, report_window, compact_briefs, section_key),
             model=model,
-            max_output_tokens=6144,
+            max_output_tokens=section_token_limits[section_key],
             temperature=0.2,
             timeout=timeout,
         )
