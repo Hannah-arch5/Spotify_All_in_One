@@ -31,6 +31,11 @@ def _clean_key_quote_line(line: str) -> str | None:
     line = SPEAKER_RE.sub("", line)
     line = line.replace("接近原文观点：", "")
     line = line.replace("中文翻译：", "")
+    line = re.sub(
+        r"^(\s*[-*+]\s+)(?:\[|\(|（)?\d{1,2}:\d{2}(?::\d{2})?(?:\]|\)|）)?\s*",
+        r"\1",
+        line,
+    )
     line = re.sub(r"\s*[-—]\s*\[\d{1,2}:\d{2}(?::\d{2})?\]\s*$", "", line)
     line = re.sub(r"\s*Timestamp\s*:\s*\[[^\]]+\]\s*$", "", line, flags=re.IGNORECASE)
     line = re.sub(r"\s*\(\s*\d{1,2}:\d{2}(?::\d{2})?\s*\)\s*$", "", line)
