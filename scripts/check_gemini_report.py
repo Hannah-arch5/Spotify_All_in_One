@@ -47,6 +47,7 @@ EVIDENCE_ANCHOR_RE = re.compile(r"^-\s*\[(?:[0-9:]+|原文段落\s+\d+)\]\s*(.+)
 UNTIMED_ANCHOR_RE = re.compile(r"^\s*-\s*\[原文段落\s+\d+\]", re.MULTILINE)
 TIMED_ANCHOR_RE = re.compile(r"^\s*-\s*\[[0-9:]+\]", re.MULTILINE)
 ITALIC_CHINESE_RE = re.compile(r"^\s+\*[^*]*[\u4e00-\u9fff][^*]*\*\s*$")
+ITALIC_TRANSLATION_RE = re.compile(r"^\s*\*[^*]+\*\s*$")
 
 
 @dataclass
@@ -184,6 +185,43 @@ def _quote_support_findings(section: dict[str, Any], transcript_text: str) -> li
                 Finding(
                     "warning",
                     f"情报 {section['number']} 的引号内容未在 transcript 中直接找到：{quote[:80]}",
+                )
+            )
+    return findings
+
+
+def _key_quote_quality_findings(section: dict[str, Any]) -> list[Finding]:
+    block_match = KEY_QUOTE_BLOCK_RE.search(section["body"])
+    if not block_match:
+        return [Finding("error", f"情报 {section['number']} 缺少关键金句/结论区块。")]
+
+    lines = block_match.group(1).splitlines()
+    translation_indexes = [
+        index for index, line in enumerate(lines) if ITALIC_TRANSLATION_RE.match(line)
+    ]
+    findings: list[Finding] = []
+    if not 1 <= len(translation_indexes) <= 3:
+        findings.append(
+            Finding(
+                "error",
+                f"情报 {section['number']} 的关键金句必须为 1-3 条完整原句及翻译，当前为 {len(translation_indexes)} 条。",
+            )
+        )
+
+    for index in translation_indexes:
+        source_index = index - 1
+        while source_index >= 0 and not lines[source_index].strip():
+            source_index -= 1
+        source = lines[source_index].strip() if source_index >= 0 else ""
+        source = re.sub(r"^[-*+]\s+", "", source).strip().strip('"“”')
+        ascii_words = re.findall(r"[A-Za-z][A-Za-z']+", source)
+        han_count = len(re.findall(r"[\u4e00-\u9fff]", source))
+        source_is_chinese = han_count > len(ascii_words)
+        if (source_is_chinese and han_count < 8) or (not source_is_chinese and len(ascii_words) < 4):
+            findings.append(
+                Finding(
+                    "error",
+                    f"情报 {section['number']} 的关键金句疑似短回应或残句：{source[:80]}",
                 )
             )
     return findings
@@ -345,6 +383,7 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
                 findings.append(Finding("warning", f"情报 {expected_index} 时间戳证据少于 3 个：{len(timestamps)} 个。"))
 
         transcript_text = _episode_transcript_text(evidence, expected_index)
+        findings.extend(_key_quote_quality_findings(section))
         findings.extend(_quote_support_findings(section, transcript_text))
         findings.extend(_evidence_translation_findings(section))
 
