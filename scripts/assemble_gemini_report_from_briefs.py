@@ -415,7 +415,7 @@ def _episode_prose_prompt(items: dict[int, tuple[str, str]]) -> str:
 
 硬性要求：
 - 只输出所提供的 `### 情报 N`、`- 核心内容摘要：`、`- 情报价值点：`，不得输出解释、标题、金句、证据锚点或其他字段。
-- 每集核心内容摘要必须为 850-1050 个中文字符（忽略空白），本次请写成 4-5 个自然段并以 1000-1030 字为目标，避免再次低于下限。
+- 每集核心内容摘要必须为 850-1050 个中文字符（忽略空白），本次请写成 3-4 个完整自然段并以 950-1030 字为目标；每段承载一组连续论证，不要把每句话或每个观点拆成单独段落。
 - 每集情报价值点必须为 350-500 个中文字符（忽略空白），本次请写成恰好 2 个自然段并以 470-490 字为目标，避免再次低于下限。两段之间只保留一个空行，不要把每句话拆成单独段落。
 - 保留重要案例、数字、因果机制、分歧、限制条件和可验证指标；删去重复铺陈与同义反复，不得用空话凑字数。
 - 不得改写或推断本输入之外的事实。输出前逐集计算两部分字数，超出范围时先自行调整再回答。
@@ -467,10 +467,10 @@ def _episode_prose_issues(
         value_length = len(re.sub(r"\s+", "", value))
         summary_paragraphs = len([part for part in re.split(r"\n\s*\n", summary) if part.strip()])
         value_paragraphs = len([part for part in re.split(r"\n\s*\n", value) if part.strip()])
-        if not 800 <= summary_length <= 1150 or not 4 <= summary_paragraphs <= 7:
+        if not 800 <= summary_length <= 1150 or not 3 <= summary_paragraphs <= 4:
             failed.add(index)
             issues.append(
-                f"情报 {index} 摘要 {summary_length} 字/{summary_paragraphs} 段，目标 850-1050 字，容差 800-1150 字/4-7 段"
+                f"情报 {index} 摘要 {summary_length} 字/{summary_paragraphs} 段，目标 850-1050 字，容差 800-1150 字/3-4 段"
             )
         if not 320 <= value_length <= 550 or not 2 <= value_paragraphs <= 3:
             failed.add(index)
@@ -485,7 +485,7 @@ def _episode_prose_issues(
 def _summary_valid(text: str) -> bool:
     length = len(re.sub(r"\s+", "", text))
     paragraphs = len([part for part in re.split(r"\n\s*\n", text) if part.strip()])
-    return 800 <= length <= 1150 and 4 <= paragraphs <= 7
+    return 800 <= length <= 1150 and 3 <= paragraphs <= 4
 
 
 def _value_valid(text: str) -> bool:

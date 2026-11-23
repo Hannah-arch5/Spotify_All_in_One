@@ -133,7 +133,7 @@ def _episode_prompt(run_id: str, episode: dict[str, Any]) -> str:
 - 来源与发布者：Spotify | {episode['podcast_title']} | 核心主讲人及职位；如 transcript 中无法确认，写“未在 transcript 中明确”
 - 原始链接：{episode.get('spotify_episode_url') or episode.get('rss_episode_url') or episode.get('audio_url') or 'unknown'}
 - Transcript 来源：Spotify transcript
-- 核心内容摘要：固定写 5 个自然段，每段按 120-140 个中文字符的模型内部计数撰写。最终会由本地检查器按非空白字符强制验收为 850-1050 字。必须只基于 transcript，依次覆盖：节目问题与背景、主要论点链条、至少两个具体案例/数字/行动、背后的因果机制、重要分歧或限制条件、最终结论。不要把证据锚点原句简单重复成摘要，不要用空泛形容词凑字数。若 transcript 很长，必须综合其主要阶段而不是只总结开头。
+- 核心内容摘要：固定写 3-4 个完整自然段，每段承载一组连续论证，不要把每个观点拆成小段。最终会由本地检查器按非空白字符强制验收为 850-1050 字。必须只基于 transcript，覆盖节目问题与背景、主要论点链条、至少两个具体案例/数字/行动、背后的因果机制、重要分歧或限制条件、最终结论。不要把证据锚点原句简单重复成摘要，不要用空泛形容词凑字数。若 transcript 很长，必须综合其主要阶段而不是只总结开头。
 - 情报价值点：固定写 2 个自然段，每段按 130-160 个中文字符的模型内部计数撰写。最终会由本地检查器按非空白字符强制验收为 350-500 字。分别说明对企业/产品/投资或组织决策的意义、适用边界和可验证指标；不能只给一句泛泛建议。两段之间必须保留一个完整空行，不能连成同一个 Markdown 段落。
 - 关键金句 / 结论：2 条有实质意义、可逐字核验的来源原句；如 transcript 为英文，每条英文原句下一行直接写对应的斜体中文翻译。译文不能写成“这句话说明……”之类的解释。如 transcript 为中文，不重复翻译成中文。不要写 `中文解释：`、`中文翻译：`、`中文翻译/解释：`、`英文解释：`、`英文翻译：`、`英文翻译/解释：` 等标签。必须先通读原文寻找可核验金句，确实没有时才写成 `转述结论`，不要伪装成直接引语；不要在这一部分写 timestamp、Speaker 1、发言者 1 等证据标记，时间戳只放在证据锚点。
 - 证据锚点：至少 3 个 timestamp + 可核验的来源原句。英文锚点下一行必须直接写无标签的斜体中文翻译，例如 `*这是对应的中文翻译。*`；中文原生锚点不重复翻译。证据必须有信息价值，能支撑具体观点、机制、数字、例子、分歧或战略判断。不要使用寒暄、感谢、广告、片头片尾、泛泛介绍、互相称赞或结束语作为证据锚点。
@@ -185,9 +185,9 @@ def _brief_issues(brief: str) -> list[str]:
     value_paragraphs = [part for part in re.split(r"\n\s*\n", value) if part.strip()]
     summary_length = len(re.sub(r"\s+", "", summary))
     value_length = len(re.sub(r"\s+", "", value))
-    if not 800 <= summary_length <= 1150 or not 4 <= len(summary_paragraphs) <= 7:
+    if not 800 <= summary_length <= 1150 or not 3 <= len(summary_paragraphs) <= 4:
         issues.append(
-            f"核心内容摘要当前 {summary_length} 字、{len(summary_paragraphs)} 段，目标 850-1050 字，容差 800-1150 字，且必须 4-7 段"
+            f"核心内容摘要当前 {summary_length} 字、{len(summary_paragraphs)} 段，目标 850-1050 字，容差 800-1150 字，且必须 3-4 段"
         )
     if not 320 <= value_length <= 550 or not 2 <= len(value_paragraphs) <= 3:
         issues.append(
@@ -333,7 +333,7 @@ def generate_chunked(
                             "\n\n本次是定向字段重试。只输出下列未通过字段，不要输出标题、链接、金句、"
                             "证据锚点或解释。每个字段仍以 `- 字段名：` 开头，并严格满足字数和段落要求。"
                             "为抵消模型对中文字符的系统性少计，本次定向修复时："
-                            "摘要固定 5 段、每段按 120-140 个中文字符撰写；"
+                            "摘要固定 3-4 个完整自然段，不要把每个观点拆成小段；"
                             "价值点固定 2 段、每段按 130-160 个中文字符撰写。"
                             "未通过项：\n- " + "\n- ".join(issues)
                         )

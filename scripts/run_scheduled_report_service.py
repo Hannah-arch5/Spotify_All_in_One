@@ -304,7 +304,7 @@ def main() -> None:
     parser.add_argument("--gemini-mode", choices=["chunked", "single"], default="chunked")
     parser.add_argument("--sleep-seconds", type=int, default=int(os.environ.get("SPOTIFY_GEMINI_SLEEP_SECONDS", "70")))
     parser.add_argument("--timeout", type=int, default=int(os.environ.get("SPOTIFY_GEMINI_TIMEOUT", "600")))
-    parser.add_argument("--pipeline-timeout", type=int, default=int(os.environ.get("SPOTIFY_PIPELINE_TIMEOUT", "21600")))
+    parser.add_argument("--pipeline-timeout", type=int, default=int(os.environ.get("SPOTIFY_PIPELINE_TIMEOUT", "18000")))
     parser.add_argument(
         "--require-zh-transcripts",
         action="store_true",

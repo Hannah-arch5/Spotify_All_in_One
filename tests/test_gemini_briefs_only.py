@@ -54,12 +54,10 @@ class BriefsOnlyTests(unittest.TestCase):
             (package / "transcript-evidence-full.json").write_text(json.dumps({
                 "run_id": "fixture", "episodes": [{"index": 1, "episode_title": "Fixture"}],
             }))
-            summary_paragraph = "这是一段基于原始逐字稿的完整摘要，说明具体背景、行动、因果机制、限制条件与最终结论。" * 6
+            summary_paragraph = "这是一段基于原始逐字稿的完整摘要，说明具体背景、行动、因果机制、限制条件与最终结论。" * 7
             value_paragraph = "这段情报价值说明企业决策意义、适用边界、验证指标和停止条件，避免空泛建议。" * 5
             brief = f"""#### Brief
 - 核心内容摘要：{summary_paragraph}
-
-{summary_paragraph}
 
 {summary_paragraph}
 

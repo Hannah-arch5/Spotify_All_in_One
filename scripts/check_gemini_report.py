@@ -354,13 +354,22 @@ def check(report_path: Path, manifest_path: Path, evidence_path: Path | None = N
 
         summary_match = SUMMARY_BLOCK_RE.search(section["body"])
         value_match = VALUE_BLOCK_RE.search(section["body"])
-        summary_length = len(re.sub(r"\s+", "", summary_match.group(1))) if summary_match else 0
+        summary_text = summary_match.group(1) if summary_match else ""
+        summary_length = len(re.sub(r"\s+", "", summary_text))
         value_length = len(re.sub(r"\s+", "", value_match.group(1))) if value_match else 0
         if not 800 <= summary_length <= 1150:
             findings.append(
                 Finding(
                     "error",
                     f"情报 {expected_index} 核心内容摘要为 {summary_length} 字，目标是 850-1050 字，允许容差 800-1150 字。",
+                )
+            )
+        summary_paragraphs = len([part for part in re.split(r"\n\s*\n", summary_text) if part.strip()])
+        if not 3 <= summary_paragraphs <= 4:
+            findings.append(
+                Finding(
+                    "error",
+                    f"情报 {expected_index} 核心内容摘要为 {summary_paragraphs} 段，必须为 3-4 个完整自然段。",
                 )
             )
         if not 320 <= value_length <= 550:
