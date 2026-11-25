@@ -216,8 +216,9 @@ Requires Comet or Chrome to be running with a local DevTools port, for example:
     await page.close();
   }
 
-  await browser.close();
+  if (launched) await browser.close();
   console.log(JSON.stringify(results, null, 2));
+  if (!launched) process.exit(0);
 }
 
 main().catch((error) => {

@@ -148,9 +148,10 @@ async function main() {
   }
 
   await page.close();
-  await browser.close();
+  if (launched) await browser.close();
   fs.writeFileSync(outPath, JSON.stringify(results, null, 2));
   console.log(outPath);
+  if (!launched) process.exit(0);
 }
 
 main().catch((error) => {
