@@ -307,11 +307,11 @@ def _repair_synthesis_parts(
                 raise SystemExit("Gemini title failed quality gates: " + "; ".join(title_issues))
             continue
         cached_path = chunk_dir / f"synthesis-{section_key}-latest.md"
+        revision_source = ""
         if cached_path.exists():
             try:
-                cached_title, cached_section = _extract_targeted_section(
-                    cached_path.read_text(encoding="utf-8"), section_key
-                )
+                revision_source = cached_path.read_text(encoding="utf-8")
+                cached_title, cached_section = _extract_targeted_section(revision_source, section_key)
                 candidate = [title, first, third, fourth, fifth]
                 target_index = {"title_first": 1, "third": 2, "fourth": 3, "fifth": 4}[section_key]
                 candidate[target_index] = cached_section
@@ -325,7 +325,62 @@ def _repair_synthesis_parts(
                     title, first, third, fourth, fifth = candidate
                     continue
             except SystemExit:
-                pass
+                revision_source = ""
+        if revision_source:
+            limits = {
+                "title_first": "第一行必须是 `# 中文完整总结句 (Natural English Translation)`；第二行必须是 `## 第一部分：摘要 (Summary)`，后面才是正文。保留原稿有证据支撑的共同判断。标题不用冒号、抽象拼词或读者指令；第一部分压缩到700-900个汉字，连同标题和Markdown标记总长度不超过1200字符。完全不提黄仁勋、Jensen、NVIDIA或英伟达，也不要复述相关未经核验的争议。",
+                "third": "保留跨集机制和边界，将本部分连同标题与Markdown标记压缩到1400-2200字符。",
+                "fourth": "保留至少三个跨集二阶机制、相反证据和行动含义，写成三个有具体证据与边界的独立主题，每个主题至少两段；本部分连同标题与Markdown标记写到1300-1600字符，不得短于1100字符。节目预测和动机指控只能明确归属于嘉宾，不得当作事实。完全不提黄仁勋、Jensen、NVIDIA或英伟达。",
+                "fifth": "保留原稿有材料支撑的分析，改成恰好三个独立主题，标题逐行严格写成**主题一：...**、**主题二：...**、**主题三：...**；每个主题恰好两个自然段，全文连同标题和Markdown标记控制在1200-1700字符。不要编造固定时间表、预算或绩效百分比。",
+            }
+            targeted = _generate_text(
+                "你是播客研报主编。只编辑以下Gemini原稿，不添加原稿之外的事实。只输出修订后的指定标题和正文，不输出说明、字数统计或其他章节。保留可核查的具体机制、限制和判断，删去重复与空话。输出前逐字符核对长度与格式。\n\n"
+                + limits[section_key] + "\n\n原稿：\n" + revision_source,
+                model=model,
+                max_output_tokens={"title_first": 2048, "third": 2600, "fourth": 2200, "fifth": 2600}[section_key],
+                temperature=0.1,
+                timeout=timeout,
+            )
+            targeted = _strip_code_fences(targeted)
+            rejected_path = chunk_dir / f"synthesis-{section_key}-rejected.md"
+            if section_key != "title_first":
+                heading = {
+                    "third": "## 第三部分：跨节目专题分析 (Cross-Episode Thematic Analysis)",
+                    "fourth": "## 第四部分：第二层思维 (Second-Order Thinking)",
+                    "fifth": "## 第五部分：结论与战略意义 (Conclusion and Strategic Implications)",
+                }[section_key]
+                if re.search(r"^##\s+", targeted, re.MULTILINE):
+                    targeted = re.sub(r"^##\s+[^\n]+", heading, targeted, count=1, flags=re.MULTILINE)
+                else:
+                    targeted = heading + "\n\n" + targeted
+            try:
+                new_title, section = _extract_targeted_section(targeted, section_key)
+            except SystemExit:
+                rejected_path.write_text(targeted + "\n", encoding="utf-8")
+                raise
+            candidate = [title, first, third, fourth, fifth]
+            target_index = {"title_first": 1, "third": 2, "fourth": 3, "fifth": 4}[section_key]
+            candidate[target_index] = section
+            if new_title:
+                candidate[0] = new_title
+            revision_issues = _synthesis_issues(tuple(candidate))
+            relevant_issues = [
+                issue for issue in revision_issues
+                if issue.startswith(label) or (section_key == "title_first" and issue.startswith("主标题"))
+            ]
+            if relevant_issues:
+                rejected_path.write_text(targeted + "\n", encoding="utf-8")
+                raise SystemExit("Gemini revision failed quality gates: " + "; ".join(relevant_issues))
+            cached_path.write_text(targeted, encoding="utf-8")
+            if section_key == "title_first":
+                title, first = new_title or title, section
+            elif section_key == "third":
+                third = section
+            elif section_key == "fourth":
+                fourth = section
+            else:
+                fifth = section
+            continue
         section_token_limits = {
             "title_first": 2048,
             "third": 1400,

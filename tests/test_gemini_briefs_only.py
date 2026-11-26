@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import generate_chunked_gemini_report as generator
+import assemble_gemini_report_from_briefs as assembler
 
 
 class BriefsOnlyTests(unittest.TestCase):
@@ -26,6 +27,29 @@ class BriefsOnlyTests(unittest.TestCase):
         self.assertEqual(prompt.count(summary_label), 1)
         self.assertEqual(prompt.count(value_label), 1)
         self.assertLess(prompt.index(summary_label), prompt.index(value_label))
+        self.assertIn("中文原句译成英文", prompt)
+
+    def test_rejected_synthesis_revision_does_not_replace_cached_draft(self):
+        with tempfile.TemporaryDirectory() as directory:
+            chunk_dir = Path(directory)
+            cached = chunk_dir / "synthesis-fourth-latest.md"
+            cached.write_text("## 第四部分：第二层思维\n\n旧稿", encoding="utf-8")
+            parts = (
+                "# 有效标题 (Valid English Translation)",
+                "## 第一部分\n" + "甲" * 700,
+                "## 第三部分\n" + "乙" * 1500,
+                "## 第四部分\n" + "丙" * 2000,
+                "## 第五部分\n**主题一：甲**\n**主题二：乙**\n**主题三：丙**\n" + "丁" * 1100 + "。",
+            )
+            with patch.object(assembler, "_generate_text", return_value="短文本"):
+                with self.assertRaisesRegex(SystemExit, "revision failed quality gates"):
+                    assembler._repair_synthesis_parts(
+                        parts, ["第四部分当前过长"], run_id="fixture", report_date="261123",
+                        report_window={}, compact_briefs=[], chunk_dir=chunk_dir,
+                        model="fixture", timeout=1,
+                    )
+            self.assertEqual(cached.read_text(encoding="utf-8"), "## 第四部分：第二层思维\n\n旧稿")
+            self.assertTrue((chunk_dir / "synthesis-fourth-rejected.md").exists())
 
     def test_targeted_prose_retry_replaces_only_requested_field(self):
         original = """- 核心内容摘要：原摘要
