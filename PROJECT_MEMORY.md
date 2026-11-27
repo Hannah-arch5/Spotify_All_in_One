@@ -3,7 +3,16 @@
 > Global memory: before starting or continuing this project, read `/Users/hannah/Documents/Codex/GLOBAL_MEMORY.md` first.
 
 
-Updated: 2026-11-19 CST
+Updated: 2026-11-28 CST
+
+## 2026-11-28 CST - 261123 Delivered; 261125/261127 Transcript Preparation
+
+- Hannah approved the reviewed 261123 report. The unchanged DOCX/PDF were delivered: Zotero direct PDF item `4541` with `/unread` and `/2611` (verified matching local PDF hash), Google Drive `1.Spotify情报汇总/261123-Spotify播客情报研报.docx` (remote SHA-256 verified), and Discord `#todo` PDF (`notification_sent` id `1795803609531-d2b9a8ae-c234-4d98-9666-48d791ee51fb-discord`). Zotero was reopened. Archive audit passed original 15/15, Chinese 15/15, no duplicates or incomplete files; late-RSS audit passed and the manifest was marked seen (15). No report content was rewritten during delivery.
+- Two separate report windows remain pending: 261125 manifest `data/runs/20261126-215055-288680-manifest.json` (12 episodes), and 261127 manifest `data/runs/20261128-022322-417178-manifest.json` (13 episodes). Both manifests are ordered by publication date. Keep the transcript-first batch gate; do not generate either Gemini report until both have complete original and Chinese subtitles and verified backup, unless Hannah explicitly changes that gate.
+- 261125 original/source coverage is 11/12. Four official originals were previously archived, and seven exact-identity Spotify native/STD downloads were added this turn. The only missing original is episode 2, `158.【2026年复盘】和沈驿康聊...`, Xiaoyuzhou source episode `6b05746801b0ab432eddab62`. The Spotify show page showed only through episode 157; exact-title search did not locate 158. Xiaoyuzhou and Apple Podcasts confirm the episode exists but their public pages provide only an outline, not a full transcript. Do not substitute that outline or a different Spotify episode. Chinese coverage is 4/12; the four previously authorized originals were translated completely.
+- 261127 original/source coverage is 13/13. Four official RSS VTT sources and nine exact-identity Spotify native/STD downloads were archived, including E261, JRE #2587/#2586, AI Daily Brief (Anthropic and family AI), Modern Wisdom #1181, The Markets, and two a16z replays. Chinese coverage is 0/13. The pipeline dry run is blocked on Chinese completeness, not missing originals.
+- The STD Auto-Translate switch was visibly off before every native Transcript tab was opened. Each generic download was checked for episode ID, title, show, and nonempty segments before archival. Seven stale `Downloads/download (N).json` retry copies from 261123 were removed only after verifying the same IDs had more complete English/original and Chinese formal archives; no new generic download was left behind.
+- The current approval reviewer rejected sending the 261125 remaining original transcripts to the Google Translate-style service because it did not recognize a batch-specific authorization. Do not retry by another route or start 261127 external translation without an acceptable authorization. No Gemini generation, pending-report Drive/Discord/Zotero delivery, or mark-seen was done for 261125/261127.
 
 ## 2026-10-03 CST - Fixed Report-Window Routing Rule (Clarified)
 
